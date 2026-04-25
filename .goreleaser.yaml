@@ -18,6 +18,8 @@ builds:
       - arm64
     main: ./src/cmd/specforce/main.go
     binary: specforce
+    ldflags:
+      - -s -w -X main.version={{.Version}}
 
 archives:
   - format: tar.gz
