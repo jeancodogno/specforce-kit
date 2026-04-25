@@ -1,0 +1,48 @@
+description: "Functional requirements, business rules, and strict BDD acceptance criteria."
+instruction: |
+  Generate a high-fidelity business specification focusing entirely on the "What" and "Why", never the "How". Adhere strictly to the following execution rules:
+
+  1. **Zero Code Mandate:** DO NOT write technical implementation details, JSON payloads, or database schemas. Stick to pure business domain and user value.
+  2. **BDD Rigor:** Acceptance Criteria MUST follow the strict GIVEN/WHEN/THEN syntax. For every requirement, you MUST define at least one "Edge Case" or failure state.
+  3. **Scope Containment:** Pay heavy attention to the "Out of Scope" section. Explicitly list features or edge cases that downstream agents MUST NOT build.
+  4. **Conditional Omission:** If the `lens` is "Backend-heavy" or "Integration", you MUST completely delete the `## 5. UI/UX Contract` section. Do not leave placeholders or write "Not applicable".
+  5. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and the correct `lens`.
+template: |
+  ---
+  slug: {FEATURE_SLUG}
+  lens: [UI-heavy | Backend-heavy | Integration | Migration | Balanced full-stack]
+  ---
+
+  # Feature: {FEATURE_NAME}
+
+  ## 1. Context & Value
+  [Briefly describe the business value and the core problem being solved. Max 3 sentences.]
+
+  ## 2. Out of Scope (Anti-Goals)
+  *Explicitly state what MUST NOT be built in this specific feature to prevent scope creep.*
+  - [e.g., Do not implement the email notification flow in this spec]
+  - [e.g., Do not build the admin panel UI yet]
+
+  ## 3. Acceptance Criteria (BDD)
+  *Every requirement MUST be testable. Define success and failure.*
+
+  ### [REQ-1] {Title}
+  **User Story:** AS A [persona], I WANT TO [action], SO THAT [value].
+  
+  **Scenarios:**
+  1. **[Happy Path]** GIVEN [context] WHEN [action] THEN [outcome].
+  2. **[Edge Case]** GIVEN [context] WHEN [exception/error] THEN [fallback/behavior].
+  3. **[Ambiguity]** [Explicitly state what is unclear, or define the ASSUMPTION made].
+
+  ### [REQ-2] {Title}
+  *(Repeat structure as needed)*
+
+  ## 4. Business Invariants
+  *Strict domain rules that the system must never violate, regardless of the user story. These must be technically testable.*
+  - [e.g., A user cannot be deleted if they have active invoices].
+
+  ## 5. UI/UX Contract
+  *(Render this section ONLY if the lens includes UI. Otherwise, omit entirely).*
+  - **Visual Posture:** [e.g., High-density data table, minimal modal].
+  - **State Behavior:** [Rules for loading, empty, error, and recovery states].
+  - **Accessibility:** [Expected standard, e.g., ARIA labels, tab navigation].

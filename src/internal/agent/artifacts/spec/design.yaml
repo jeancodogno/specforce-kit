@@ -1,0 +1,50 @@
+description: "Technical blueprint, data models, API contracts, and file inventory."
+dependency: requirements
+instruction: |
+  Generate a deterministic technical blueprint based on the Requirements document. Adhere strictly to the following execution rules:
+
+  1. **Zero Philosophy:** DO NOT write architectural rationale or debate alternatives. Your output must be a strict, actionable blueprint.
+  2. **Visual Architecture:** You MUST generate a Mermaid.js diagram (`graph TB` or `erDiagram`) representing the data flow or persistence model.
+  3. **Strict API Contracts:** API Contracts MUST be exact, including HTTP methods, JSON payload structures, and expected HTTP status codes. This is critical for downstream Developer TDD.
+  4. **Standardized Inventory:** The File & Component Inventory must use explicit file paths and map core responsibilities clearly.
+  5. **Conditional Omission:** If the `lens` is "UI-heavy" and requires no backend changes, you MUST completely delete the `Persistence` and `API` sections. Do not leave placeholders.
+template: |
+  ---
+  slug: {FEATURE_SLUG}
+  lens: [UI-heavy | Backend-heavy | Integration | Migration | Balanced full-stack]
+  ---
+  
+  # Technical Design: {FEATURE_NAME}
+
+  ## 1. Architecture Blueprint
+  *A visual representation of the data flow or entity relationships for this feature.*
+
+  ```mermaid
+  graph TB
+      User((User)) --> UI[Frontend]
+      UI --> API[API Layer]
+      API --> Domain[Domain Logic]
+      Domain --> DB[(Database)]
+  ```
+
+  ## 2. Persistence & Data Modeling
+  *(Render this section ONLY if the database schema is changing. Otherwise, omit entirely).*
+  - **Schema Changes:** [e.g., Add `status` column to `users` table].
+  - **Indexes & Constraints:** [e.g., Unique index on `email`].
+
+  ## 3. API & Interfaces (The Contract)
+  *(Render this section ONLY if new APIs or external contracts are created/modified. Otherwise, omit entirely).*
+  - **Endpoint:** `[METHOD] /api/path`
+  - **AuthZ / Roles:** [Who can access this endpoint?]
+  - **Request Payload:** [JSON structure or Query Params]
+  - **Response (200 OK):** [JSON structure]
+  - **Response (4xx/5xx):** [Error mapping]
+
+  ## 4. File & Component Inventory
+  *The exact files that the Developer must create or modify. Map the core responsibility.*
+  
+  **Backend:**
+  - `[src/Domain/Path/File.ext]` -> [Core responsibility]
+  
+  **Frontend:**
+  - `[src/components/Path/File.ext]` -> [Core responsibility]

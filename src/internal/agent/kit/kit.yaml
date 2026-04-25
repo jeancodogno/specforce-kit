@@ -1,0 +1,111 @@
+tools:
+  gemini-cli:
+    name: "Gemini CLI"
+    description: "Google's Gemini CLI agent."
+    target: ".gemini/"
+    mappings:
+      agents:
+        path: "agents"
+        ext: ".md"
+      commands:
+        path: "commands/spf"
+        ext: ".toml"
+      skills:
+        path: "skills"
+        ext: ".md"
+  claude:
+    name: "Claude"
+    description: "Anthropic's Claude agent integration."
+    target: ".claude/"
+    mappings:
+      agents:
+        path: "agents"
+        ext: ".md"
+      commands:
+        path: "commands/spf"
+        ext: ".md"
+      skills:
+        path: "skills"
+        ext: ".md"
+  qwen:
+    name: "Qwen"
+    description: "Alibaba's Qwen agent integration."
+    target: ".qwen/"
+    mappings:
+      agents:
+        path: "agents"
+        ext: ".md"
+      commands:
+        path: "commands/spf"
+        ext: ".md"
+      skills:
+        path: "skills"
+        ext: ".md"
+  open-code:
+    name: "OpenCode"
+    description: "OpenCode agent integration."
+    target: ".opencode/"
+    mappings:
+      agents:
+        path: "agents"
+        ext: ".md"
+      commands:
+        path: "commands"
+        ext: ".md"
+      skills:
+        path: "skills"
+        ext: ".md"
+  kilo-code:
+    name: "KiloCode"
+    description: "KiloCode agent integration."
+    target: ".kilocode/"
+    mappings:
+      agents:
+        path: "agents"
+        ext: ".md"
+      commands:
+        path: "commands"
+        ext: ".md"
+      skills:
+        path: "skills"
+        ext: ".md"
+  codex:
+    name: "Codex"
+    description: "Codex agent integration."
+    target: ".codex/"
+    mappings:
+      commands:
+        target: "${CODEX_PROMPTS_DIR:-${CODEX_HOME:-~/.codex}/prompts}"
+        path: "."
+        name: "spf-*"
+        ext: ".md"
+      skills:
+        path: "skills"
+        ext: ".md"
+  antigravity:
+    name: "Antigravity"
+    description: "Antigravity workflow integration."
+    target: ".agent/"
+    mappings:
+      agents:
+        path: "agents"
+        ext: ".md"
+      commands:
+        path: "workflows"
+        name: "spf-*"
+        ext: ".md"
+      skills:
+        path: "skills"
+        ext: ".md"
+  kimi-code:
+    name: "Kimi Code"
+    description: "Moonshot AI's Kimi Code CLI agent."
+    target: ".kimi/"
+    mappings:
+      commands:
+        path: "skills/spf-*"
+        name: "SKILL"
+        ext: ".md"
+      skills:
+        path: "skills"
+        ext: ".md"

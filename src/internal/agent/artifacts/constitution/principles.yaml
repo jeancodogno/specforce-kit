@@ -1,0 +1,54 @@
+description: "Core values, philosophy, and non-negotiable cultural or technical axioms."
+instruction: |
+  Generate the Principles document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. Do not output any placeholder text; replace all sections with concrete project decisions.
+  
+  Adhere to the following rules for each section:
+  
+  1. Mission:
+     - Define a clear, single-paragraph statement of the core problem being solved and the primary value proposition.
+  
+  2. User Personas:
+     - Define the primary users of the system.
+     - For each persona, explicitly state their Role, Primary Goal, and Key Pain Point.
+     - Note: These personas MUST dictate authorization and UX design rules in future specs.
+  
+  3. Golden Rules (The Tie-Breakers):
+     - List 3 to 5 non-negotiable axioms (e.g., "Data privacy is prioritized over feature speed," or "The UI must remain fully functional without JavaScript").
+     - Instruct the AI that these rules are absolute tie-breakers for any architectural or design disputes.
+  
+  4. Product Boundaries:
+     - In Scope: List 3-4 core capabilities the product MUST have.
+     - Out of Scope (Anti-Goals): List explicitly what the product MUST NOT do to prevent AI hallucination and feature creep.
+
+  CRITICAL AI DIRECTIVE: The LLM MUST use this document as the ultimate source of truth. If a user prompt or a draft Spec contradicts the Golden Rules or Out of Scope boundaries, the AI MUST refuse the change and cite this document.
+
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `principles.md`.
+template: |
+  # Principles
+
+  ## Mission
+
+  ## User Personas
+  - **Persona 1:**
+  - **Role:**
+  - **Goal:**
+  - **Pain Point:**
+  - **Persona 2:**
+  - **Role:**
+  - **Goal:**
+  - **Pain Point:**
+  
+  ## Golden Rules
+  1. **Rule 1:**
+  2. **Rule 2:**
+  3. **Rule 3:**
+  
+  ## Product Boundaries
+  
+  ### In Scope
+  - 
+  - 
+
+  ### Out of Scope (Anti-Goals)
+  - 
+  -

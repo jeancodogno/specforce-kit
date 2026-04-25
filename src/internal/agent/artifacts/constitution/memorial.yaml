@@ -1,0 +1,55 @@
+description: "Cross-session memory, durable lessons learned, and critical project reminders."
+instruction: |
+  Generate the Memorial document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. 
+  
+  Adhere to the following rules for bootstrapping this file:
+  
+  1. DO NOT invent or hallucinate past actions, lessons, or pending decisions. This is the initialization phase. Leave the structural placeholders empty but ready for use.
+  2. The section "> FOR AI AGENTS" is the most critical part of this file. It MUST be copied verbatim into the final `memorial.md` document. This block serves as the runtime prompt for all future agents interacting with the repository.
+  3. Keep the exact Markdown formatting for the data blocks (Critical Now, Last Actions, etc.) so future agents have a strict schema to follow when appending data.
+
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `memorial.md`.
+template: |
+  # Memorial (Active Memory)
+
+  > **FOR AI AGENTS: RULES OF ENGAGEMENT**
+  > This is your cross-session memory file. You MUST obey these rules:
+  > 1. **READ THIS FIRST** before starting any task, debugging, or writing code in this repository.
+  > 2. **TRIAGE:** Read `Critical Now` first, then `Last Actions`. Only read lessons if they match your current scope.
+  > 3. **STRICT LIMITS (DO NOT BLOAT):** >    - Max 3 `Critical Now` bullets.
+  >    - Max 5 `Last Actions` entries. 
+  >    - Max 7 `Active Lessons`. 
+  >    - Max 5 `Pending Decisions`.
+  > 4. **GARBAGE COLLECTION:** If a list is full, you MUST delete the oldest/least relevant item before adding a new one.
+  > 5. **DISTILLATION:** If a lesson or decision becomes a permanent rule, you MUST move it to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and completely delete it from here.
+
+  ---
+
+  ## Critical Now
+  - [YYYY-MM-DD] [Scope] [System initialized. Awaiting first actions.]
+
+  ## Last Actions
+  - **Date:**
+  - **Scope:**
+  - **Completed:**
+  - **Next:**
+  - **Relevant Files:**
+  
+  ## Active Lessons & Anti-Patterns
+  - **First Seen:**
+  - **Last Seen:**
+  - **Scope:**
+  - **Symptom:**
+  - **Avoid:**
+  - **Do Instead:**
+  - **Recurrence Count:**
+  - **Status:**
+  - **Distill To:**
+  
+  ## Pending Decisions (Need Distillation)
+  - **Date:**
+  - **Scope:**
+  - **Decision:**
+  - **Why:**
+  - **Validate By:**
+  - **Distill To:**

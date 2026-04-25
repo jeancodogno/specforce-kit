@@ -1,0 +1,27 @@
+# Tools Directories
+.agent/
+.claude/
+.gemini/
+.codex/
+.kilocode/
+.qwen/
+.opencode/
+.kimi/
+.github/
+
+results.sarif
+
+# Test Data and Temporary Directories
+test-init/
+testdata/
+*.out
+*.sarif
+
+# Go Build Artifacts
+/specforce
+/vendor/
+/bin/
+
+# OS Specific
+.DS_Store
+Thumbs.db

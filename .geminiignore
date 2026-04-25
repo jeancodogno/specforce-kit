@@ -1,0 +1,15 @@
+# --- Padrões Globais ---
+.git/
+.gitignore
+.env.local
+.env.*.local
+*.log
+dist/
+vendor/
+node_modules/
+
+# --- Arquivos de Sistema e IDE ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,137 @@
+name: task-atomic-decomposition
+description: Use when converting design into executable tasks. Focuses on 5-20 minute
+  task slices, explicit dependencies, verification, rollback, and safe parallel tracks.
+version: 1.0
+priority: HIGH
+content: '# Skill: Task Atomic Decomposition & Dependency Mapping
+
+
+  ## When to use this skill
+
+  Use when turning design into tasks, splitting large work, sequencing dependencies,
+  or defining verify and rollback steps.
+
+
+  ## How to use it
+
+  1. Break work into the smallest meaningful units with one clear outcome.
+
+  2. Define dependency order, verify command, and rollback per task.
+
+  3. Confirm the roadmap can be executed without hidden assumptions.
+
+
+  ## Checklist
+
+  - [ ] Each task is atomic enough to prove complete quickly.
+
+  - [ ] Dependencies and parallel tracks are explicit.
+
+  - [ ] Every task has objective verification and safe rollback.
+
+
+  ## Artifact Guidance
+
+  - **For `design.md` consumption**: use the class/file inventory and roadmap as the
+  raw material for decomposition.
+
+  - **For `tasks.md`**: produce 5-20 minute slices with verify, rollback, dependency,
+  and `[REQ-X]` context.
+
+  - **For implementation handoff**: ensure every phase ends in a still-working state.
+
+
+  ## References
+
+  - **Roadmap patterns and decomposition examples**: read [roadmap-patterns.md](references/roadmap-patterns.md)
+  when task sizing or rollback quality is unclear.
+
+
+  ## 0. Best Practices (Quick Reference)
+
+
+  | # | Principle | Rule | Why |
+
+  |---|-----------|------|-----|
+
+  | 1 | **Task Size** | 5-20 min, one clear outcome | Easy verification & rollback
+  |
+
+  | 2 | **Dependencies** | Explicit blockers only | No hidden failures |
+
+  | 3 | **Parallel** | Different files/agents OK | Avoid merge conflicts |
+
+  | 4 | **Verify-First** | Define success before coding | Prevents "done but broken"
+  |
+
+  | 5 | **Rollback** | Every task has recovery path | Tasks fail, prepare for it |
+
+  | 6 | **Context** | Explain WHY not just WHAT | Better agent decisions |
+
+  | 7 | **Risks** | Identify before they happen | Prepared responses |
+
+  | 8 | **Milestones** | Each phase ends with working state | Continuous value |
+
+  | 9 | **Phase X** | Verification is ALWAYS final | Definition of done |
+
+
+  ## 1. The Micro-Atomic Standard
+
+  You must break down technical designs into **micro-tasks**. A task is only valid
+  if it targets a single logical change that can be verified in isolation.
+
+  - **Rule of One**: One file, one function, or one configuration entry per task.
+
+  - **Verify-First**: Every task description must begin with or include the specific
+  command or state that confirms success.
+
+
+  ## 2. Dependency & Parallelism Logic
+
+  - **Explicit Blockers**: Clearly mark tasks that cannot start until another is finished.
+
+  - **Branching Factor**: Identify tasks that touch different directories or namespaces
+  as "Parallel-Ready" to allow multiple agents to work without merge conflicts.
+
+
+  ## 3. The Gravity Rule (Sequencing)
+
+  Order tasks to build a stable foundation:
+
+  1. **Infrastructure/Schema**: The "soil" for the code.
+
+  2. **Contracts/Interfaces**: The "promises" between layers.
+
+  3. **Core Logic**: The "brain" of the feature.
+
+  4. **Implementation/UI**: The "skin" and interaction.
+
+
+  ## 4. Resilience & Rollback
+
+  For every complex task, the plan must imply or state a recovery path (e.g., "Keep
+  a backup of the original config" or "Revert migration on failure"). This ensures
+  the system never stays in a corrupted state.
+
+
+  ## 5. Contextual Intelligence
+
+  Never plan a task as a blind instruction. Every task must carry a fragment of the
+  "Why" (referencing `[REQ-X]`) so the Executor understands the business value and
+  can make micro-decisions correctly.
+
+
+  ## 6. Decomposition Quality Checklist
+
+  Before finalizing, verify the roadmap:
+
+  - [ ] **Atomicity**: Is every task truly a 5-20 minute effort?
+
+  - [ ] **Verification**: Does every task have a "Success State" defined?
+
+  - [ ] **Independence**: Can parallel tasks be executed in any order?
+
+  - [ ] **Working State**: Does every milestone (end of phase) result in a codebase
+  that still passes core tests?
+
+  '

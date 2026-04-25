@@ -1,0 +1,56 @@
+name: opportunity-framing
+description: Use during discovery and brainstorming to frame the objective, constraints,
+  idea directions, tradeoffs, and next-step recommendations before writing a feature
+  spec.
+version: 1.0
+priority: HIGH
+content: '# Opportunity Framing
+
+
+  > **CORE MANDATE:** Turn raw ideas into decision-ready directions, not generic suggestion
+  lists.
+
+
+  ## When to use this skill
+
+  Use for discovery, brainstorming, strategic exploration, idea ranking, and pre-spec
+  product framing.
+
+
+  ## How to use it
+
+  1. Frame the objective, actor, and outcome clearly.
+
+  2. Generate a small number of differentiated directions with tradeoffs.
+
+  3. Rank the best options and recommend the next action.
+
+
+  ## Checklist
+
+  - [ ] The problem framing is explicit.
+
+  - [ ] Idea directions are meaningfully different.
+
+  - [ ] Tradeoffs and open questions are visible.
+
+  - [ ] The recommendation includes a concrete next command.
+
+
+  ## Output Shape
+
+  - Objective
+
+  - Constraints
+
+  - 3-7 idea directions
+
+  - Top insights
+
+  - Ranked recommendation
+
+  - Open questions
+
+  - Next step
+
+  '

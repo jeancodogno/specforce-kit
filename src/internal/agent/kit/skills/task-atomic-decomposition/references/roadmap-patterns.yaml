@@ -1,0 +1,103 @@
+content: '# Roadmap Patterns
+
+
+  Use this reference when a design is hard to decompose cleanly.
+
+
+  ## Good Atomic Task Shape
+
+  - One clear outcome.
+
+  - One obvious verification path.
+
+  - One safe rollback path.
+
+  - Minimal file and dependency surface.
+
+
+  ## Preferred Sequence
+
+  1. Infrastructure or schema.
+
+  2. Contracts and interfaces.
+
+  3. Core logic.
+
+  4. Delivery layer or UI.
+
+  5. Verification and polish.
+
+
+  ## Scenario Patterns
+
+
+  ### UI-Heavy / Redesign
+
+  1. Surface shell or layout boundary.
+
+  2. Route/menu/shell integration when the surface introduces a new access path.
+
+  3. Surface-specific implementation.
+
+  4. UI polish.
+
+  5. A11y / responsive verification.
+
+  6. Contract verification when backend behavior is consumed.
+
+
+  ### Backend-Heavy / Domain
+
+  1. Contract or interface.
+
+  2. Domain rule or use case.
+
+  3. Persistence / infrastructure.
+
+  4. API exposure.
+
+  5. Verification.
+
+
+  ### Integration-Heavy
+
+  1. External contract assumptions.
+
+  2. Adapter or gateway.
+
+  3. Failure handling / fallback.
+
+  4. Observability.
+
+  5. Verification.
+
+
+  ### Migration / Rollout
+
+  1. Prepare compatibility.
+
+  2. Rollout-compatible implementation.
+
+  3. Verification.
+
+  4. Cleanup / deprecation removal.
+
+
+  ## Parallelism Rule
+
+  - Parallelize tasks that touch different files or modules and do not share a hidden
+  blocker.
+
+  - Do not parallelize tasks whose verify steps depend on unfinished upstream contract
+  work.
+
+
+  ## Rollback Examples
+
+  - Restore one config file from the previous content.
+
+  - Revert one migration file or disable one flag.
+
+  - Remove one newly introduced route, job, or component.
+
+  '

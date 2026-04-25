@@ -1,0 +1,70 @@
+description: "Technical structure, system boundaries, layers, dependency direction, and persistence topology."
+instruction: |
+  Generate the Architecture document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. Do not output any placeholder text; replace all sections with concrete project decisions.
+  
+  Adhere to the following rules for each section:
+  
+  1. Stack & Tooling Baseline:
+     - Define the exact Backend language/framework (e.g., PHP/Symfony) and minimum version.
+     - Define the Frontend framework (e.g., Vue 3) and minimum version.
+     - Define the State Management strategy.
+     - Define the Data storage (primary DB, caching).
+     - Define the Tooling/Infra (e.g., Docker, Makefiles).
+  
+  2. API & Communication Paradigm:
+     - Specify the Client-to-Server protocol (e.g., RESTful JSON APIs).
+     - Specify the Internal-Services communication method.
+  
+  3. High-Level Architecture (Mermaid):
+     - Generate a `graph TB` Mermaid diagram.
+     - It MUST represent the macro-flow between the User, Frontend App, API Gateway, Domain/Application Layer, Database, and External Services.
+     - Group containerized environments if applicable.
+  
+  4. Architectural Principles:
+     - List 3-5 core principles. Ensure rules like "Domain logic MUST remain framework-agnostic" and explicit boundary definitions are included.
+  
+  5. Repository Topology:
+     - State explicitly if it is a `monorepo` or `single-repo`.
+     - Provide a clear technical rationale for this choice.
+  
+  6. Directory Structure:
+     - Provide a canonical directory tree using a text block (e.g., `repo/apps/`, `repo/packages/`, `repo/.specforce/`).
+  
+  7. Directory & Naming Standards:
+     - Define paths for feature specs (`.specforce/specs/{slug}/`) and docs (`.specforce/docs/`).
+     - Define source layout naming conventions (e.g., PascalCase for Domain, kebab-case for UI components).
+  
+  8. Observability Baseline:
+     - Define the requirements for structured logs, correlation ID propagation, and error traceability to Spec IDs.
+
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `architecture.md`.
+template: |
+    # Architecture
+
+    ## Stack & Tooling Baseline
+    - **Backend:**
+    - **Frontend:**
+    - **State Management:**
+    - **Data:**
+    - **Tooling/Infra:**
+    
+    ## API & Communication Paradigm
+    - **Client-to-Server:**
+    - **Internal-Services:**
+    
+    ## High-Level Architecture (Mermaid)
+    ```mermaid```
+
+    ## Architectural Principles
+
+    ## Repository Topology
+    - **Topology:** - **Rationale:**
+    
+    ## Directory Structure
+
+    ## Directory & Naming Standards
+    - **Feature specs:** `.specforce/specs/{slug}/`
+    - **Constitution docs:** `.specforce/docs/`
+    - **Source layout:**
+    
+    ## Observability Baseline

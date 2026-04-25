@@ -1,0 +1,52 @@
+name: spec-clarification-interview
+description: Use when a requirements document has ambiguity or [UNCLEAR] markers and
+  needs a one-question-at-a-time clarification interview that updates the source requirement
+  incrementally.
+version: 1.0
+priority: HIGH
+content: '# Spec Clarification Interview
+
+
+  > **CORE MANDATE:** Resolve ambiguity directly in the requirement text, one decision
+  at a time.
+
+
+  ## When to use this skill
+
+  Use for clarification loops, ambiguity removal, underspecified business rules, and
+  incremental updates to `requirements.md`.
+
+
+  ## How to use it
+
+  1. Identify the highest-impact ambiguity first.
+
+  2. Ask exactly one question with a recommended option and bounded alternatives.
+
+  3. Update the source requirement immediately after the answer.
+
+
+  ## Checklist
+
+  - [ ] Only one question is asked at a time.
+
+  - [ ] The recommended option is explicit and justified.
+
+  - [ ] The source requirement is updated after each answer.
+
+  - [ ] Clarification history is logged without replacing source-of-truth text.
+
+  - [ ] No more than 5 questions are asked in one session.
+
+
+  ## Interview Rules
+
+  - Prioritize lifecycle, security, and error-handling gaps first.
+
+  - Prefer decision-ready options over open-ended prompts.
+
+  - Replace `[UNCLEAR]` markers with SHALL or MUST language after the answer.
+
+  - End with a short coverage summary and the next recommended command.
+
+  '

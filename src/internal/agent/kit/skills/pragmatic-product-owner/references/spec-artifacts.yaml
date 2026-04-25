@@ -1,0 +1,38 @@
+content: '# Spec Artifacts
+
+
+  Use this reference when shaping discovery outputs or `requirements.md`.
+
+
+  ## Before `requirements.md`
+
+  - Clarify objective, persona, and business outcome.
+
+  - Identify constraints from constitution docs.
+
+  - Reduce idea exploration to the highest-value direction and one fallback.
+
+
+  ## Inside `requirements.md`
+
+  - Introduction: state the user problem and value in plain language.
+
+  - Requirements: write each slice as independently testable value.
+
+  - Key Entities: define business objects and lifecycle language without leaking implementation.
+
+  - Success Criteria: make outcomes measurable across business, performance, and UX.
+
+  - UI Contract: if UI exists, define observable expectations rather than vague taste.
+
+
+  ## Clarification Standard
+
+  - Prefer one ambiguity at a time.
+
+  - Resolve by updating the requirement text itself with SHALL or MUST language.
+
+  - Keep a short clarification log, but treat the requirement section as the source
+  of truth.
+
+  '

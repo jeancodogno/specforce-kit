@@ -1,0 +1,158 @@
+description: "Visual direction, interaction patterns, accessibility posture, and aesthetic DNA."
+instruction: |
+  Generate the UI/UX document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. Do not output any placeholder text; replace all sections with concrete project decisions.
+  
+  Adhere to the following rules for each section:
+  
+  1. Visual Theme:
+     - Explicitly define the primary UI/CSS framework (e.g., Tailwind CSS, custom Vue components, or Bubbletea for TUI) to ground the design.
+     - Define the mood, density, and design philosophy without vague adjectives.
+  
+  2. Color Palette & Roles:
+     - Provide EXACT, valid Hex codes.
+     - CRITICAL: The AI MUST ensure WCAG AA minimum contrast between Text colors and Canvas/Surface colors.
+  
+  3. Typography Rules:
+     - Specify real, web-safe, or modern Google fonts (e.g., Inter, Roboto, Fira Code).
+     - Fill the hierarchy table with exact CSS values (e.g., rem or px, explicit font weights).
+  
+  4. Component Stylings:
+     - Describe stylings using the terminology of the chosen CSS framework (e.g., using Tailwind utility concepts like `rounded-md`, `shadow-sm`).
+  
+  5 & 6. Layout & Depth:
+     - Define exact spacing scales (e.g., 4px baseline grid).
+     - Define shadow and elevation rules logically (e.g., Modals have highest z-index and shadow-2xl).
+  
+  7. Do's and Don'ts:
+     - Provide 3 strict actionable rules for "Do" and 3 for "Don't" to prevent AI hallucination in UI generation.
+  
+  8. Responsive Behavior:
+     - Fill the exact pixel ranges for breakpoints. Define strict collapsing strategies for mobile (e.g., "Sidebar becomes a hamburger menu").
+  
+  9. Agent Prompt Guide (CRITICAL FOR SDD):
+     - Generate concise, reusable system prompts that will instruct an LLM on how to build a component (e.g., Vue 3) matching this exact visual DNA.
+
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `ui-ux.md`.
+template: |
+  # UI/UX
+
+  ## 1. Visual Theme & Atmosphere
+  - **Framework/Base:** [e.g., Tailwind CSS, custom SCSS, etc.]
+  - **Theme:** [e.g., Industrial Mission Control / Editorial Luxury / Quiet Utility]
+  - **Atmosphere:** [How the product should feel emotionally and operationally]
+  - **Density Posture:** [airy / balanced / compact / high-density]
+  - **Design Philosophy:** [What the interface optimizes for and what it deliberately avoids]
+  - **Signature Moves:** [1-3 recurring visual behaviors or motifs]
+
+  ## 2. Color Palette & Roles
+  ### Brand & Accent
+  - **Primary Brand:** `#` | [Usage]
+  - **Secondary Brand:** `#` | [Usage]
+
+  ### Text & Feedback
+  - **Primary Text:** `#` | [Usage]
+  - **Secondary Text:** `#` | [Usage]
+  - **Error:** `#` | [Usage]
+  - **Success:** `#` | [Usage]
+  - **Warning:** `#` | [Usage]
+  - **Info:** `#` | [Usage]
+
+  ### Surface & Border
+  - **Canvas:** `#` | [Usage]
+  - **Surface:** `#` | [Usage]
+  - **Muted Surface:** `#` | [Usage]
+  - **Border:** `#` | [Usage]
+
+  ## 3. Typography Rules
+  ### Font Family
+  - **Primary:**
+  - **Secondary:**
+  - **Usage Logic:**
+
+  ### Hierarchy
+  | Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
+  |---|---|---|---|---|---|---|
+  | Display | | | | | | |
+  | Heading | | | | | | |
+  | Subheading | | | | | | |
+  | Body | | | | | | |
+  | UI Label | | | | | | |
+  | Caption | | | | | | |
+
+  ### Content Voice
+  - **Headlines:**
+  - **Buttons & Actions:**
+  - **Form Guidance:**
+
+  ## 4. Component Stylings
+  ### Buttons
+  - **Primary:**
+  - **Secondary:**
+  - **Destructive:**
+  
+  ### Cards & Panels
+  - **Container Style:**
+  - **State Behavior:**
+  
+  ### Inputs & Forms
+  - **Input Baseline:**
+  - **Focus Style:**
+  - **Error Style:**
+  
+  ### Navigation
+  - **Primary Navigation:**
+  - **Active State:**
+  - **Secondary Navigation:**
+  
+  ## 5. Layout Principles
+  - **Spacing Scale:**
+  - **Grid Logic:**
+  - **Whitespace Philosophy:**
+  - **Page Structure Bias:**
+  - **Navigation Distribution:**
+  
+  ## 6. Depth & Elevation
+  | Level | Treatment | Use |
+  |---|---|---|
+  | Flat | | backgrounds, passive surfaces |
+  | Raised | | cards, popovers, controls |
+  | Interactive Hover | | buttons, cards, nav items |
+  | Modal / Priority | | dialogs, overlays, blocking UI |
+
+  - **Shadow Philosophy:**
+  - **Surface Hierarchy:**
+  
+  ## 7. Do's and Don'ts
+  ### Do
+  - 
+  - 
+  - 
+
+  ### Don't
+  - 
+  - 
+  - 
+
+  ## 8. Responsive Behavior
+  | Breakpoint | Width | Key Changes |
+  |---|---|---|
+  | Mobile | | |
+  | Tablet | | |
+  | Desktop | | |
+  | Large Desktop | | |
+
+  - **Touch Targets:**
+  - **Collapsing Strategy:**
+  - **Responsive Priority:**
+  
+  ## 9. Agent Prompt Guide
+  ### Quick Reference
+  - **Theme Summary:**
+  - **Primary Colors:**
+  - **Typography Summary:**
+  - **Key Surface Rules:**
+  
+  ### Example Prompts
+  - "Build a component using..."
+  - "Build a form using..."
+  - "When making this responsive, ensure that..."

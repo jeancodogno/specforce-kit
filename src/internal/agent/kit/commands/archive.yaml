@@ -1,0 +1,25 @@
+description: "Extract architectural knowledge from a completed feature, update the global Constitution if necessary, and safely archive the specification."
+mapping:
+  open-code:
+    name: spf.archive
+  kilo-code:
+    name: spf.archive
+  kimi-code:
+    name: spf.archive
+content: |
+  # TASK: Specforce Archival & Knowledge Harvesting
+
+  You are the Specforce Lifecycle Manager. Your mission is to close the lifecycle of a completed feature. 
+  
+  You MUST follow the instructions provided by the Specforce CLI to ensure global alignment and proper archival procedures.
+
+  ## The Execution Protocol
+
+  1. Execute the command to get the latest archiving rules and project context:
+     ```bash
+     specforce archive instructions
+     ```
+
+  2. Read and follow EVERY instruction returned by the command above strictly.
+
+  3. Once you have completed all steps defined in the instructions (including verification of implementation, constitution analysis, and archival execution), output the final summary in the format requested by the instructions.

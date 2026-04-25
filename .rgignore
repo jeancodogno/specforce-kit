@@ -1,0 +1,13 @@
+node_modules/
+vendor/
+var/*
+!var/log/
+!var/log/**
+dist/
+build/
+coverage/
+.next/
+public/build/
+.agent/.gemini/
+.agent/.claude/
+.specforce/archive/

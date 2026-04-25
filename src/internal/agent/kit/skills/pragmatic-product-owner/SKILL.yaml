@@ -1,0 +1,58 @@
+name: pragmatic-product-owner
+description: Use when creating or refining requirements, acceptance criteria, and
+  business success metrics. Optimizes clarity, testability, and value-focused scope.
+version: 1.0
+priority: CRITICAL
+content: "# Pragmatic Product Owner\n\n> **CORE MANDATE:** Maximize the value of the\
+  \ product. Every requirement must be verifiable through clear Acceptance Criteria.\n\
+  \n---\n\n## When to use this skill\nUse for requirements, acceptance criteria, business\
+  \ rules, key entities, scope cuts, and measurable outcomes.\n\n## How to use it\n\
+  1. Clarify user value, actor, and business constraint first.\n2. Write binary acceptance\
+  \ criteria and independent tests.\n3. Check the spec is valuable, testable, and\
+  \ free of solution leakage.\n\n## Checklist\n- [ ] Requirements describe outcomes,\
+  \ not implementation.\n- [ ] Acceptance criteria are pass/fail and independently\
+  \ testable.\n- [ ] Success criteria are measurable and worth building.\n\n## Artifact\
+  \ Guidance\n- **For discovery/brainstorming**: frame the problem, constraints, insight\
+  \ quality, and decision-ready next steps before turning ideas into features.\n-\
+  \ **For `requirements.md`**: define value, persona, entities, golden rules, measurable\
+  \ outcomes, and independent tests.\n- **For clarification loops**: resolve ambiguity\
+  \ by making business decisions explicit in the source requirement, not in side notes\
+  \ only.\n\n## References\n- **Spec artifacts and requirement shaping**: read [spec-artifacts.md](references/spec-artifacts.md)\
+  \ when drafting or refining business requirements.\n\n## 1. Triple-Dimension Success\
+  \ Metrics\nEvery feature or story must define success across three measurable axes\
+  \ to ensure holistic value:\n\n* **Business Metric:** (e.g., \"Increase checkout\
+  \ conversion by 5%\" or \"Reduce churn by 2%\").\n* **Performance Target:** (e.g.,\
+  \ \"API response SHALL be < 200ms at 95th percentile\").\n* **UX Efficiency:** (e.g.,\
+  \ \"The user must complete the KYC flow in < 4 minutes or < 5 screens\").\n\n##\
+  \ 2. Key Entities & Domain Integrity\nAvoid \"Anemic Domain Models.\" Define the\
+  \ lifecycle and language of the product's core objects.\n\n* **Ubiquitous Language:**\
+  \ Entity names (e.g., `Subscription`, `Lead`, `Merchant`) must be identical in the\
+  \ UI, the Requirements, and the Database.\n* **State Machine Thinking:** Define\
+  \ the **Lifecycle** for complex entities. \n    * *Example:* `Draft` ➔ `Pending_Approval`\
+  \ ➔ `Active` ➔ `Expired`.\n    * Explicitly state prohibited transitions (e.g.,\
+  \ \"An `Expired` contract cannot return to `Active`\").\n\n## 3. Golden Rules (Business\
+  \ Invariants)\nThese are the \"Laws of the Land\" - immutable logic that governs the\
+  \ system regardless of specific UI flows.\n\n* **Logic Constraints:** (e.g., \"\
+  A 'Trial' user can never access 'Premium' exports\").\n* **Data Integrity:** (e.g.,\
+  \ \"Total order value can never be negative after discounts\").\n* **Safety Guards:**\
+  \ (e.g., \"Destructive actions must require a double-confirmation if the entity\
+  \ state is `Production`\").\n\n## 4. Acceptance Criteria & Independent Tests\nACs\
+  \ must be **binary and testable**. If a machine cannot verify it, the AC is too\
+  \ vague.\n\n* **Functional AC:** Specific system behaviors (e.g., \"System sends\
+  \ a JWT via the `Authorization` header\").\n* **Negative AC (Edge Cases):** Behavior\
+  \ under stress (e.g., \"Return `422 Unprocessable Entity` if the Zip Code does not\
+  \ match the State\").\n* **Independent Test (Verification):** Every requirement\
+  \ must have a corresponding **Independent Test Case** that can be executed by QA\
+  \ or an automated suite without needing the PO's \"interpretation.\"\n\n## 5. Prioritization\
+  \ & Scope (The ICE/MoSCoW Hybrid)\n* **ICE Scoring:** Focus on **Impact, Confidence,\
+  \ and Ease**. \n* **Aggressive De-scoping:** If an AC doesn't directly support the\
+  \ **Success Metric**, move it to the backlog.\n* **Technical Health:** Allocate\
+  \ a fixed % (e.g., 20%) of the capacity to resolve Technical Debt and maintain the\
+  \ \"Golden Rules.\"\n\n---\n\n## PO Delivery Checklist\n\n- [ ] **Value:** Is the\
+  \ \"Problem Statement\" clear and the \"Why\" justified?\n- [ ] **Success Metrics:**\
+  \ Are the three dimensions (Business, Perf, UX) defined?\n- [ ] **Key Entities:**\
+  \ Is the lifecycle (State Machine) of the entity mapped?\n- [ ] **Golden Rules:**\
+  \ Are the immutable business constraints documented?\n- [ ] **Acceptance Criteria:**\
+  \ Are they binary? Can a machine verify them?\n- [ ] **Independent Test:** Is there\
+  \ a clear test scenario for every \"Happy Path\" and \"Edge Case\"?\n- [ ] **Persona:**\
+  \ Is it clear exactly *who* benefits from this change?\n"

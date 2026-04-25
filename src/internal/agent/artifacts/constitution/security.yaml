@@ -1,0 +1,47 @@
+description: "Authentication, authorization, roles, permissions, privacy, and data protection rules."
+instruction: |
+  Generate the Security document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. Do not output any placeholder text; replace all sections with concrete project decisions.
+  
+  Adhere to the following rules for each section:
+  
+  1. Identity & Access Control:
+     - Define the exact Authentication strategy (e.g., JWT with RS256, Session cookies, OAuth2).
+     - Define the token/session lifecycle (e.g., Access tokens expire in 15m, Refresh in 7d).
+     - Specify the Authorization model (e.g., RBAC, ABAC) and the strict rule for tenant isolation to prevent IDOR (Insecure Direct Object Reference).
+  
+  2. Data Protection & Cryptography:
+     - Specify encryption standards for Data at Rest (e.g., AES-256) and Data in Transit (e.g., TLS 1.3).
+     - Explicitly define how application secrets MUST be managed (e.g., strictly via environment variables or a Secret Manager).
+  
+  3. Auditing & Logging:
+     - List the specific events that MUST trigger a security audit log (e.g., authentication failures, permission modifications, data exports).
+     - Define the masking policy to ensure PII (Personally Identifiable Information) or passwords never leak into logs.
+  
+  4. AI Security Constraints (CRITICAL FOR SDD):
+     - Mandate that the AI MUST NEVER hardcode passwords, API keys, or dummy tokens in any generated file.
+     - Mandate that the AI MUST ALWAYS use parameterized queries or the official project ORM to prevent SQL Injection. No raw string concatenation for SQL is allowed.
+     - Mandate that all inputs MUST be validated at the boundary and all outputs encoded to prevent XSS.
+
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `security.md`.
+template: |
+  # Security Posture
+
+  ## Identity & Access Control
+  - **Authentication Strategy:**
+  - **Token/Session Lifecycle:**
+  - **Authorization Model:**
+  - **Tenant Isolation (IDOR Prevention):**
+  
+  ## Data Protection & Cryptography
+  - **Data in Transit:**
+  - **Data at Rest:**
+  - **Secret Management:**
+  
+  ## Auditing & Logging
+  - **Auditable Events:**
+  - **Log Sanitization & PII:**
+  
+  ## AI Security Constraints
+  - The AI MUST NEVER hardcode passwords, tokens, or API keys in the source code. All secrets MUST be mocked via environment variables.
+  - The AI MUST ALWAYS use parameterized queries or the framework's native ORM/QueryBuilder. Raw SQL string concatenation is strictly forbidden.
+  - The AI MUST strictly validate all API and Controller inputs using the framework's validator before any domain logic execution.

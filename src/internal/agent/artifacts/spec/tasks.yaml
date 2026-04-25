@@ -1,0 +1,55 @@
+description: "Atomic, sequential implementation roadmap and TDD verification steps in a strict, CLI-scannable format."
+dependency: design
+instruction: |
+  Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements.
+
+  1. DO NOT write actual implementation code. You write the INTENT and the ACTION.
+  2. Tasks MUST be strictly sequential. Do not use parallel execution flags.
+  3. **Phases**: Group tasks into logical phases using `### Phase {N}: [Phase Name]` headers.
+  4. STRICT FORMATTING: Use `#### T{Phase}.{Task}:` as the header for EVERY task. The immediate next line MUST be the state tracker. 
+     - ENUM CONSTRAINT: The state MUST be exactly `**State:** [PENDING]`. 
+     - DO NOT invent new states. DO NOT use [TODO], [IN_PROGRESS], or [WAITING].
+  5. Target Flexibility: If a task is a global operation, set the Target to the CLI command (e.g., `CLI (npm run lint)`) or `Global Scope`.
+template: |
+  ---
+  slug: {FEATURE_SLUG}
+  lens: [UI-heavy | Backend-heavy | Integration | Migration | Balanced full-stack]
+  ---
+
+  # Implementation Roadmap: {FEATURE_NAME}
+
+  ## 1. Execution Strategy
+  - **Gravity Order:** [Briefly explain the sequence, e.g., DB Migration -> Domain Logic -> API Controllers -> UI]
+
+  ## 2. Tasks
+
+  ### Phase 1: [Phase Name]
+
+  #### T1.1: [SCAFFOLD/CLI] {Task Title}
+  **State:** `[PENDING]`
+  **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
+  **Context:** [REQ-X]
+
+  **Action Steps:**
+  - [Step 1: Concrete change]
+  - [Step 2: Concrete change]
+
+  **Verification (TDD):**
+  [MANDATORY: Define the exact test scenario or CLI command the developer MUST write/run to prove this task works.]
+
+  ### Phase 2: [Phase Name]
+
+  #### T2.1: [CODE] {Task Title}
+  **State:** `[PENDING]`
+  **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
+  **Context:** [REQ-X]
+
+  **Action Steps:**
+  - [Step 1: Concrete change]
+
+  **Verification (TDD):**
+  [Explicit test scenario or CLI command]
+
+  ## 3. Pre-emptive Mitigations
+  *(Render this section ONLY if there are high-impact execution risks, otherwise omit).*
+  - **Risk:** [e.g., Concurrent DB writes] -> **Mitigation:** [e.g., Use pessimistic locking].

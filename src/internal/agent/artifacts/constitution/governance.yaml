@@ -1,0 +1,41 @@
+description: "Project lifecycle rules, amendment policies, ownership, review processes, and AI boundaries."
+instruction: |
+  Generate the Governance document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. Do not output any placeholder text; replace all blank sections with concrete project decisions.
+  
+  Adhere to the following rules for each section:
+  
+  1. Versioning & Amendment:
+     - Keep the provided SemVer and Amendment process exactly as defined in the template. They are the core rules of the framework.
+  
+  2. Ownership & Review:
+     - Define the explicitly responsible Owner/Role for the constitution (e.g., "Lead Architect", "Core Engineering Team").
+     - Define the Review Cadence for the constitution (e.g., "Quarterly", "After every Major release").
+  
+  3. Agentic Authority & Boundaries (CRITICAL):
+     - Explicitly define what autonomous AI agents CAN do (e.g., "AI agents MAY draft new Specs and propose Memorial updates").
+     - Explicitly define what AI agents CANNOT do without human approval (e.g., "AI agents MUST NOT modify ANY constitution file in .specforce/docs/ without explicit human approval and a version bump").
+     - Establish the protocol for when the AI detects a conflict between a prompt and the Constitution (e.g., "The AI MUST refuse the prompt and cite the violated Principle/Rule").
+
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `governance.md`.
+template: |
+  # Governance
+
+  ## Versioning Policy (SemVer)
+  - **MAJOR:** Breaking constitutional or architectural process change. Requires team consensus.
+  - **MINOR:** New principle or standard added without breaking prior commitments.
+  - **PATCH:** Clarifications, typo fixes, wording, and non-functional adjustments.
+
+  ## Amendment Process
+  1. Propose the change with a clear rationale and impact analysis.
+  2. Classify the SemVer impact (Major/Minor/Patch).
+  3. Update all affected docs in `.specforce/docs/`.
+  4. Record the version bump and the amendment date in the document's header.
+
+  ## Ownership & Review
+  - **Owner:**
+  - **Review Cadence:** 
+  
+  ## Agentic Authority & Boundaries
+  - **Permitted AI Autonomous Actions:**
+  - **Prohibited AI Actions (Requires Human Approval):**
+  - **Conflict Resolution Protocol:**

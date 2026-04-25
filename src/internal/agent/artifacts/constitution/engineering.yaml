@@ -1,0 +1,52 @@
+description: "Coding standards, testing strategy, verification rigor, rollout safety, and AI constraints."
+instruction: |
+  Generate the Engineering document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. Do not output any placeholder text; replace all sections with concrete, rigid project decisions.
+  
+  Adhere to the following rules for each section:
+  
+  1. Coding Standards:
+     - Define the exact linting tools and style guides for Backend (e.g., PHPStan Level 8, PSR-12) and Frontend (e.g., ESLint, Prettier).
+     - State strict typing rules (e.g., "All PHP methods MUST have return types").
+     - Establish limits on complexity (e.g., max function length, max nesting).
+  
+  2. Testing Strategy:
+     - Define the required testing frameworks (e.g., Pest for PHP, Vitest for Vue).
+     - Define the minimum code coverage percentage gate (e.g., 80%).
+     - State the requirement for regressions (e.g., "A failing test MUST be written before fixing a bug").
+  
+  3. Delivery & Definition of Done (DoD):
+     - Specify the commit message format (e.g., Conventional Commits).
+     - Define the mandatory checks for a PR/Feature to be considered "Done" (e.g., passing CI, observability implemented, Spec updated).
+  
+  4. AI Coding Constraints (CRITICAL FOR SDD):
+     - Establish rules for autonomous code generation.
+     - Mandate that the AI MUST NOT remove existing human-written comments unless they are obsolete.
+     - Require the AI to document complex regex or algorithmic choices.
+
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `engineering.md`.
+template: |
+  # Engineering
+
+  ## Coding Standards
+  - **Backend Style & Linters:** 
+  - **Frontend Style & Linters:** 
+  - **Typing Strictness:** 
+  - **Complexity Limits:** 
+  
+  ## Testing Strategy
+  - **Frameworks:**
+  - **Coverage Gate:**
+  - **Unit Testing Rules:** Critical paths MUST have automated tests.
+  - **Regression Rules:** New behavior MUST include at least one verification test. Regressions MUST be captured with reproducible test cases.
+
+  ## Delivery Standards & DoD
+  - **Commit Standard:**
+  - **Definition of Done (DoD):**
+    - [ ] Code passes all linters and static analysis.
+    - [ ] Tests are written and passing.
+    - [ ] Observability/Logs are implemented for new features.
+
+  ## AI Coding Constraints
+  - The AI MUST NOT remove existing comments unless explicitly replacing them with better documentation.
+  - All newly generated public methods/functions MUST include docblocks or strict type hinting.
+  - [Add any other AI-specific safety rules]
