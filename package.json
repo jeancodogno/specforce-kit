@@ -19,7 +19,26 @@
   "goBinary": {
     "name": "specforce",
     "path": "./bin",
-    "url": "https://github.com/jeancodogno/specforce-kit/releases/download/v{{version}}/specforce-kit_{{platform}}_{{arch}}.{{extension}}"
+    "url": "https://github.com/jeancodogno/specforce-kit/releases/download/v{{version}}/specforce-kit_{{platform}}_{{arch}}.{{extension}}",
+    "platforms": {
+      "linux": {
+        "amd64": "Linux_x86_64",
+        "arm64": "Linux_arm64"
+      },
+      "darwin": {
+        "amd64": "Darwin_x86_64",
+        "arm64": "Darwin_arm64"
+      },
+      "win32": {
+        "amd64": "Windows_x86_64",
+        "arm64": "Windows_arm64"
+      }
+    },
+    "extensions": {
+      "linux": "tar.gz",
+      "darwin": "tar.gz",
+      "win32": "zip"
+    }
   },
   "author": "Jean Codogno <jeancarlo.eng.comp@gmail.com>",
   "license": "MIT"
