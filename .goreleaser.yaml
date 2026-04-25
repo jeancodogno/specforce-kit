@@ -23,10 +23,6 @@ builds:
 
 archives:
   - format: tar.gz
-    # use zip for windows archives
-    format_overrides:
-      - goos: windows
-        format: zip
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
