@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.2'
+          cache: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.2'
+          cache: true
+
+      - name: Bootstrap Tools
+        run: make bootstrap
+
+      - name: Run Security Scans
+        run: make security
+        continue-on-error: true # Upload SARIF even if findings exist
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.2'
+          cache: true
+
+      - name: Run Tests
+        run: make test-coverage
+
+      - name: Check Coverage
+        run: |
+          CORE_COVERAGE=$(go tool cover -func=coverage.out | grep -E "src/internal/(core|project|spec)" | awk '{count++; sum+=$3} END {print sum/count}' | tr ',' '.')
+          echo "Core Packages Average Coverage: $CORE_COVERAGE%"
+          if (( $(echo "$CORE_COVERAGE < 80" | bc -l) )); then
+            echo "Core coverage is below 80%"
+            exit 1
+          fi
+
+  quality:
+    name: Mutation Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.2'
+          cache: true
+
+      - name: Bootstrap Tools
+        run: make bootstrap
+
+      - name: Run Mutation Tests
+        run: make quality
