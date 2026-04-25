@@ -48,11 +48,13 @@ If a hook fails, the state transition will be blocked.
 
 // EnsureAgentsMD creates or updates the AGENTS.md file in the project root.
 func EnsureAgentsMD(root string, ui core.UI) error {
+	root = filepath.Clean(root)
 	path := filepath.Join(root, "AGENTS.md")
 	replacement := generateAgentsContent()
 
 	var existing string
 	if _, err := os.Stat(path); err == nil {
+		// #nosec G304
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("failed to read existing AGENTS.md: %w", err)
@@ -70,7 +72,8 @@ func EnsureAgentsMD(root string, ui core.UI) error {
 		ui.SubTask("Updating AGENTS.md...")
 	}
 
-	if err := os.WriteFile(path, []byte(merged), 0644); err != nil {
+	// #nosec G306 G304
+	if err := os.WriteFile(path, []byte(merged), 0600); err != nil {
 		return fmt.Errorf("failed to write AGENTS.md: %w", err)
 	}
 
