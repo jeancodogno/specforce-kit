@@ -1,0 +1,26 @@
+{
+  "name": "specforce-kit",
+  "version": "0.1.0",
+  "description": "SpecForce Kit CLI - Distributed via GoReleaser",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeancodogno/specforce-kit.git"
+  },
+  "bin": {
+    "specforce": "bin/specforce"
+  },
+  "scripts": {
+    "postinstall": "go-npm install",
+    "uninstall": "go-npm uninstall"
+  },
+  "dependencies": {
+    "go-npm": "^0.1.1"
+  },
+  "goBinary": {
+    "name": "specforce",
+    "path": "./bin",
+    "url": "https://github.com/jeancodogno/specforce-kit/releases/download/v{{version}}/specforce-kit_{{platform}}_{{arch}}.{{extension}}"
+  },
+  "author": "Jean Codogno <jeancarlo.eng.comp@gmail.com>",
+  "license": "MIT"
+}

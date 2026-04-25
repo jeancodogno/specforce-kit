@@ -25,3 +25,4 @@ testdata/
 # OS Specific
 .DS_Store
 Thumbs.db
+\n# NPM binaries\nbin/
