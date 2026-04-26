@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var AppVersion = "v0.1.3"
+var AppVersion = "v0.1.4"
 
 var brailleLines = []string{
 	`    ⢠⣶⣶⡄     `,
