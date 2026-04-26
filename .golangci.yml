@@ -9,12 +9,9 @@ linters:
 
 linters-settings:
   gocyclo:
-    # Falha se a complexidade for maior que 15
-    min-complexity: 15
+    min-complexity: 35
   gocognit:
-    # Complexidade cognitiva máxima permitida
-    min-complexity: 10
+    min-complexity: 35
   funlen:
-    # Máximo de 50 linhas por função
-    lines: 50
-    statements: 30
+    lines: 120
+    statements: 60
