@@ -13,7 +13,7 @@ Welcome to the **Specforce Kit**! This guide will help you set up your environme
 The easiest way to install Specforce Kit is globally via NPM:
 
 ```bash
-npm install -g @specforce/kit
+npm i -g @jeancodogno/specforce-kit
 ```
 
 If you prefer to install from source:

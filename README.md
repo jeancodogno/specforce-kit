@@ -110,7 +110,7 @@ Specforce Kit is designed to be tool-agnostic but comes with pre-built kits and 
 
 **Using NPM (Recommended)**
 ```bash
-npm install -g @specforce/kit
+npm i -g @jeancodogno/specforce-kit
 ```
 
 **From Source (Requires Go 1.26+ & Make)**
