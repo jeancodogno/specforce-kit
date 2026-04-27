@@ -7,7 +7,11 @@
 - **Typing Strictness:** Rigid Go typing. Minimize use of `interface{}` or `any`; prefer explicit types and interfaces for testing mocks.
 - **Embedded Registry Pattern:** Components discovered via metadata MUST be managed by a centralized `Registry` type. This registry should be initialized once (usually with an `fs.FS`) and passed as a dependency to other services or UI components.
 - **Agent-Specific Artifact Mapping:** To support diverse AI coding agents with differing directory conventions, the framework MUST use centralized `kit.yaml` (kit-level) and `mapping.yaml` (legacy/blueprint-level) files. These files translate internal Specforce artifact paths to the native hidden directory names of each supported agent (e.g., `.kimi/`, `.claude/`).
-    - **Generic Wildcard Expansion:** Mapping configurations in `kit.yaml` MUST support the `*` wildcard in both `path` and `name` fields. The system MUST replace the `*` with the artifact's slug (source filename without extension).
+- **Automated Platform Configuration:** The framework MUST automatically set up environment-specific discovery rules for supported agents during project initialization or refresh. This includes:
+    - Creating `.gemini/settings.json` with the correct `fileName` context mapping.
+    - Creating relative symbolic links (e.g., `.agent/rules/AGENTS.md -> ../../AGENTS.md`) to expose global project rules to agents that use standardized rules directories.
+    - Ensuring all symlinks are relative to maintain project portability.
+- **Generic Wildcard Expansion:** Mapping configurations in `kit.yaml` MUST support the `*` wildcard in both `path` and `name` fields. The system MUST replace the `*` with the artifact's slug (source filename without extension).
     - **Strict Category Whitelisting:** Artifacts are only installed for an agent if their source category (e.g., `agents`, `commands`, `skills`) is explicitly defined in that agent's `mappings` within `kit.yaml`. Categories not present in the mapping MUST be ignored by default.
     - **Slug Defaulting:** If a mapping's `name` field is empty, the system MUST default to the artifact's slug.
     - **Hierarchy Preservation:** For static mappings (no `*` in path), the system MUST preserve any sub-directory hierarchy found in the source category.

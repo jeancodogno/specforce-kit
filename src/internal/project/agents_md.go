@@ -35,10 +35,13 @@ Specforce allows developers to gate state transitions (e.g., finishing a task) u
 ` + "```" + `yaml
 # config.yaml example
 hooks:
-  on_task_finish:
-    command: "make lint && make test"
-  on_spec_finish:
-    command: "make build"
+  on_task_finished:
+    - "make lint"
+    - "make test"
+  on_phase_finished:
+    - "go test ./src/internal/..."
+  on_all_tasks_finished:
+    - "go test ./..."
 ` + "```" + `
 If a hook fails, the state transition will be blocked.
 
@@ -75,6 +78,50 @@ func EnsureAgentsMD(root string, ui core.UI) error {
 	// #nosec G306 G304
 	if err := os.WriteFile(path, []byte(merged), 0600); err != nil {
 		return fmt.Errorf("failed to write AGENTS.md: %w", err)
+	}
+
+	return ensurePlatformConfigs(root)
+}
+
+func ensurePlatformConfigs(root string) error {
+	// 1. Gemini
+	geminiDir := filepath.Join(root, ".gemini")
+	if err := os.MkdirAll(geminiDir, 0750); err != nil {
+		return fmt.Errorf("failed to create .gemini directory: %w", err)
+	}
+	geminiSettings := filepath.Join(geminiDir, "settings.json")
+	settingsContent := `{
+  "context": {
+    "fileName": [
+      "AGENTS.md",
+      "GEMINI.md"
+    ]
+  }
+}`
+	// Always write the file to ensure the configuration is correct and up to date
+	if err := os.WriteFile(geminiSettings, []byte(settingsContent), 0600); err != nil {
+		return fmt.Errorf("failed to write .gemini/settings.json: %w", err)
+	}
+
+	// 2. Symlinks
+	agents := []string{".agent", ".claude"}
+	for _, agent := range agents {
+		rulesDir := filepath.Join(root, agent, "rules")
+		if err := os.MkdirAll(rulesDir, 0750); err != nil {
+			return fmt.Errorf("failed to create %s/rules directory: %w", agent, err)
+		}
+
+		linkPath := filepath.Join(rulesDir, "AGENTS.md")
+		if _, err := os.Lstat(linkPath); err == nil {
+			// Remove existing link or file if it exists to ensure it's correct
+			if err := os.Remove(linkPath); err != nil {
+				return fmt.Errorf("failed to remove existing link at %s: %w", linkPath, err)
+			}
+		}
+
+		if err := os.Symlink("../../AGENTS.md", linkPath); err != nil {
+			return fmt.Errorf("failed to create symlink at %s: %w", linkPath, err)
+		}
 	}
 
 	return nil

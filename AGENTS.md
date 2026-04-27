@@ -24,13 +24,23 @@ Specforce allows developers to gate state transitions (e.g., finishing a task) u
 ```yaml
 # config.yaml example
 hooks:
-  on_task_finish:
-    command: "make lint && make test"
-  on_spec_finish:
-    command: "make build"
+  on_task_finished:
+    - "make lint"
+    - "make test"
+  on_phase_finished:
+    - "go test ./src/internal/..."
+  on_all_tasks_finished:
+    - "go test ./..."
 ```
 If a hook fails, the state transition will be blocked.
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
+
+
+
+
+
+
 

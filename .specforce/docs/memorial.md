@@ -16,24 +16,25 @@
 
 ## Critical Now
 - [2026-04-19] [Tasks] Hierarchical task organization (Phases H3 / Tasks H4) implemented. Agents should now use this for all new feature roadmaps.
+- [2026-04-26] [Linter] `.golangci.yml` requires `version: "2"` for compatibility with current `golangci-lint` versions.
 
 ## Last Actions
-- **Date:** 2026-04-25
-- **Scope:** Agent / CLI
-- **Completed:** Implemented `specforce archive instructions` command and Instruction-Driven Agent Pattern for feature archival.
-- **Next:** Apply the Instruction-Driven pattern to other agent commands (e.g., implement, spec).
-- **Relevant Files:** src/internal/cli/archive.go, src/internal/agent/kit/instructions/archive.md, src/internal/agent/kit/commands/archive.yaml
+- **Date:** 2026-04-26
+- **Scope:** Agent / Project Setup
+- **Completed:** Corrected `AGENTS.md` hook names and implemented automated platform-specific configurations (Gemini settings, Antigravity/Claude symlinks).
+- **Next:** Monitor agent discovery performance across different platforms with the new automated links.
+- **Relevant Files:** src/internal/project/agents_md.go, docs/configuration.md, docs/supported-tools.md
 
 ## Active Lessons & Anti-Patterns
-- **First Seen:**
-- **Last Seen:**
-- **Scope:**
-- **Symptom:**
-- **Avoid:**
-- **Do Instead:**
-- **Recurrence Count:**
-- **Status:**
-- **Distill To:**
+- **First Seen:** 2026-04-26
+- **Last Seen:** 2026-04-26
+- **Scope:** Project Initialization / AI Onboarding
+- **Symptom:** AI agents (Gemini, Claude Code) failing to discover project rules after `specforce init`.
+- **Avoid:** Manual setup instructions for each platform.
+- **Do Instead:** Automated environment-specific configuration (symlinks/settings files) triggered during `EnsureAgentsMD`.
+- **Recurrence Count:** 1
+- **Status:** Resolved
+- **Distill To:** engineering.md
 
 ## Pending Decisions (Need Distillation)
 - **Date:**

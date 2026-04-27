@@ -54,6 +54,52 @@ func TestEnsureAgentsMD(t *testing.T) {
 	})
 }
 
+func TestEnsurePlatformConfigs(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "specforce-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	err = EnsureAgentsMD(tempDir, nil)
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+
+	// Gemini
+	geminiPath := filepath.Join(tempDir, ".gemini", "settings.json")
+	if _, err := os.Stat(geminiPath); err != nil {
+		t.Errorf("Gemini settings.json not created: %v", err)
+	}
+	data, _ := os.ReadFile(geminiPath)
+	if !strings.Contains(string(data), "\"fileName\": [") {
+		t.Errorf("Gemini settings.json content mismatch (expected array): %s", string(data))
+	}
+	if !strings.Contains(string(data), "\"AGENTS.md\"") {
+		t.Errorf("Gemini settings.json missing AGENTS.md: %s", string(data))
+	}
+
+	// Antigravity symlink
+	agentLink := filepath.Join(tempDir, ".agent", "rules", "AGENTS.md")
+	if _, err := os.Lstat(agentLink); err != nil {
+		t.Errorf("Antigravity symlink not created: %v", err)
+	}
+	target, _ := os.Readlink(agentLink)
+	if target != "../../AGENTS.md" {
+		t.Errorf("Antigravity symlink target mismatch: %s", target)
+	}
+
+	// Claude Code symlink
+	claudeLink := filepath.Join(tempDir, ".claude", "rules", "AGENTS.md")
+	if _, err := os.Lstat(claudeLink); err != nil {
+		t.Errorf("Claude Code symlink not created: %v", err)
+	}
+	target, _ = os.Readlink(claudeLink)
+	if target != "../../AGENTS.md" {
+		t.Errorf("Claude Code symlink target mismatch: %s", target)
+	}
+}
+
 func TestGenerateAgentsContent(t *testing.T) {
 	content := generateAgentsContent()
 
