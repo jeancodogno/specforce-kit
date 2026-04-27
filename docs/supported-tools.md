@@ -11,4 +11,18 @@ Specforce is designed to be independent of any specific tool or ecosystem (tool-
 - **Codex**
 - **Antigravity**
 
+## Automated Configuration
+
+Specforce automatically configures your environment to ensure agents can discover the project rules defined in `AGENTS.md`. When running `specforce init` or updating tools:
+
+- **Gemini CLI**: Automatically creates `.gemini/settings.json` with the correct context mapping:
+  ```json
+  {
+    "context": {
+      "fileName": ["AGENTS.md", "GEMINI.md"]
+    }
+  }
+  ```
+- **Antigravity & Claude Code**: Automatically creates symbolic links at `.agent/rules/AGENTS.md` and `.claude/rules/AGENTS.md` pointing to the root rules file.
+
 *Can't find your favorite agent? Submit a PR creating a Kit for it!*

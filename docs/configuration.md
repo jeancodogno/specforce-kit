@@ -33,7 +33,16 @@ hooks:
   on_task_finished:
     - "npm run lint"
     - "npm run test"
+  on_phase_finished:
+    - "npm run integration-tests"
+  on_all_tasks_finished:
+    - "npm run e2e-tests"
 ```
+
+### Supported Hooks:
+- **`on_task_finished`**: Triggered after each individual task is completed.
+- **`on_phase_finished`**: Triggered after all tasks in a specific Phase (H3) are completed.
+- **`on_all_tasks_finished`**: Triggered after the entire implementation roadmap is completed.
 
 ### How does it work?
 1. The agent attempts to mark a task from its specification as finished.
