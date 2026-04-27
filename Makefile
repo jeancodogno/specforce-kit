@@ -66,7 +66,8 @@ npm-packages:
 		[ "$$os" = "win32" ] && binary_name="specforce.exe"; \
 		cp $$src_dir/$$binary_name $$pkg_dir/bin/specforce$$( [ "$$os" = "win32" ] && echo ".exe" ); \
 		cp LICENSE $$pkg_dir/LICENSE; \
-		printf '{\n  "name": "%s",\n  "version": "%s",\n  "description": "Native binary for %s %s",\n  "license": "MIT",\n  "os": ["%s"],\n  "cpu": ["%s"],\n  "bin": { "specforce": "bin/specforce%s" }\n}\n' \
+		cp README.md $$pkg_dir/README.md; \
+		printf '{\n  "name": "%s",\n  "version": "%s",\n  "description": "Native binary for %s %s",\n  "license": "MIT",\n  "author": "Jean Codogno <jeancarlo.eng.comp@gmail.com>",\n  "repository": { "type": "git", "url": "https://github.com/jeancodogno/specforce-kit.git" },\n  "bugs": { "url": "https://github.com/jeancodogno/specforce-kit/issues" },\n  "homepage": "https://github.com/jeancodogno/specforce-kit#readme",\n  "os": ["%s"],\n  "cpu": ["%s"],\n  "bin": { "specforce": "bin/specforce%s" }\n}\n' \
 			"$$pkg_name" "$(VERSION)" "$$os" "$$arch" "$$os" "$$arch" "$$( [ "$$os" = "win32" ] && echo ".exe" )" > $$pkg_dir/package.json; \
 	done
 

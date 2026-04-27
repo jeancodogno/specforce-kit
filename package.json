@@ -6,6 +6,10 @@
     "type": "git",
     "url": "git+https://github.com/jeancodogno/specforce-kit.git"
   },
+  "bugs": {
+    "url": "https://github.com/jeancodogno/specforce-kit/issues"
+  },
+  "homepage": "https://github.com/jeancodogno/specforce-kit#readme",
   "bin": {
     "specforce": "index.js"
   },
