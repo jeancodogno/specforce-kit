@@ -27,10 +27,11 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.64
-          args: --timeout=5m
+          version: latest
+          args: --timeout=5m --verify=false
           install-mode: goinstall
           skip-pkg-cache: true
+
 
   security:
     name: Security
