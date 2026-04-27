@@ -25,3 +25,8 @@ testdata/
 .DS_Store
 Thumbs.db
 \n# NPM binaries\nbin/
+
+# Build and Distribution Artifacts
+dist/
+npm/
+
