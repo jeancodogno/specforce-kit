@@ -1,39 +1,23 @@
 {
   "name": "@jeancodogno/specforce-kit",
   "version": "0.1.5",
-  "description": "SpecForce Kit CLI - Distributed via GoReleaser",
+  "description": "SpecForce Kit CLI - Distributed via Native Binaries",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jeancodogno/specforce-kit.git"
   },
   "bin": {
-    "specforce": "bin/specforce"
+    "specforce": "index.js"
   },
-  "scripts": {
-    "postinstall": "go-npm install",
-    "uninstall": "go-npm uninstall"
-  },
-  "dependencies": {
-    "go-npm": "^0.1.1"
-  },
-  "goBinary": {
-    "name": "specforce",
-    "path": "./bin",
-    "url": "https://github.com/jeancodogno/specforce-kit/releases/download/v{{version}}/specforce-kit_{{platform}}_{{arch}}.tar.gz",
-    "platforms": {
-      "linux": {
-        "x64": "linux_amd64",
-        "arm64": "linux_arm64"
-      },
-      "darwin": {
-        "x64": "darwin_amd64",
-        "arm64": "darwin_arm64"
-      },
-      "win32": {
-        "x64": "windows_amd64",
-        "arm64": "windows_arm64"
-      }
-    }
+  "files": [
+    "index.js"
+  ],
+  "optionalDependencies": {
+    "@jeancodogno/specforce-kit-linux-x64": "0.1.5",
+    "@jeancodogno/specforce-kit-linux-arm64": "0.1.5",
+    "@jeancodogno/specforce-kit-darwin-x64": "0.1.5",
+    "@jeancodogno/specforce-kit-darwin-arm64": "0.1.5",
+    "@jeancodogno/specforce-kit-win32-x64": "0.1.5"
   },
   "author": "Jean Codogno <jeancarlo.eng.comp@gmail.com>",
   "license": "MIT"

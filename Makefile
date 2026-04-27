@@ -46,4 +46,27 @@ clean-test:
 	rm -rf test-init/.specforce test-init/.agent test-init/.claude test-init/.gemini
 	rm -f results.sarif coverage.out
 
-.PHONY: build test lint security quality check bootstrap clean-test install uninstall
+VERSION=$(shell node -p "require('./package.json').version")
+PLATFORMS=linux-x64 linux-arm64 darwin-x64 darwin-arm64 win32-x64
+
+npm-packages:
+	@echo "Generating NPM native packages for version $(VERSION)..."
+	@for platform in $(PLATFORMS); do \
+		os=$$(echo $$platform | cut -d- -f1); \
+		arch=$$(echo $$platform | cut -d- -f2); \
+		goos=$$os; \
+		goarch=$$arch; \
+		[ "$$os" = "win32" ] && goos="windows"; \
+		[ "$$arch" = "x64" ] && goarch="amd64"; \
+		pkg_name="@jeancodogno/specforce-kit-$$os-$$arch"; \
+		pkg_dir="npm/$$os-$$arch"; \
+		mkdir -p $$pkg_dir/bin; \
+		src_dir=$$(ls -d dist/specforce-kit_$${goos}_$${goarch}* | head -n 1); \
+		binary_name="specforce"; \
+		[ "$$os" = "win32" ] && binary_name="specforce.exe"; \
+		cp $$src_dir/$$binary_name $$pkg_dir/bin/specforce$$( [ "$$os" = "win32" ] && echo ".exe" ); \
+		printf '{\n  "name": "%s",\n  "version": "%s",\n  "description": "Native binary for %s %s",\n  "os": ["%s"],\n  "cpu": ["%s"],\n  "bin": { "specforce": "bin/specforce%s" }\n}\n' \
+			"$$pkg_name" "$(VERSION)" "$$os" "$$arch" "$$os" "$$arch" "$$( [ "$$os" = "win32" ] && echo ".exe" )" > $$pkg_dir/package.json; \
+	done
+
+.PHONY: build test lint security quality check bootstrap clean-test install uninstall npm-packages
