@@ -1,3 +1,4 @@
+name: spf.constitution
 description: Initialize, update, orchestrate, and generate the project's Core Constitution
   artifacts.
 mapping:

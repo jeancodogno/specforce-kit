@@ -79,6 +79,8 @@ func AdaptArtifacts(ctx context.Context, root string, kitFS fs.FS, agent string,
 		return err
 	}
 
+	tracker := newNameTracker()
+
 	return fs.WalkDir(kitFS, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -98,8 +100,41 @@ func AdaptArtifacts(ctx context.Context, root string, kitFS fs.FS, agent string,
 			return nil
 		}
 
+		// REQ-3: Validate name uniqueness
+		if err := validateBlueprintHeaderName(kitFS, kitConfig, path, agent, tracker); err != nil {
+			return err
+		}
+
 		return processBlueprint(ctx, root, kitFS, kitConfig, path, agent, opts)
 	})
+}
+
+func validateBlueprintHeaderName(kitFS fs.FS, kitConfig *core.KitConfig, path string, agent string, tracker *nameTracker) error {
+	data, err := fs.ReadFile(kitFS, path)
+	if err != nil {
+		return nil // Non-critical for uniqueness check if it fails here; processBlueprint will handle it
+	}
+
+	bp, err := core.ParseBlueprint(path, data)
+	if err != nil {
+		return nil
+	}
+
+	mappings, err := resolveMappings(kitConfig, path, bp, agent)
+	if err != nil {
+		return nil
+	}
+
+	category := strings.Split(filepath.ToSlash(path), "/")[0]
+	for _, m := range mappings {
+		if m.Ext == ".md" {
+			name := resolveHeaderName(bp, m, category)
+			if err := tracker.validate(name, path); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func processBlueprint(ctx context.Context, root string, kitFS fs.FS, kitConfig *core.KitConfig, path string, agent string, opts installer.Options) error {
@@ -285,10 +320,7 @@ func injectYAMLHeader(bp *core.Blueprint, mapping core.MappingConfig, sourcePath
 	header.WriteString("---\n")
 
 	// Resolve the display name: prefer metadata name, fallback to mapping name
-	displayName := bp.Metadata.Name
-	if displayName == "" {
-		displayName = mapping.Name
-	}
+	displayName := resolveHeaderName(bp, mapping, category)
 
 	// REQ-2 AC-1: Agent header
 	if category == "agents" {

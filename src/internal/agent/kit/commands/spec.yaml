@@ -1,3 +1,4 @@
+name: spf.spec
 description: "SDD Orchestrator. Activate whenever there is a need to plan, document, or alter feature specifications (requirements, design, tasks)."
 mapping:
   open-code:

@@ -1,3 +1,4 @@
+name: spf.archive
 description: "Lifecycle Manager. Activate when a feature implementation is complete to harvest knowledge, update the Constitution, and safely archive the specification."
 mapping:
   open-code:

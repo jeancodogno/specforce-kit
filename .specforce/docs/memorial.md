@@ -19,22 +19,32 @@
 - [2026-04-28] [Autonomous Workflows] Proactive Mandate in `AGENTS.md` and dual-installation (Commands as Skills) are now live. Agents should automatically trigger `/spec` or `/implement`.
 
 ## Last Actions
-- **Date:** 2026-04-28
-- **Scope:** SDD Workflow / AI Proactivity
-- **Completed:** Implemented "Autonomous SDD Workflow via Skills" featuring dual command-skill installation and `AGENTS.md` proactive triggers.
-- **Next:** Validate agent proactivity in a fresh session.
-- **Relevant Files:** src/internal/agent/translator.go, kit.yaml, AGENTS.md, src/internal/project/agents_md.go
+- **Date:** 2026-04-29
+- **Scope:** Agent Kit / Command Mapping
+- **Completed:** Fixed generic 'SKILL' name leakage in agent headers and implemented global header name uniqueness validation.
+- **Next:** Monitor for name collisions in future agent kit expansions.
+- **Relevant Files:** src/internal/agent/translator.go, kit.yaml, src/internal/agent/translator_uniqueness.go
 
 ## Active Lessons & Anti-Patterns
-- **First Seen:** 2026-04-28
-- **Last Seen:** 2026-04-28
-- **Scope:** Agent / Tool Discovery
-- **Symptom:** LLMs failing to recognize slash commands as procedural workflows when they aren't explicitly invoked.
-- **Avoid:** Relying on user-initiated `/commands` for core SDD steps.
-- **Do Instead:** Map commands to `skills/spf-*/SKILL.md` and instruct proactivity in `AGENTS.md`.
+- **First Seen:** 2026-04-29
+- **Last Seen:** 2026-04-29
+- **Scope:** Agent / Kit Mapping
+- **Symptom:** AI Agents failing to distinguish between commands because multiple `SKILL.md` files have the same `name: SKILL` in their headers.
+- **Avoid:** Using the mapping-level `name` as the primary identity for generated frontmatter if that name is a generic placeholder like "SKILL".
+- **Do Instead:** Resolve identity hierarchically: Metadata Name > Blueprint Slug (prefixed with `spf.` for commands) > Mapping Name.
 - **Recurrence Count:** 1
 - **Status:** Resolved
-- **Distill To:** governance.md
+- **Distill To:** engineering.md
+
+- **First Seen:** 2026-04-29
+- **Last Seen:** 2026-04-29
+- **Scope:** Artifact Generation / Security
+- **Symptom:** Multiple blueprints resulting in the same header name, causing non-deterministic discovery.
+- **Avoid:** Blindly generating artifacts without cross-checking for global identity collisions.
+- **Do Instead:** Use a session-level `nameTracker` to validate that every generated header `name` is unique across all artifacts for a given agent.
+- **Recurrence Count:** 1
+- **Status:** Resolved
+- **Distill To:** engineering.md
 
 ## Pending Decisions (Need Distillation)
 - **Date:** 2026-04-28

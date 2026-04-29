@@ -15,7 +15,7 @@ You MUST operate exclusively through the Specforce workflow engines (commands/sk
 Do NOT wait for explicit slash commands from the user. If the conversation context shifts to "planning" or "implementation," you MUST automatically invoke the corresponding workflow command/skill to proceed.
 
 - **Specs First:** Never write implementation code until a fully approved Specification (requirements.md, design.md, tasks.md) exists.
-- **Total Consistency:** If a change is required at any point (even mid-implementation), you MUST update ALL related artifacts. You are strictly forbidden from updating only `tasks.md` while leaving `requirements.md` or `design.md` inconsistent. The entire specification suite must remain a unified source of truth.
+- **Total Consistency:** If a change is required at any point (even mid-implementation), you MUST update ALL related artifacts. You are strictly forbidden from updating only tasks.md while leaving requirements.md or design.md inconsistent.
 - **Atomic Execution:** Follow the exact sequence of the tasks.md roadmap. Mark tasks as [DONE] or [FINISHED] sequentially and ONLY after successful verification.
 
 ## 2. Project Constitution
@@ -46,6 +46,8 @@ If a hook fails, the state transition will be blocked.
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
+
 
 
 

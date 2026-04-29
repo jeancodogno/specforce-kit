@@ -14,6 +14,8 @@
 - **Generic Wildcard Expansion:** Mapping configurations in `kit.yaml` MUST support the `*` wildcard in both `path` and `name` fields. The system MUST replace the `*` with the artifact's slug (source filename without extension).
     - **Strict Category Whitelisting:** Artifacts are only installed for an agent if their source category (e.g., `agents`, `commands`, `skills`) is explicitly defined in that agent's `mappings` within `kit.yaml`. Categories not present in the mapping MUST be ignored by default.
     - **Slug Defaulting:** If a mapping's `name` field is empty, the system MUST default to the artifact's slug.
+    - **Header vs. Filename Identity:** For agents requiring standardized filenames (e.g., `SKILL.md`), the system MUST ensure the internal YAML header `name` reflects the artifact's unique identity (Slug or Metadata Name) rather than the generic filename.
+    - **Session-Level Uniqueness Validation:** The artifact generation process MUST validate that all generated header `name` properties are globally unique across all categories for a given agent session. Any collision MUST abort the process with a security error.
     - **Hierarchy Preservation:** For static mappings (no `*` in path), the system MUST preserve any sub-directory hierarchy found in the source category.
     - **Agent Tool Addition Process:** To integrate a new agent tool into the Specforce ecosystem, developers MUST follow these steps:
         1. **Register Constant:** Add the tool's hidden directory name (e.g., `.newagent/`) to the `ToolPrefixes` slice in `src/internal/core/constants.go`.
