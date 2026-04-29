@@ -17,29 +17,29 @@ func getMockKitConfig() *core.KitConfig {
 		Tools: map[string]core.ToolRoute{
 			"claude": {
 				Target: ".claude/",
-				Mappings: map[string]core.MappingConfig{
-					"agents":   {Path: "agents", Ext: ".md"},
-					"skills":   {Path: "skills", Ext: ".md"},
-					"commands": {Path: "commands/spf", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
+					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
+					"commands": {core.MappingConfig{Path: "commands/spf", Ext: ".md"}},
 				},
 			},
 			"gemini-cli": {
 				Target: ".gemini/",
-				Mappings: map[string]core.MappingConfig{
-					"agents": {Path: "agents", Ext: ".toml"},
+				Mappings: map[string]core.MappingConfigs{
+					"agents": {core.MappingConfig{Path: "agents", Ext: ".toml"}},
 				},
 			},
 			"kimi-code": {
 				Target: ".kimi/",
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "skills/spf-*", Name: "SKILL", Ext: ".md"},
-					"skills":   {Path: "skills", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "skills/spf-*", Name: "SKILL", Ext: ".md"}},
+					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
 				},
 			},
 			"wildcard-tool": {
 				Target: ".wildcard/",
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "tools", Name: "*-kit", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "tools", Name: "*-kit", Ext: ".md"}},
 				},
 			},
 		},
@@ -64,14 +64,14 @@ func TestResolveMapping_Wildcards(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"generic-tool": {
 				Target: ".generic/",
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "skills/spf-*", Name: "SKILL", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "skills/spf-*", Name: "SKILL", Ext: ".md"}},
 				},
 			},
 			"wildcard-tool": {
 				Target: ".wildcard/",
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "tools", Name: "*-kit", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "tools", Name: "*-kit", Ext: ".md"}},
 				},
 			},
 		},
@@ -115,8 +115,8 @@ func TestResolveMapping_Whitelisting(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"minimal": {
 				Target: ".minimal/",
-				Mappings: map[string]core.MappingConfig{
-					"skills": {Path: "skills", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"skills": {core.MappingConfig{Path: "skills", Ext: ".md"}},
 				},
 			},
 		},
@@ -152,8 +152,8 @@ func TestResolveMapping_Defaulting(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"test-tool": {
 				Target: ".test/",
-				Mappings: map[string]core.MappingConfig{
-					"agents": {Path: "dir", Name: "", Ext: ".md"}, // Empty Name
+				Mappings: map[string]core.MappingConfigs{
+					"agents": {core.MappingConfig{Path: "dir", Name: "", Ext: ".md"}}, // Empty Name
 				},
 			},
 		},
@@ -508,8 +508,8 @@ func TestStandardizedNaming(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"codex": {
 				Target: ".codex/",
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "commands/spf", Name: "spf-*", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "commands/spf", Name: "spf-*", Ext: ".md"}},
 				},
 			},
 		},
@@ -534,8 +534,8 @@ func TestStandardizedNaming(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"codex": {
 				Target: globalTmp,
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "spf", Name: "spf-*", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "spf", Name: "spf-*", Ext: ".md"}},
 				},
 			},
 		},
@@ -569,15 +569,19 @@ func TestResolveMapping_TargetOverride(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"test-agent": {
 				Target: ".local/",
-				Mappings: map[string]core.MappingConfig{
+				Mappings: map[string]core.MappingConfigs{
 					"commands": {
-						Target: globalDir,
-						Path:   "global-cmds",
-						Ext:    ".md",
+						core.MappingConfig{
+							Target: globalDir,
+							Path:   "global-cmds",
+							Ext:    ".md",
+						},
 					},
 					"skills": {
-						Path: "local-skills",
-						Ext:  ".md",
+						core.MappingConfig{
+							Path: "local-skills",
+							Ext:  ".md",
+						},
 					},
 				},
 			},
@@ -587,20 +591,22 @@ func TestResolveMapping_TargetOverride(t *testing.T) {
 	bp := &core.Blueprint{ID: "test"}
 
 	// Test case 1: Command uses override target
-	mapping, err := resolveMapping(kitConfig, "commands/test.yaml", bp, "test-agent")
+	mappings, err := resolveMappings(kitConfig, "commands/test.yaml", bp, "test-agent")
 	if err != nil {
-		t.Fatalf("resolveMapping failed: %v", err)
+		t.Fatalf("resolveMappings failed: %v", err)
 	}
+	mapping := mappings[0]
 	expectedPath := filepath.Clean(filepath.Join(globalDir, "global-cmds"))
 	if mapping.Path != expectedPath {
 		t.Errorf("expected path %s, got %s", expectedPath, mapping.Path)
 	}
 
 	// Test case 2: Skill uses default tool target
-	mapping, err = resolveMapping(kitConfig, "skills/test.yaml", bp, "test-agent")
+	mappings, err = resolveMappings(kitConfig, "skills/test.yaml", bp, "test-agent")
 	if err != nil {
-		t.Fatalf("resolveMapping failed: %v", err)
+		t.Fatalf("resolveMappings failed: %v", err)
 	}
+	mapping = mappings[0]
 	expectedPath = filepath.Clean(filepath.Join(".local/", "local-skills"))
 	if mapping.Path != expectedPath {
 		t.Errorf("expected path %s, got %s", expectedPath, mapping.Path)
@@ -612,8 +618,8 @@ func TestResolveMapping_TildeExpansionFailure(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"test-agent": {
 				Target: "~/hidden-path",
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "cmds", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "cmds", Ext: ".md"}},
 				},
 			},
 		},
@@ -625,7 +631,7 @@ func TestResolveMapping_TildeExpansionFailure(t *testing.T) {
 	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
 	bp := &core.Blueprint{ID: "test"}
-	_, err := resolveMapping(kitConfig, "commands/test.yaml", bp, "test-agent")
+	_, err := resolveMappings(kitConfig, "commands/test.yaml", bp, "test-agent")
 	if err == nil {
 		t.Fatal("expected error for failed tilde expansion, got nil")
 	}
@@ -638,11 +644,13 @@ func TestCodexExpansionHierarchy(t *testing.T) {
 	kitConfig := &core.KitConfig{
 		Tools: map[string]core.ToolRoute{
 			"codex": {
-				Mappings: map[string]core.MappingConfig{
+				Mappings: map[string]core.MappingConfigs{
 					"commands": {
-						Target: "${CODEX_PROMPTS_DIR:-${CODEX_HOME:-~/.codex}/prompts}",
-						Path:   ".",
-						Ext:    ".md",
+						core.MappingConfig{
+							Target: "${CODEX_PROMPTS_DIR:-${CODEX_HOME:-~/.codex}/prompts}",
+							Path:   ".",
+							Ext:    ".md",
+						},
 					},
 				},
 			},
@@ -658,10 +666,11 @@ func TestCodexExpansionHierarchy(t *testing.T) {
 
 	// Case 1: CODEX_PROMPTS_DIR
 	_ = os.Setenv("CODEX_PROMPTS_DIR", "/path/to/prompts")
-	mapping, err := resolveMapping(kitConfig, "commands/test.yaml", bp, "codex")
+	mappings, err := resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
-		t.Fatalf("resolveMapping failed: %v", err)
+		t.Fatalf("resolveMappings failed: %v", err)
 	}
+	mapping := mappings[0]
 	if mapping.Path != "/path/to/prompts" {
 		t.Errorf("Priority 1 failed: expected /path/to/prompts, got %s", mapping.Path)
 	}
@@ -669,10 +678,11 @@ func TestCodexExpansionHierarchy(t *testing.T) {
 	// Case 2: CODEX_HOME
 	_ = os.Unsetenv("CODEX_PROMPTS_DIR")
 	_ = os.Setenv("CODEX_HOME", "/home/user/.codex")
-	mapping, err = resolveMapping(kitConfig, "commands/test.yaml", bp, "codex")
+	mappings, err = resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
-		t.Fatalf("resolveMapping failed: %v", err)
+		t.Fatalf("resolveMappings failed: %v", err)
 	}
+	mapping = mappings[0]
 	if mapping.Path != "/home/user/.codex/prompts" {
 		t.Errorf("Priority 2 failed: expected /home/user/.codex/prompts, got %s", mapping.Path)
 	}
@@ -680,10 +690,11 @@ func TestCodexExpansionHierarchy(t *testing.T) {
 	// Case 3: Default ~/.codex/prompts
 	_ = os.Unsetenv("CODEX_HOME")
 	home, _ := os.UserHomeDir()
-	mapping, err = resolveMapping(kitConfig, "commands/test.yaml", bp, "codex")
+	mappings, err = resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
-		t.Fatalf("resolveMapping failed: %v", err)
+		t.Fatalf("resolveMappings failed: %v", err)
 	}
+	mapping = mappings[0]
 	expected := filepath.Clean(filepath.Join(home, ".codex/prompts"))
 	if mapping.Path != expected {
 		t.Errorf("Priority 3 failed: expected %s, got %s", expected, mapping.Path)
@@ -697,15 +708,19 @@ func TestCodexGlobalLocalIsolation(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"codex": {
 				Target: ".codex/", // Local target
-				Mappings: map[string]core.MappingConfig{
+				Mappings: map[string]core.MappingConfigs{
 					"commands": {
-						Target: globalDir, // Global override
-						Path:   ".",
-						Ext:    ".md",
+						core.MappingConfig{
+							Target: globalDir, // Global override
+							Path:   ".",
+							Ext:    ".md",
+						},
 					},
 					"skills": {
-						Path: "skills",
-						Ext:  ".md",
+						core.MappingConfig{
+							Path: "skills",
+							Ext:  ".md",
+						},
 					},
 				},
 			},
@@ -714,19 +729,21 @@ func TestCodexGlobalLocalIsolation(t *testing.T) {
 	bp := &core.Blueprint{ID: "test"}
 
 	// 1. Verify Command is Global (Absolute)
-	mapping, err := resolveMapping(kitConfig, "commands/test.yaml", bp, "codex")
+	mappings, err := resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
-		t.Fatalf("resolveMapping failed: %v", err)
+		t.Fatalf("resolveMappings failed: %v", err)
 	}
+	mapping := mappings[0]
 	if mapping.Path != globalDir {
 		t.Errorf("expected global path %s, got %s", globalDir, mapping.Path)
 	}
 
 	// 2. Verify Skill is Local (Relative)
-	mapping, err = resolveMapping(kitConfig, "skills/test.yaml", bp, "codex")
+	mappings, err = resolveMappings(kitConfig, "skills/test.yaml", bp, "codex")
 	if err != nil {
-		t.Fatalf("resolveMapping failed: %v", err)
+		t.Fatalf("resolveMappings failed: %v", err)
 	}
+	mapping = mappings[0]
 	expectedLocal := filepath.Clean(filepath.Join(".codex/", "skills"))
 	if mapping.Path != expectedLocal {
 		t.Errorf("expected local path %s, got %s", expectedLocal, mapping.Path)

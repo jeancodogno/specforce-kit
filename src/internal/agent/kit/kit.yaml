@@ -8,8 +8,11 @@ tools:
         path: "agents"
         ext: ".md"
       commands:
-        path: "commands/spf"
-        ext: ".toml"
+        - path: "commands/spf"
+          ext: ".toml"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
       skills:
         path: "skills"
         ext: ".md"
@@ -22,8 +25,11 @@ tools:
         path: "agents"
         ext: ".md"
       commands:
-        path: "commands/spf"
-        ext: ".md"
+        - path: "commands/spf"
+          ext: ".md"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
       skills:
         path: "skills"
         ext: ".md"
@@ -36,8 +42,11 @@ tools:
         path: "agents"
         ext: ".md"
       commands:
-        path: "commands/spf"
-        ext: ".md"
+        - path: "commands/spf"
+          ext: ".md"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
       skills:
         path: "skills"
         ext: ".md"
@@ -50,8 +59,11 @@ tools:
         path: "agents"
         ext: ".md"
       commands:
-        path: "commands"
-        ext: ".md"
+        - path: "commands"
+          ext: ".md"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
       skills:
         path: "skills"
         ext: ".md"
@@ -64,8 +76,11 @@ tools:
         path: "agents"
         ext: ".md"
       commands:
-        path: "commands"
-        ext: ".md"
+        - path: "commands"
+          ext: ".md"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
       skills:
         path: "skills"
         ext: ".md"
@@ -75,10 +90,13 @@ tools:
     target: ".codex/"
     mappings:
       commands:
-        target: "${CODEX_PROMPTS_DIR:-${CODEX_HOME:-~/.codex}/prompts}"
-        path: "."
-        name: "spf-*"
-        ext: ".md"
+        - target: "${CODEX_PROMPTS_DIR:-${CODEX_HOME:-~/.codex}/prompts}"
+          path: "."
+          name: "spf-*"
+          ext: ".md"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
       skills:
         path: "skills"
         ext: ".md"
@@ -91,9 +109,12 @@ tools:
         path: "agents"
         ext: ".md"
       commands:
-        path: "workflows"
-        name: "spf-*"
-        ext: ".md"
+        - path: "workflows"
+          name: "spf-*"
+          ext: ".md"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
       skills:
         path: "skills"
         ext: ".md"

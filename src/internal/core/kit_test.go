@@ -49,7 +49,7 @@ tools:
 		t.Fatalf("expected 2 mappings for gemini-cli, got %d", len(gemini.Mappings))
 	}
 
-	skillsMap := gemini.Mappings["skills"]
+	skillsMap := gemini.Mappings["skills"][0]
 	if skillsMap.Path != "skills" || skillsMap.Ext != ".md" {
 		t.Errorf("unexpected skills mapping: %+v", skillsMap)
 	}

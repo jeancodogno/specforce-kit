@@ -1,4 +1,4 @@
-description: "Extract architectural knowledge from a completed feature, update the global Constitution if necessary, and safely archive the specification."
+description: "Lifecycle Manager. Activate when a feature implementation is complete to harvest knowledge, update the Constitution, and safely archive the specification."
 mapping:
   open-code:
     name: spf.archive

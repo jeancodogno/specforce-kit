@@ -16,30 +16,30 @@
 
 ## Critical Now
 - [2026-04-19] [Tasks] Hierarchical task organization (Phases H3 / Tasks H4) implemented. Agents should now use this for all new feature roadmaps.
-- [2026-04-26] [Linter] `.golangci.yml` requires `version: "2"` for compatibility with current `golangci-lint` versions.
+- [2026-04-28] [Autonomous Workflows] Proactive Mandate in `AGENTS.md` and dual-installation (Commands as Skills) are now live. Agents should automatically trigger `/spec` or `/implement`.
 
 ## Last Actions
-- **Date:** 2026-04-26
-- **Scope:** Agent / Project Setup
-- **Completed:** Corrected `AGENTS.md` hook names and implemented automated platform-specific configurations (Gemini settings, Antigravity/Claude symlinks).
-- **Next:** Monitor agent discovery performance across different platforms with the new automated links.
-- **Relevant Files:** src/internal/project/agents_md.go, docs/configuration.md, docs/supported-tools.md
+- **Date:** 2026-04-28
+- **Scope:** SDD Workflow / AI Proactivity
+- **Completed:** Implemented "Autonomous SDD Workflow via Skills" featuring dual command-skill installation and `AGENTS.md` proactive triggers.
+- **Next:** Validate agent proactivity in a fresh session.
+- **Relevant Files:** src/internal/agent/translator.go, kit.yaml, AGENTS.md, src/internal/project/agents_md.go
 
 ## Active Lessons & Anti-Patterns
-- **First Seen:** 2026-04-26
-- **Last Seen:** 2026-04-26
-- **Scope:** Project Initialization / AI Onboarding
-- **Symptom:** AI agents (Gemini, Claude Code) failing to discover project rules after `specforce init`.
-- **Avoid:** Manual setup instructions for each platform.
-- **Do Instead:** Automated environment-specific configuration (symlinks/settings files) triggered during `EnsureAgentsMD`.
+- **First Seen:** 2026-04-28
+- **Last Seen:** 2026-04-28
+- **Scope:** Agent / Tool Discovery
+- **Symptom:** LLMs failing to recognize slash commands as procedural workflows when they aren't explicitly invoked.
+- **Avoid:** Relying on user-initiated `/commands` for core SDD steps.
+- **Do Instead:** Map commands to `skills/spf-*/SKILL.md` and instruct proactivity in `AGENTS.md`.
 - **Recurrence Count:** 1
 - **Status:** Resolved
-- **Distill To:** engineering.md
+- **Distill To:** governance.md
 
 ## Pending Decisions (Need Distillation)
-- **Date:**
-- **Scope:**
-- **Decision:**
-- **Why:**
-- **Validate By:**
-- **Distill To:**
+- **Date:** 2026-04-28
+- **Scope:** Architecture / Kit
+- **Decision:** Support `MappingConfigs` as a slice in `kit.yaml` to allow multiple destinations for the same category.
+- **Why:** Enables "Commands as Skills" without logic duplication.
+- **Validate By:** `src/internal/agent/dual_install_test.go`
+- **Distill To:** architecture.md

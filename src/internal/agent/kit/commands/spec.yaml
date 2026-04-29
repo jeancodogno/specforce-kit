@@ -1,4 +1,4 @@
-description: "Orchestrate the creation or modification of a Feature Specification using the Specforce pipeline, performing dynamic discovery, interrogation, and strict adherence to project context."
+description: "SDD Orchestrator. Activate whenever there is a need to plan, document, or alter feature specifications (requirements, design, tasks)."
 mapping:
   open-code:
     name: spf.spec

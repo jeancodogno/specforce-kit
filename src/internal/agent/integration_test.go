@@ -68,11 +68,13 @@ func TestIntegration_AntigravityFlatExport(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"antigravity": {
 				Target: ".agent/",
-				Mappings: map[string]core.MappingConfig{
+				Mappings: map[string]core.MappingConfigs{
 					"commands": {
-						Path: ".",
-						Name: "spf-*",
-						Ext:  ".md",
+						core.MappingConfig{
+							Path: ".",
+							Name: "spf-*",
+							Ext:  ".md",
+						},
 					},
 				},
 			},
@@ -114,8 +116,8 @@ func TestIntegration_SecurityConstraint(t *testing.T) {
 		Tools: map[string]core.ToolRoute{
 			"claude": {
 				Target: globalTmp,
-				Mappings: map[string]core.MappingConfig{
-					"commands": {Path: "spf", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"commands": {core.MappingConfig{Path: "spf", Ext: ".md"}},
 				},
 			},
 		},

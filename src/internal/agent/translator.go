@@ -113,54 +113,53 @@ func processBlueprint(ctx context.Context, root string, kitFS fs.FS, kitConfig *
 		return fmt.Errorf("failed to parse blueprint %s: %w", path, err)
 	}
 
-	mapping, err := resolveMapping(kitConfig, path, bp, agent)
+	mappings, err := resolveMappings(kitConfig, path, bp, agent)
 	if err != nil {
 		return err
 	}
-	if mapping == nil {
-		return nil
-	}
 
-	// REQ-2: Check if this artifact should be installed based on the target path
-	if !installer.ShouldInstall(mapping.Path, opts) {
-		return nil
-	}
-
-	var targetDir, targetFile string
-	if isGlobalEnabled(agent) {
-		targetDir = mapping.Path
-		if !filepath.IsAbs(targetDir) {
-			targetDir = filepath.Join(root, targetDir)
+	for _, mapping := range mappings {
+		// REQ-2: Check if this artifact should be installed based on the target path
+		if !installer.ShouldInstall(mapping.Path, opts) {
+			continue
 		}
-		targetFile = filepath.Join(targetDir, mapping.Name+mapping.Ext)
-	} else {
-		var err error
-		targetDir, err = core.SecurePath(root, mapping.Path)
-		if err != nil {
-			return fmt.Errorf("security: %w", err)
+
+		var targetDir, targetFile string
+		if isGlobalEnabled(agent) {
+			targetDir = mapping.Path
+			if !filepath.IsAbs(targetDir) {
+				targetDir = filepath.Join(root, targetDir)
+			}
+			targetFile = filepath.Join(targetDir, mapping.Name+mapping.Ext)
+		} else {
+			var err error
+			targetDir, err = core.SecurePath(root, mapping.Path)
+			if err != nil {
+				return fmt.Errorf("security: %w", err)
+			}
+			targetFile, err = core.SecurePath(root, filepath.Join(mapping.Path, mapping.Name+mapping.Ext))
+			if err != nil {
+				return fmt.Errorf("security: %w", err)
+			}
 		}
-		targetFile, err = core.SecurePath(root, filepath.Join(mapping.Path, mapping.Name+mapping.Ext))
-		if err != nil {
-			return fmt.Errorf("security: %w", err)
+
+		if err := os.MkdirAll(targetDir, 0750); err != nil {
+			return fmt.Errorf("failed to create target directory %s: %w", targetDir, err)
 		}
-	}
 
-	if err := os.MkdirAll(targetDir, 0750); err != nil {
-		return fmt.Errorf("failed to create target directory %s: %w", targetDir, err)
-	}
+		category := strings.Split(filepath.ToSlash(path), "/")[0]
+		content := applyTransformation(bp, mapping, path, category)
 
-	category := strings.Split(filepath.ToSlash(path), "/")[0]
-	content := applyTransformation(bp, *mapping, path, category)
-
-	// #nosec G306 - Path is secured by SecurePath
-	if err := os.WriteFile(targetFile, []byte(content), 0600); err != nil {
-		return fmt.Errorf("failed to write adapted artifact %s: %w", targetFile, err)
+		// #nosec G306 - Path is secured by SecurePath
+		if err := os.WriteFile(targetFile, []byte(content), 0600); err != nil {
+			return fmt.Errorf("failed to write adapted artifact %s: %w", targetFile, err)
+		}
 	}
 
 	return nil
 }
 
-func resolveMapping(kitConfig *core.KitConfig, path string, bp *core.Blueprint, agent string) (*core.MappingConfig, error) {
+func resolveMappings(kitConfig *core.KitConfig, path string, bp *core.Blueprint, agent string) ([]core.MappingConfig, error) {
 	parts := strings.Split(filepath.ToSlash(path), "/")
 	if len(parts) == 0 {
 		return nil, nil
@@ -174,7 +173,9 @@ func resolveMapping(kitConfig *core.KitConfig, path string, bp *core.Blueprint, 
 		return nil, core.ErrToolMappingNotFound
 	}
 
-	mapping, hasMapping := toolRoute.Mappings[category]
+	rawMappings, hasMapping := toolRoute.Mappings[category]
+
+	var results []core.MappingConfig
 
 	if !hasMapping {
 		if bp.Metadata.Mapping == nil {
@@ -184,34 +185,42 @@ func resolveMapping(kitConfig *core.KitConfig, path string, bp *core.Blueprint, 
 		if !ok {
 			return nil, nil
 		}
-		mapping = override
+		results = []core.MappingConfig{override}
 	} else {
-		applyBlueprintOverrides(&mapping, bp, agent)
+		// Process each mapping in the slice
+		for _, m := range rawMappings {
+			mapping := m
+			applyBlueprintOverrides(&mapping, bp, agent)
+			results = append(results, mapping)
+		}
 	}
 
-	initialPath := mapping.Path
-	applyWildcards(&mapping, slug, parts, initialPath)
+	for i := range results {
+		mapping := &results[i]
+		initialPath := mapping.Path
+		applyWildcards(mapping, slug, parts, initialPath)
 
-	// Default naming logic: If mapping.Name is missing, resolve it based on source filename
-	if mapping.Name == "" {
-		mapping.Name = slug
+		// Default naming logic: If mapping.Name is missing, resolve it based on source filename
+		if mapping.Name == "" {
+			mapping.Name = slug
+		}
+
+		// Resolve final target path
+		rawTarget := mapping.Target
+		if rawTarget == "" {
+			rawTarget = toolRoute.Target
+		}
+
+		target := core.ExpandPath(rawTarget)
+		if strings.HasPrefix(target, "~") {
+			return nil, fmt.Errorf("failed to resolve home directory for path: %s", target)
+		}
+
+		// Use filepath.Join to combine target and the mapping's internal path
+		mapping.Path = filepath.Clean(filepath.Join(target, mapping.Path))
 	}
 
-	// Resolve final target path
-	rawTarget := mapping.Target
-	if rawTarget == "" {
-		rawTarget = toolRoute.Target
-	}
-
-	target := core.ExpandPath(rawTarget)
-	if strings.HasPrefix(target, "~") {
-		return nil, fmt.Errorf("failed to resolve home directory for path: %s", target)
-	}
-
-	// Use filepath.Join to combine target and the mapping's internal path
-	mapping.Path = filepath.Clean(filepath.Join(target, mapping.Path))
-
-	return &mapping, nil
+	return results, nil
 }
 
 func isGlobalEnabled(agent string) bool {
@@ -288,7 +297,7 @@ func injectYAMLHeader(bp *core.Blueprint, mapping core.MappingConfig, sourcePath
 	}
 
 	// REQ-2 AC-2 & AC-3: Skill header (only for primary SKILL.md)
-	if category == "skills" {
+	if category == "skills" || mapping.Name == "SKILL" {
 		if mapping.Name == "SKILL" {
 			fmt.Fprintf(&header, "name: %s\n", displayName)
 			fmt.Fprintf(&header, "description: %s\n", bp.Metadata.Description)
@@ -298,14 +307,14 @@ func injectYAMLHeader(bp *core.Blueprint, mapping core.MappingConfig, sourcePath
 			if bp.Metadata.Priority != "" {
 				fmt.Fprintf(&header, "priority: %s\n", bp.Metadata.Priority)
 			}
-		} else {
+		} else if category == "skills" {
 			// Skills secondary files don't get headers
 			return bp.Content
 		}
 	}
 
-	// REQ-2 AC-4: Command header
-	if category == "commands" {
+	// REQ-2 AC-4: Command header (only if not already handled as SKILL)
+	if category == "commands" && mapping.Name != "SKILL" {
 		fmt.Fprintf(&header, "name: %s\n", displayName)
 		fmt.Fprintf(&header, "description: %s\n", bp.Metadata.Description)
 	}

@@ -16,34 +16,34 @@ func getTestKitConfig() *core.KitConfig {
 		Tools: map[string]core.ToolRoute{
 			"qwen": {
 				Target: ".qwen",
-				Mappings: map[string]core.MappingConfig{
-					"agents":   {Path: "agents", Ext: ".md"},
-					"skills":   {Path: "skills", Ext: ".md"},
-					"commands": {Path: "commands/spf", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
+					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
+					"commands": {core.MappingConfig{Path: "commands/spf", Ext: ".md"}},
 				},
 			},
 			"open-code": {
 				Target: ".opencode",
-				Mappings: map[string]core.MappingConfig{
-					"agents":   {Path: "agents", Ext: ".md"},
-					"skills":   {Path: "skills", Ext: ".md"},
-					"commands": {Path: "commands", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
+					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
+					"commands": {core.MappingConfig{Path: "commands", Ext: ".md"}},
 				},
 			},
 			"kilo-code": {
 				Target: ".kilocode",
-				Mappings: map[string]core.MappingConfig{
-					"agents":   {Path: "agents", Ext: ".md"},
-					"skills":   {Path: "skills", Ext: ".md"},
-					"commands": {Path: "commands", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
+					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
+					"commands": {core.MappingConfig{Path: "commands", Ext: ".md"}},
 				},
 			},
 			"codex": {
 				Target: ".codex",
-				Mappings: map[string]core.MappingConfig{
-					"agents":   {Path: "agents", Ext: ".md"},
-					"skills":   {Path: "skills", Ext: ".md"},
-					"commands": {Path: "commands/spf", Ext: ".md"},
+				Mappings: map[string]core.MappingConfigs{
+					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
+					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
+					"commands": {core.MappingConfig{Path: "commands/spf", Ext: ".md"}},
 				},
 			},
 		},
