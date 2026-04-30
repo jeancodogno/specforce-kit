@@ -19,6 +19,20 @@ Launches the **Specforce Console TUI (Text User Interface)**. This is your comma
 
 ---
 
+## Discovery Commands
+
+Conversational exploration and technical research.
+
+### `spf.discovery` (Agent Command)
+**Usage:** `/spf:discovery {topic}`
+
+Purely conversational and read-only mode for feature brainstorming or diagnostic investigation. 
+- **Read-Only:** Forbidden from modifying the codebase or any project artifacts.
+- **Expert Personas:** Switches between "Senior Product Architect" (Brainstorming) and "Senior Systems Engineer" (Detective).
+- **Project Alignment:** Automatically reads Constitution documents (`.specforce/docs/`) for context.
+
+---
+
 ## Constitution Commands
 
 Manage the foundational rules and guidelines (the "Constitution") of your project.

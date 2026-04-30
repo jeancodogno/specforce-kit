@@ -17,6 +17,7 @@ This project uses **Specforce** for Spec-Driven Development (SDD). As an AI agen
 ## 1. Spec-Driven Development (SDD) Protocol
 You MUST operate exclusively through the Specforce workflow engines (commands/skills). They define your mindset and mandatory steps:
 
+- **Discovery (` + "`/discovery`" + `):** Purely conversational and read-only mode for feature brainstorming or diagnostic investigation. Use this to explore ideas or research bugs before planning.
 - **Planning (` + "`/spec`" + `):** Always activate this workflow when a new feature intent or structural change is detected. It governs requirements discovery, constitutional alignment, and task decomposition.
 - **Governance (` + "`/constitution`" + `):** Use to ensure your proposals respect the project's architecture, security, and principles.
 - **Execution (` + "`/implement`" + `):** Activate this engine to perform the deterministic execution cycle following the approved roadmap.

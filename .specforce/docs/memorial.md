@@ -17,13 +17,14 @@
 ## Critical Now
 - [2026-04-19] [Tasks] Hierarchical task organization (Phases H3 / Tasks H4) implemented. Agents should now use this for all new feature roadmaps.
 - [2026-04-28] [Autonomous Workflows] Proactive Mandate in `AGENTS.md` and dual-installation (Commands as Skills) are now live. Agents should automatically trigger `/spec` or `/implement`.
+- [2026-04-29] [Discovery] Conversational `/discovery` mode (Specforce Scout) is live. It's purely read-only and designed for brainstorming or bug-hunting before `/spec`.
 
 ## Last Actions
 - **Date:** 2026-04-29
-- **Scope:** Agent Kit / Command Mapping
-- **Completed:** Fixed generic 'SKILL' name leakage in agent headers and implemented global header name uniqueness validation.
-- **Next:** Monitor for name collisions in future agent kit expansions.
-- **Relevant Files:** src/internal/agent/translator.go, kit.yaml, src/internal/agent/translator_uniqueness.go
+- **Scope:** Discovery Command
+- **Completed:** Implemented `spf.discovery` (Specforce Scout), updated `AGENTS.md` template, and enriched prompt with unique branding and diagnostic workflows.
+- **Next:** Monitor user engagement with Discovery mode to refine 'Thinking Partner' prompts.
+- **Relevant Files:** src/internal/agent/kit/commands/discovery.yaml, src/internal/project/agents_md.go, README.md
 
 ## Active Lessons & Anti-Patterns
 - **First Seen:** 2026-04-29
@@ -45,6 +46,16 @@
 - **Recurrence Count:** 1
 - **Status:** Resolved
 - **Distill To:** engineering.md
+
+- **First Seen:** 2026-04-29
+- **Last Seen:** 2026-04-29
+- **Scope:** Discovery / Implementation
+- **Symptom:** Ambiguity between unstructured exploration and formal SDD lifecycle.
+- **Avoid:** Letting discovery sessions wander into ad-hoc implementation without specification.
+- **Do Instead:** Enforce a strict read-only prompt for Discovery and mandate a handoff summary that recommends `/spec` to formalize insights.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** governance.md
 
 ## Pending Decisions (Need Distillation)
 - **Date:** 2026-04-28

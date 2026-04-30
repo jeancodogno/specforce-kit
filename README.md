@@ -44,7 +44,15 @@ Specforce is designed to be the **invisible orchestration layer**. It brings pre
 
 Specforce interacts seamlessly with your preferred AI agent via simple slash commands. Here is the standard workflow:
 
-### 1. The Constitution (`/spf:constitution`)
+### 1. Discovery (`/spf:discovery`)
+**Command:** `/spf:discovery {idea or bug report}`
+
+The early exploration phase. Use this to brainstorm new features or investigate technical issues without modifying any files.
+- **Read-Only Exploration:** The agent is strictly forbidden from writing code or artifacts. It focuses on research, root cause analysis, and technical strategy.
+- **Expert Personas:** Automatically switches between "Senior Product Architect" (Brainstorming) and "Senior Systems Engineer" (Detective) based on your input.
+- **Project Alignment:** Reads your project's Constitution (`.specforce/docs/`) to ensure all ideas align with your principles and architecture.
+
+### 2. The Constitution (`/spf:constitution`)
 **Command:** `/spf:constitution {project description}`
 
 The first step in any project. This generates your project's Constitution, containing all rules, principles, UI/UX guidelines, architecture, security, and agent memory. 
