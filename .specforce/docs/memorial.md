@@ -17,9 +17,15 @@
 ## Critical Now
 - [2026-04-19] [Tasks] Hierarchical task organization (Phases H3 / Tasks H4) implemented. Agents should now use this for all new feature roadmaps.
 - [2026-04-28] [Autonomous Workflows] Proactive Mandate in `AGENTS.md` and dual-installation (Commands as Skills) are now live. Agents should automatically trigger `/spec` or `/implement`.
-- [2026-04-29] [Discovery] Conversational `/discovery` mode (Specforce Scout) is live. It's purely read-only and designed for brainstorming or bug-hunting before `/spec`.
+- [2026-04-30] [Worktrees] Multi-root Git Worktree Support added to Scanner and Console. Specs are now aggregated across branches.
 
 ## Last Actions
+- **Date:** 2026-04-30
+- **Scope:** Git Worktree Support
+- **Completed:** Implemented porcelain-based worktree discovery, updated scanner to aggregate Active/Archived specs across roots, and added UI labels in Console.
+- **Next:** Execute `/archive` to formalize worktree support.
+- **Relevant Files:** src/internal/spec/scanner.go, src/internal/tui/console.go, src/internal/spec/scanner_test.go
+
 - **Date:** 2026-04-29
 - **Scope:** Discovery Command
 - **Completed:** Implemented `spf.discovery` (Specforce Scout), updated `AGENTS.md` template, and enriched prompt with unique branding and diagnostic workflows.
@@ -27,35 +33,15 @@
 - **Relevant Files:** src/internal/agent/kit/commands/discovery.yaml, src/internal/project/agents_md.go, README.md
 
 ## Active Lessons & Anti-Patterns
-- **First Seen:** 2026-04-29
-- **Last Seen:** 2026-04-29
-- **Scope:** Agent / Kit Mapping
-- **Symptom:** AI Agents failing to distinguish between commands because multiple `SKILL.md` files have the same `name: SKILL` in their headers.
-- **Avoid:** Using the mapping-level `name` as the primary identity for generated frontmatter if that name is a generic placeholder like "SKILL".
-- **Do Instead:** Resolve identity hierarchically: Metadata Name > Blueprint Slug (prefixed with `spf.` for commands) > Mapping Name.
-- **Recurrence Count:** 1
-- **Status:** Resolved
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-04-29
-- **Last Seen:** 2026-04-29
-- **Scope:** Artifact Generation / Security
-- **Symptom:** Multiple blueprints resulting in the same header name, causing non-deterministic discovery.
-- **Avoid:** Blindly generating artifacts without cross-checking for global identity collisions.
-- **Do Instead:** Use a session-level `nameTracker` to validate that every generated header `name` is unique across all artifacts for a given agent.
-- **Recurrence Count:** 1
-- **Status:** Resolved
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-04-29
-- **Last Seen:** 2026-04-29
-- **Scope:** Discovery / Implementation
-- **Symptom:** Ambiguity between unstructured exploration and formal SDD lifecycle.
-- **Avoid:** Letting discovery sessions wander into ad-hoc implementation without specification.
-- **Do Instead:** Enforce a strict read-only prompt for Discovery and mandate a handoff summary that recommends `/spec` to formalize insights.
+- **First Seen:** 2026-04-30
+- **Last Seen:** 2026-04-30
+- **Scope:** Scanner / Performance
+- **Symptom:** Aggregating specs from dozens of worktrees could cause disk I/O bottlenecks or UI lag if scanned synchronously.
+- **Avoid:** Synchronous scanning of potentially many external project roots during UI refresh.
+- **Do Instead:** Use `git worktree list --porcelain` for fast path discovery and implement a robust exclusion logic (e.g., skip Constitution for external roots) to minimize I/O.
 - **Recurrence Count:** 1
 - **Status:** Active
-- **Distill To:** governance.md
+- **Distill To:** architecture.md
 
 ## Pending Decisions (Need Distillation)
 - **Date:** 2026-04-28

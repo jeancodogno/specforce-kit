@@ -3,6 +3,7 @@ package spec
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -38,6 +39,7 @@ type StateItem struct {
 	CurrentTaskID string        `json:"current_task_id"`
 	CurrentTask   string        `json:"current_task"`
 	ArchivedDate  string        `json:"archived_date"`
+	Worktree      string        `json:"worktree"`
 }
 
 // StateTree represents the full hierarchical state of a Specforce project.
@@ -60,19 +62,42 @@ func ScanProject(ctx context.Context, projectRoot string, registry *Registry) (*
 
 	tree := NewStateTree()
 
-	// 1. Scan Constitution documents (.specforce/docs/)
-	if err := scanConstitution(ctx, projectRoot, tree); err != nil {
-		return nil, err
+	worktrees, err := discoverWorktrees(ctx, projectRoot)
+	if err != nil {
+		// Log error but continue with current root
+		worktrees = []worktreeInfo{{Path: projectRoot, Branch: ""}}
 	}
 
-	// 2. Scan Active Specs and Implementations (.specforce/specs/)
-	if err := scanActiveSpecs(ctx, projectRoot, tree, registry); err != nil {
-		return nil, err
-	}
+	for _, wt := range worktrees {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 
-	// 3. Scan Archived specs (.specforce/archive/)
-	if err := scanArchivedSpecs(ctx, projectRoot, tree); err != nil {
-		return nil, err
+		// Robust main root check
+		absWt, _ := filepath.Abs(wt.Path)
+		absRoot, _ := filepath.Abs(projectRoot)
+		isMainRoot := absWt == absRoot
+
+		// 1. Scan Constitution documents (.specforce/docs/) - ONLY MAIN ROOT
+		if isMainRoot {
+			if err := scanConstitution(ctx, wt.Path, tree); err != nil {
+				return nil, err
+			}
+		}
+
+		// 2. Scan Active Specs and Implementations (.specforce/specs/) - ALL WORKTREES
+		branchLabel := ""
+		if !isMainRoot {
+			branchLabel = wt.Branch
+		}
+		if err := scanActiveSpecs(ctx, wt.Path, tree, registry, branchLabel); err != nil {
+			return nil, err
+		}
+
+		// 3. Scan Archived specs (.specforce/archive/) - ALL WORKTREES
+		if err := scanArchivedSpecs(ctx, wt.Path, tree, branchLabel); err != nil {
+			return nil, err
+		}
 	}
 
 	return tree, nil
@@ -96,7 +121,7 @@ func scanConstitution(ctx context.Context, projectRoot string, tree *StateTree) 
 		tree.Categories[CategoryConstitution] = append(tree.Categories[CategoryConstitution], StateItem{
 			Slug:     slug,
 			Name:     cases.Title(language.Und).String(strings.ReplaceAll(slug, "-", " ")),
-			Path:     filepath.Join(".specforce", "docs", entry.Name()),
+			Path:     filepath.Join(projectRoot, ".specforce", "docs", entry.Name()),
 			Category: CategoryConstitution,
 			Status:   "FINISHED",
 			Progress: 100,
@@ -105,7 +130,7 @@ func scanConstitution(ctx context.Context, projectRoot string, tree *StateTree) 
 	return nil
 }
 
-func scanActiveSpecs(ctx context.Context, projectRoot string, tree *StateTree, registry *Registry) error {
+func scanActiveSpecs(ctx context.Context, projectRoot string, tree *StateTree, registry *Registry, worktree string) error {
 	specsDir := filepath.Join(projectRoot, ".specforce", "specs")
 	entries, err := os.ReadDir(specsDir)
 	if err != nil {
@@ -120,19 +145,20 @@ func scanActiveSpecs(ctx context.Context, projectRoot string, tree *StateTree, r
 			continue
 		}
 		
-		item := scanSingleActiveSpec(ctx, projectRoot, entry.Name(), registry)
+		item := scanSingleActiveSpec(ctx, projectRoot, entry.Name(), registry, worktree)
 		tree.Categories[item.Category] = append(tree.Categories[item.Category], item)
 	}
 	return nil
 }
 
-func scanSingleActiveSpec(ctx context.Context, projectRoot, slug string, registry *Registry) StateItem {
+func scanSingleActiveSpec(ctx context.Context, projectRoot, slug string, registry *Registry, worktree string) StateItem {
 	item := StateItem{
 		Slug:     slug,
 		Name:     slug,
-		Path:     filepath.Join(".specforce", "specs", slug),
+		Path:     filepath.Join(projectRoot, ".specforce", "specs", slug),
 		Category: CategoryActiveSpecs,
 		Status:   "PENDING",
+		Worktree: worktree,
 	}
 
 	if status, err := GetStatus(ctx, projectRoot, slug, registry); err == nil {
@@ -174,7 +200,7 @@ func scanSingleActiveSpec(ctx context.Context, projectRoot, slug string, registr
 	return item
 }
 
-func scanArchivedSpecs(ctx context.Context, projectRoot string, tree *StateTree) error {
+func scanArchivedSpecs(ctx context.Context, projectRoot string, tree *StateTree, worktree string) error {
 	archiveDir := filepath.Join(projectRoot, ".specforce", "archive")
 	entries, err := os.ReadDir(archiveDir)
 	if err != nil {
@@ -198,11 +224,12 @@ func scanArchivedSpecs(ctx context.Context, projectRoot string, tree *StateTree)
 		archivedItems = append(archivedItems, StateItem{
 			Slug:         entry.Name(),
 			Name:         entry.Name(),
-			Path:         filepath.Join(".specforce", "archive", entry.Name()),
+			Path:         filepath.Join(projectRoot, ".specforce", "archive", entry.Name()),
 			Category:     CategoryArchived,
 			Status:       "FINISHED",
 			Progress:     100,
 			ArchivedDate: date,
+			Worktree:     worktree,
 		})
 	}
 
@@ -214,6 +241,59 @@ func scanArchivedSpecs(ctx context.Context, projectRoot string, tree *StateTree)
 		archivedItems = archivedItems[:10]
 	}
 
-	tree.Categories[CategoryArchived] = archivedItems
+	// We append instead of overwriting because we might have multiple worktrees
+	tree.Categories[CategoryArchived] = append(tree.Categories[CategoryArchived], archivedItems...)
 	return nil
+}
+
+type worktreeInfo struct {
+	Path   string
+	Branch string
+}
+
+func discoverWorktrees(ctx context.Context, projectRoot string) ([]worktreeInfo, error) {
+	// git worktree list --porcelain
+	cmd := exec.CommandContext(ctx, "git", "worktree", "list", "--porcelain")
+	cmd.Dir = projectRoot
+	out, err := cmd.Output()
+	if err != nil {
+		// Not a git repo or git not installed - return current root as a fallback
+		return []worktreeInfo{{Path: projectRoot, Branch: ""}}, nil
+	}
+
+	return parseWorktreePorcelain(string(out)), nil
+}
+
+func parseWorktreePorcelain(output string) []worktreeInfo {
+	var worktrees []worktreeInfo
+	var current worktreeInfo
+
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		if strings.HasPrefix(line, "worktree ") {
+			if current.Path != "" {
+				if _, err := os.Stat(current.Path); err == nil {
+					worktrees = append(worktrees, current)
+				}
+			}
+			current = worktreeInfo{Path: strings.TrimPrefix(line, "worktree ")}
+		} else if strings.HasPrefix(line, "branch ") {
+			current.Branch = strings.TrimPrefix(line, "branch ")
+			// Simplified branch name
+			current.Branch = strings.TrimPrefix(current.Branch, "refs/heads/")
+		}
+	}
+	// Add the last one
+	if current.Path != "" {
+		if _, err := os.Stat(current.Path); err == nil {
+			worktrees = append(worktrees, current)
+		}
+	}
+
+	return worktrees
 }

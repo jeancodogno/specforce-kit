@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -239,5 +240,109 @@ func TestScanProject_ArchiveLimits(t *testing.T) {
 		if strings.HasPrefix(item.Slug, ".") {
 			t.Errorf("Archive scan should ignore hidden entries: %s", item.Slug)
 		}
+	}
+}
+
+func TestParseWorktreePorcelain(t *testing.T) {
+	tempDir := t.TempDir()
+	
+	// Create a dummy dir to simulate another worktree
+	otherDir := filepath.Join(tempDir, "other-wt")
+	if err := os.MkdirAll(otherDir, 0755); err != nil {
+		t.Fatalf("Failed to create dummy dir: %v", err)
+	}
+
+	input := "worktree " + tempDir + "\n" +
+		"HEAD e46d9471c0c22760c6e7260ce1fafb3a5ace52d3\n" +
+		"branch refs/heads/main\n" +
+		"\n" +
+		"worktree " + otherDir + "\n" +
+		"HEAD 1234567890abcdef1234567890abcdef12345678\n" +
+		"branch refs/heads/feature-x\n" +
+		"\n" +
+		"worktree /non/existent/path\n" +
+		"HEAD abcdef1234567890abcdef1234567890abcdef\n" +
+		"branch refs/heads/ghost\n"
+
+	worktrees := parseWorktreePorcelain(input)
+
+	if len(worktrees) != 2 {
+		t.Errorf("Expected 2 worktrees, got %d", len(worktrees))
+	}
+
+	if worktrees[0].Path != tempDir || worktrees[0].Branch != "main" {
+		t.Errorf("First worktree mismatch: %+v", worktrees[0])
+	}
+
+	if worktrees[1].Path != otherDir || worktrees[1].Branch != "feature-x" {
+		t.Errorf("Second worktree mismatch: %+v", worktrees[1])
+	}
+}
+
+func TestScanProject_WithWorktrees(t *testing.T) {
+	tempDir := t.TempDir()
+	
+	// Initialize a real git repo in tempDir
+	runCmd := func(dir string, name string, args ...string) {
+		cmd := exec.Command(name, args...)
+		cmd.Dir = dir
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("Failed to run %s %v: %v", name, args, err)
+		}
+	}
+
+	runCmd(tempDir, "git", "init")
+	runCmd(tempDir, "git", "config", "user.email", "test@example.com")
+	runCmd(tempDir, "git", "config", "user.name", "Test User")
+	runCmd(tempDir, "git", "commit", "--allow-empty", "-m", "initial")
+
+	// Create .specforce in main repo
+	setupMockProject(t, tempDir)
+
+	// Create a worktree
+	wtDir := filepath.Join(t.TempDir(), "wt1")
+	runCmd(tempDir, "git", "worktree", "add", "-b", "wt-branch", wtDir)
+
+	// Create .specforce in worktree
+	setupMockProject(t, wtDir)
+	// Add a unique spec in worktree to distinguish
+	wtSpecDir := filepath.Join(wtDir, ".specforce", "specs", "wt-spec")
+	if err := os.MkdirAll(wtSpecDir, 0755); err != nil {
+		t.Fatalf("Failed to create wt spec dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(wtSpecDir, "requirements.md"), []byte("# WT Spec"), 0644); err != nil {
+		t.Fatalf("Failed to write wt spec requirements: %v", err)
+	}
+
+	// Setup mock registry
+	registry := &Registry{
+		artifacts: map[string]Artifact{
+			"requirements": {Name: "requirements"},
+		},
+	}
+
+	tree, err := ScanProject(context.Background(), tempDir, registry)
+	if err != nil {
+		t.Fatalf("ScanProject failed: %v", err)
+	}
+
+	// Should have items from both
+	foundWTSpec := false
+	for _, item := range tree.Categories[CategoryActiveSpecs] {
+		if item.Slug == "wt-spec" {
+			foundWTSpec = true
+			if item.Worktree == "" {
+				t.Error("wt-spec should have worktree tagged")
+			}
+		}
+	}
+
+	if !foundWTSpec {
+		t.Error("Did not find spec from worktree")
+	}
+
+	// Constitution should ONLY be from main root
+	if len(tree.Categories[CategoryConstitution]) != 1 {
+		t.Errorf("Expected only 1 constitution doc (from main root), got %d", len(tree.Categories[CategoryConstitution]))
 	}
 }

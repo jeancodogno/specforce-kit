@@ -189,6 +189,11 @@ func (m *ConsoleModel) renderItem(item spec.StateItem) string {
 	marker := "  "
 	style := BodyStyle
 
+	wtLabel := ""
+	if item.Worktree != "" {
+		wtLabel = MutedStyle.Render(fmt.Sprintf(" [wt:%s (Read-Only)]", item.Worktree))
+	}
+
 	// High-density info based on category
 	switch item.Category {
 	case spec.CategoryConstitution:
@@ -205,7 +210,7 @@ func (m *ConsoleModel) renderItem(item spec.StateItem) string {
 			icon = FinishedStyle.Render("◉")
 		}
 		artifactStatus := MutedStyle.Render(fmt.Sprintf("(%d/%d artifacts)", item.ArtifactCount, item.ArtifactTotal))
-		fmt.Fprintf(&s, "%s%s %s - %s %s\n", marker, icon, style.Render(item.Slug), RenderProgressBar(item.Progress, 20), artifactStatus)
+		fmt.Fprintf(&s, "%s%s %s%s - %s %s\n", marker, icon, style.Render(item.Slug), wtLabel, RenderProgressBar(item.Progress, 20), artifactStatus)
 	case spec.CategoryImplementations:
 		icon := MutedStyle.Render("○")
 		if item.Progress == 100 {
@@ -214,7 +219,7 @@ func (m *ConsoleModel) renderItem(item spec.StateItem) string {
 			icon = InProgressStyle.Render("◉")
 		}
 		taskStatus := MutedStyle.Render(fmt.Sprintf("(%d/%d tasks)", item.TaskCount, item.TaskTotal))
-		fmt.Fprintf(&s, "%s%s %s - %s %s\n", marker, icon, style.Render(item.Slug), RenderProgressBar(item.Progress, 20), taskStatus)
+		fmt.Fprintf(&s, "%s%s %s%s - %s %s\n", marker, icon, style.Render(item.Slug), wtLabel, RenderProgressBar(item.Progress, 20), taskStatus)
 		// Contextual Task Detail
 		var detail string
 		if item.Progress == 100 {
@@ -228,7 +233,7 @@ func (m *ConsoleModel) renderItem(item spec.StateItem) string {
 	case spec.CategoryArchived:
 		icon := MutedStyle.Render("○")
 		metadata := MutedStyle.Render(fmt.Sprintf("(Archived on: %s)", item.ArchivedDate))
-		fmt.Fprintf(&s, "%s%s %-20s %s\n", marker, icon, style.Render(item.Slug), metadata)
+		fmt.Fprintf(&s, "%s%s %-20s%s %s\n", marker, icon, style.Render(item.Slug), wtLabel, metadata)
 	}
 
 	return s.String()
