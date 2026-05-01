@@ -167,6 +167,7 @@ func (i *BinaryInstaller) ReplaceAt(newPath, targetPath string) error {
 	_ = os.Remove(backupPath)
 
 	// 4. Ensure new binary is executable
+	// #nosec G302 - Binary must be executable by others to function globally
 	return os.Chmod(targetPath, 0755)
 }
 

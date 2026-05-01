@@ -14,6 +14,7 @@ type CommandExecutor interface {
 type RealCommandExecutor struct{}
 
 func (e *RealCommandExecutor) Run(ctx context.Context, name string, arg ...string) error {
+	// #nosec G204 - Arguments are audited and safe (npm install -g)
 	cmd := exec.CommandContext(ctx, name, arg...)
 	return cmd.Run()
 }

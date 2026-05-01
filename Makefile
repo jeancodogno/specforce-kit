@@ -27,7 +27,7 @@ lint:
 
 security:
 	$(GOBIN)/gosec -exclude=G703,G304,G306 -fmt=sarif -out=results.sarif ./...
-	$(GOBIN)/govulncheck ./... > /dev/null 2>&1 || echo "Warning: govulncheck found vulnerabilities (likely Go stdlib version mismatch). Ignored locally."
+	$(GOBIN)/govulncheck ./...
 
 quality:
 	$(GOBIN)/gremlins unleash

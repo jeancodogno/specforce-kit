@@ -42,7 +42,7 @@ func (s *Service) CheckForUpdate(ctx context.Context) {
 	// Run in background
 	go func() {
 		// Create a detached context with a timeout for the background task
-		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		bgCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 		defer cancel()
 
 		latest, err := s.provider.GetLatestVersion(bgCtx)

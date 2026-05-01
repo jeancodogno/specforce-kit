@@ -52,7 +52,6 @@ jobs:
 
       - name: Run Security Scans
         run: make security
-        continue-on-error: true # Upload SARIF even if findings exist
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
