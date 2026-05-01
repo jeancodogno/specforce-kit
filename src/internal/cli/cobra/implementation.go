@@ -8,6 +8,9 @@ import (
 var implementationCmd = &cobra.Command{
 	Use:   "implementation",
 	Short: "Task tracking and implementation status",
+	Annotations: map[string]string{
+		"IsAgentCommand": "true",
+	},
 }
 
 var implementationStatusCmd = &cobra.Command{

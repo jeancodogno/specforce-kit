@@ -12,6 +12,9 @@ var specCmd = &cobra.Command{
 	Use:   "spec",
 	Short: "Manage feature specification artifacts",
 	Long:  `Manage feature specification artifacts, including initialization, status tracking, and archiving.`,
+	Annotations: map[string]string{
+		"IsAgentCommand": "true",
+	},
 }
 
 var specInitCmd = &cobra.Command{

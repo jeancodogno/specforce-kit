@@ -8,6 +8,9 @@ import (
 var constitutionCmd = &cobra.Command{
 	Use:   "constitution",
 	Short: "Manage project constitution docs",
+	Annotations: map[string]string{
+		"IsAgentCommand": "true",
+	},
 }
 
 var constitutionStatusCmd = &cobra.Command{
