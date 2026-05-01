@@ -630,6 +630,12 @@ func TestResolveMapping_TildeExpansionFailure(t *testing.T) {
 	_ = os.Unsetenv("USERPROFILE") // For windows compatibility in tests if ever run there
 	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
+	// macOS and some other platforms might have fallback mechanisms for UserHomeDir
+	// that don't rely on environment variables. If it still succeeds, we skip the test.
+	if _, err := os.UserHomeDir(); err == nil {
+		t.Skip("os.UserHomeDir() still succeeds after unsetting HOME; platform has fallback")
+	}
+
 	bp := &core.Blueprint{ID: "test"}
 	_, err := resolveMappings(kitConfig, "commands/test.yaml", bp, "test-agent")
 	if err == nil {

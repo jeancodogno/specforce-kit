@@ -8,6 +8,20 @@ import (
 	"time"
 )
 
+func TestService_PerformUpgrade(t *testing.T) {
+	tempDir := t.TempDir()
+	mgr := &StateManager{path: filepath.Join(tempDir, "state.json")}
+	svc := NewService(mgr, &MockProvider{}, "v1.0.0")
+
+	// We can't easily test the full success path without a real server or lots of mocking,
+	// but we can test that it correctly identifies NPM or tries binary.
+	// We'll just call it and expect it to fail (as it will try to download from github).
+	err := svc.PerformUpgrade(context.Background(), "v2.0.0")
+	if err == nil {
+		t.Error("expected error from PerformUpgrade in test environment, got nil")
+	}
+}
+
 func TestServiceCheckForUpdate(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "upgrade-svc-test-*")
 	if err != nil {
@@ -93,6 +107,13 @@ func TestServiceIsUpdateAvailable(t *testing.T) {
 	if available {
 		t.Error("expected no update when versions are equal")
 	}
+}
+
+func TestService_IsNPM_Detection(t *testing.T) {
+	svc := &Service{}
+	// This will call os.Executable() which is likely 'specforce.test' or similar.
+	// It should return false unless the test binary name matches NPM criteria.
+	_ = svc.isNPM()
 }
 
 func TestServiceIsNPM(t *testing.T) {

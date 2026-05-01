@@ -17,6 +17,16 @@ func (e *MockCommandExecutor) Run(ctx context.Context, name string, arg ...strin
 	return e.Err
 }
 
+func TestNewNPMInstaller(t *testing.T) {
+	installer := NewNPMInstaller()
+	if installer == nil {
+		t.Fatal("expected non-nil installer")
+	}
+	if installer.Executor == nil {
+		t.Error("expected non-nil executor")
+	}
+}
+
 func TestNPMInstaller(t *testing.T) {
 	mock := &MockCommandExecutor{}
 	installer := &NPMInstaller{Executor: mock}

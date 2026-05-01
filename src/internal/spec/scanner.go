@@ -74,9 +74,7 @@ func ScanProject(ctx context.Context, projectRoot string, registry *Registry) (*
 		}
 
 		// Robust main root check
-		absWt, _ := filepath.Abs(wt.Path)
-		absRoot, _ := filepath.Abs(projectRoot)
-		isMainRoot := absWt == absRoot
+		isMainRoot := evalPath(wt.Path) == evalPath(projectRoot)
 
 		// 1. Scan Constitution documents (.specforce/docs/) - ONLY MAIN ROOT
 		if isMainRoot {
@@ -101,6 +99,18 @@ func ScanProject(ctx context.Context, projectRoot string, registry *Registry) (*
 	}
 
 	return tree, nil
+}
+
+func evalPath(path string) string {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	eval, err := filepath.EvalSymlinks(abs)
+	if err != nil {
+		return abs
+	}
+	return eval
 }
 
 func scanConstitution(ctx context.Context, projectRoot string, tree *StateTree) error {

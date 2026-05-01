@@ -3,9 +3,31 @@ package upgrade
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
+
+func TestNewStateManager(t *testing.T) {
+	// We need to set up HOME or XDG_CONFIG_HOME if we want to test the default path
+	oldHome := os.Getenv("HOME")
+	tempHome := t.TempDir()
+	if err := os.Setenv("HOME", tempHome); err != nil {
+		t.Fatalf("failed to set HOME: %v", err)
+	}
+	defer func() { _ = os.Setenv("HOME", oldHome) }()
+
+	mgr, err := NewStateManager()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if mgr == nil {
+		t.Fatal("expected non-nil manager")
+	}
+	if !strings.Contains(mgr.path, ".specforce") {
+		t.Errorf("expected path to contain .specforce, got %s", mgr.path)
+	}
+}
 
 func TestStateManager(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "upgrade-test-*")
