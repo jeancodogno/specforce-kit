@@ -26,13 +26,32 @@
 - **Next:** Monitor for similar reports in other OS environments.
 - **Relevant Files:** index.js, package.json, README.md, docs/getting-started.md
 
-- **Date:** 2026-04-30
-- **Scope:** Git Worktree Support
-- **Completed:** Implemented porcelain-based worktree discovery, updated scanner to aggregate Active/Archived specs across roots, and added UI labels in Console.
-- **Next:** Execute `/archive` to formalize worktree support.
-- **Relevant Files:** src/internal/spec/scanner.go, src/internal/tui/console.go, src/internal/spec/scanner_test.go
+- **Date:** 2026-05-01
+- **Scope:** macOS CI & Coverage
+- **Completed:** Fixed `ScanProject` path discrepancies using `filepath.EvalSymlinks`, added resilience to `os.UserHomeDir` tests, and increased `upgrade` coverage to >80%.
+- **Next:** Monitor macOS-specific path issues in future features.
+- **Relevant Files:** src/internal/spec/scanner.go, src/internal/agent/translator_test.go, src/internal/upgrade/*.go
 
 ## Active Lessons & Anti-Patterns
+- **First Seen:** 2026-05-01
+- **Last Seen:** 2026-05-01
+- **Scope:** CI / Platform
+- **Symptom:** `TestScanProject_WithWorktrees` failing on macOS but passing on Linux due to `/var` vs `/private/var` symlink.
+- **Avoid:** Direct comparison of `filepath.Abs` results across different environments without evaluating symlinks.
+- **Do Instead:** Use a helper (e.g., `evalPath`) that applies `filepath.EvalSymlinks` to canonicalize paths before equality checks.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
+
+- **First Seen:** 2026-05-01
+- **Last Seen:** 2026-05-01
+- **Scope:** Testing / Platform
+- **Symptom:** Tests relying on `os.Unsetenv("HOME")` to force `os.UserHomeDir` failure fail on macOS because of system fallback.
+- **Avoid:** Assuming `os.UserHomeDir` will always fail if environment variables are removed.
+- **Do Instead:** Explicitly check if the function still succeeds after `Unsetenv` and use `t.Skip` to handle platforms with persistent home directory resolution.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
 - **First Seen:** 2026-04-30
 - **Last Seen:** 2026-04-30
 - **Scope:** Proxy / Environment
