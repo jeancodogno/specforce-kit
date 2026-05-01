@@ -34,6 +34,7 @@ Specforce is designed to be the **invisible orchestration layer**. It brings pre
 
 - **Segmented Constitution**: Instead of a single massive prompt, rules are broken down into specialized domains (Architecture, UI/UX, Security). The agent only loads the exact context it needs, keeping token costs low and reducing hallucinations.
 - **Dynamic Verification Hooks**: Run tests, linters, or custom scripts automatically before an agent is allowed to mark a task as finished.
+- **Git Worktree Support**: Natively discover and view specifications across multiple git branches simultaneously without switching contexts.
 - **Context-Aware Instructions**: Inject specific rules and constraints dynamically based on the artifact or phase the agent is currently working on.
 - **Tool & IDE Agnostic**: Bring Spec-Driven Development directly to your terminal. Works flawlessly with your favorite IDE and CLI-based AI agents (Gemini, Claude, Cursor, KiloCode, etc).
 - **Lightning Fast & Zero Dependencies**: Distributed as a single binary, requiring no heavy Python setups or forced ecosystems to bootstrap your project.
@@ -136,6 +137,7 @@ make install
 For a deeper dive into Specforce Kit, check out our official documentation:
 
 - [Getting Started & Workflow](docs/getting-started.md): Environment setup, first steps, and the recommended Spec-Driven Development lifecycle.
+- [Git Worktree Support](docs/git-worktrees.md): Guide to cross-branch specification discovery, unified console, and read-only constraints.
 - [Artifacts](docs/artifacts.md): Details about the generated files (Constitution, Requirements, Design, Tasks).
 - [Configuration](docs/configuration.md): Guide to customize hooks and instructions.
 - [CLI Reference](docs/cli.md): Terminal and slash command usage.
