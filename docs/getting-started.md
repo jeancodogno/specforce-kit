@@ -25,6 +25,37 @@ make build
 make install
 ```
 
+### Troubleshooting
+
+If you encounter a `command not found: specforce` error after installation, it usually means your system's `PATH` does not include the directory where binaries are stored.
+
+#### 1. Fix for macOS/Linux (NPM)
+If you installed via `npm i -g`, add the following to your shell profile (e.g., `~/.zshrc` or `~/.bashrc`):
+
+```bash
+# Add npm global bin to PATH
+export PATH="$(npm config get prefix)/bin:$PATH"
+```
+
+Then reload your profile: `source ~/.zshrc`.
+
+#### 2. Fix for Windows (NPM)
+Ensure that your npm global directory (usually `%AppData%\npm`) is in your system's Environment Variables.
+
+#### 3. Fix for Source/Git Installation
+If you installed from source or Git and the command is missing, ensure you have built the native binary:
+
+```bash
+cd specforce-kit
+make build
+# This creates a 'specforce' binary in the root
+```
+
+If the automated build failed during installation, check if you have `go` and `make` installed on your system.
+
+#### 4. Automatic Diagnostics
+If the `specforce` command works but fails to find its internal "brain" (the native binary), it will automatically run a diagnostic check and print the exact command you need to run to fix your `PATH`.
+
 ## First Steps
 
 ### 1. Initialize your Project

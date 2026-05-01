@@ -143,6 +143,24 @@ For a deeper dive into Specforce Kit, check out our official documentation:
 
 ---
 
+## 🔍 Troubleshooting
+
+### "command not found: specforce"
+If you encounter this error after installation, it usually means your npm global bin directory is not in your system's `PATH`.
+
+**Fix for macOS/Linux:**
+Add the following line to your shell profile (e.g., `~/.zshrc` or `~/.bashrc`):
+```bash
+export PATH="$(npm config get prefix)/bin:$PATH"
+```
+
+**Fix for Windows:**
+Ensure that `%AppData%\npm` is in your environment variables.
+
+For more detailed troubleshooting, see [Getting Started: Troubleshooting](docs/getting-started.md#troubleshooting).
+
+---
+
 ## 🤝 Contributing
 We welcome contributions! See our [CONTRIBUTING.md](CONTRIBUTING.md) to learn how to add support for new AI agents or improve existing kits.
 

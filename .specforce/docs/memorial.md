@@ -15,33 +15,33 @@
 ---
 
 ## Critical Now
-- [2026-04-19] [Tasks] Hierarchical task organization (Phases H3 / Tasks H4) implemented. Agents should now use this for all new feature roadmaps.
 - [2026-04-28] [Autonomous Workflows] Proactive Mandate in `AGENTS.md` and dual-installation (Commands as Skills) are now live. Agents should automatically trigger `/spec` or `/implement`.
 - [2026-04-30] [Worktrees] Multi-root Git Worktree Support added to Scanner and Console. Specs are now aggregated across branches.
+- [2026-04-30] [Environment] Global bin PATH issues resolved with automated builds and stylized diagnostics in `index.js`.
 
 ## Last Actions
+- **Date:** 2026-04-30
+- **Scope:** Fix Command Not Found (Issue #3)
+- **Completed:** Added `prepare`/`postinstall` scripts to `package.json`, refactored `index.js` with a stylized diagnostic tool for PATH issues, and updated troubleshooting docs.
+- **Next:** Monitor for similar reports in other OS environments.
+- **Relevant Files:** index.js, package.json, README.md, docs/getting-started.md
+
 - **Date:** 2026-04-30
 - **Scope:** Git Worktree Support
 - **Completed:** Implemented porcelain-based worktree discovery, updated scanner to aggregate Active/Archived specs across roots, and added UI labels in Console.
 - **Next:** Execute `/archive` to formalize worktree support.
 - **Relevant Files:** src/internal/spec/scanner.go, src/internal/tui/console.go, src/internal/spec/scanner_test.go
 
-- **Date:** 2026-04-29
-- **Scope:** Discovery Command
-- **Completed:** Implemented `spf.discovery` (Specforce Scout), updated `AGENTS.md` template, and enriched prompt with unique branding and diagnostic workflows.
-- **Next:** Monitor user engagement with Discovery mode to refine 'Thinking Partner' prompts.
-- **Relevant Files:** src/internal/agent/kit/commands/discovery.yaml, src/internal/project/agents_md.go, README.md
-
 ## Active Lessons & Anti-Patterns
 - **First Seen:** 2026-04-30
 - **Last Seen:** 2026-04-30
-- **Scope:** Scanner / Performance
-- **Symptom:** Aggregating specs from dozens of worktrees could cause disk I/O bottlenecks or UI lag if scanned synchronously.
-- **Avoid:** Synchronous scanning of potentially many external project roots during UI refresh.
-- **Do Instead:** Use `git worktree list --porcelain` for fast path discovery and implement a robust exclusion logic (e.g., skip Constitution for external roots) to minimize I/O.
+- **Scope:** Proxy / Environment
+- **Symptom:** Users encounter "command not found" even after successful global install if npm bin is missing from PATH.
+- **Avoid:** Silently failing or giving generic errors when native binaries are missing.
+- **Do Instead:** Run an automated diagnostic check that identifies the exact missing PATH entry and provides the specific OS-level fix command.
 - **Recurrence Count:** 1
 - **Status:** Active
-- **Distill To:** architecture.md
+- **Distill To:** engineering.md
 
 ## Pending Decisions (Need Distillation)
 - **Date:** 2026-04-28

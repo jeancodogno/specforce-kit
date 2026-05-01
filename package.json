@@ -13,6 +13,12 @@
   "bin": {
     "specforce": "index.js"
   },
+  "scripts": {
+    "build": "make build",
+    "test": "go test ./...",
+    "prepare": "make build || true",
+    "postinstall": "make build || true"
+  },
   "files": [
     "index.js",
     "LICENSE"

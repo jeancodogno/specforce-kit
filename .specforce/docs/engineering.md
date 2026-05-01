@@ -37,6 +37,13 @@
     - **Directories:** Use `0750` for all directory creation (`os.MkdirAll`).
     - **Files:** Use `0600` for all sensitive or system-internal files (e.g., config, tasks, implementation reports). Use `0644` only where public read access by external tools is strictly required.
 
+- **Automated Native Builds:** To support users installing from Git or source, the `package.json` MUST include `prepare` and `postinstall` scripts (e.g., `"prepare": "make build || true"`) that attempt to build the native binary automatically. These scripts MUST use the `|| true` guard to ensure the installation process is not blocked if build tools (Go/Make) are missing.
+- **Environment Diagnostics Pattern:** CLI entry points or proxies (e.g., `index.js`) MUST NOT fail silently when a native binary is missing. Instead, they MUST execute a stylized diagnostic check that:
+    - Identifies the expected installation path (e.g., via `npm config get prefix`).
+    - Verifies if the system's `PATH` includes the expected directory.
+    - Provides the user with the exact, OS-specific command (Unix `export` vs. Windows `setx`) required to fix their environment.
+    - Adheres to the "Ghost in the Machine" aesthetic using consistent ANSI colors (Mint Green for success/fixes, Error Red for failures).
+
 - **Instruction-Driven Agent Pattern:** Agent command definitions (`.yaml`) SHOULD NOT contain complex, hardcoded logic or multi-step instructions. Instead, they MUST trigger a dedicated Specforce CLI command (e.g., `specforce archive instructions`) to retrieve a dynamic instruction set. This allows the framework to inject global context (Constitution), core kit rules, and project-specific overrides from `config.yaml` without updating the agent's definition.
 - **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST update the project's `.specforce/docs/memorial.md` with lessons learned, established precedents, and critical architectural decisions discovered during the implementation.
 
