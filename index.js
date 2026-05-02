@@ -1,11 +1,14 @@
 #!/usr/bin/env node
-
 const { spawnSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 /**
  * SpecForce Kit Proxy
- * Detects the current platform/arch and executes the corresponding native binary.
+ * 
+ * SECURITY NOTE: This proxy uses 'child_process.spawnSync' to execute native binaries.
+ * To prevent shell injection, we NEVER use 'shell: true' and always pass arguments
+ * as an explicit array. All paths are validated to be absolute before execution.
  */
 
 const platform = process.platform;
@@ -19,15 +22,14 @@ try {
     const pkgJsonPath = require.resolve(`${pkgName}/package.json`);
     const pkgDir = path.dirname(pkgJsonPath);
     const pkgJson = require(pkgJsonPath);
-    
+
     // 2. Extract binary path from package.json bin field
     const binRelativePath = typeof pkgJson.bin === 'string' ? pkgJson.bin : pkgJson.bin.specforce;
     binaryPath = path.resolve(pkgDir, binRelativePath);
 } catch (e) {
-    // Fallback 1: Look for a binary in the root (built via 'make build' or 'prepare')
+    // Fallback 1: Look for a binary in the root (built via 'make build')
     const localBinaryName = platform === 'win32' ? 'specforce.exe' : 'specforce';
     const rootBinaryPath = path.join(__dirname, localBinaryName);
-    const fs = require('fs');
 
     if (fs.existsSync(rootBinaryPath)) {
         binaryPath = rootBinaryPath;
@@ -45,12 +47,16 @@ try {
     }
 }
 
+// Security Hardening: Ensure binaryPath is absolute and exists before execution
+if (!binaryPath || !path.isAbsolute(binaryPath) || !fs.existsSync(binaryPath)) {
+    runDiagnostic(platform, arch, pkgName);
+    process.exit(1);
+}
+
 /**
  * Runs a diagnostic check to help the user fix their environment.
  */
 function runDiagnostic(platform, arch, pkgName) {
-    const fs = require('fs');
-    
     // Aesthetic Colors
     const RESET = "\x1b[0m";
     const BOLD = "\x1b[1m";

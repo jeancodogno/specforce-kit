@@ -36,7 +36,7 @@ func (i *BinaryInstaller) DownloadAndVerify(ctx context.Context, version, baseUR
 		assetName += ".exe"
 	}
 
-	// Format checksum file name: specforce-kit_0.2.0_checksums.txt
+	// Format checksum file name: specforce-kit_0.2.2_checksums.txt
 	// version might have 'v' prefix, need to strip it for checksum filename if that's the pattern
 	versionClean := strings.TrimPrefix(version, "v")
 	checksumName := fmt.Sprintf("specforce-kit_%s_checksums.txt", versionClean)

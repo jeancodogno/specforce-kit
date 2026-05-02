@@ -15,16 +15,16 @@
 ---
 
 ## Critical Now
-- [2026-04-28] [Autonomous Workflows] Proactive Mandate in `AGENTS.md` and dual-installation (Commands as Skills) are now live. Agents should automatically trigger `/spec` or `/implement`.
+- [2026-05-02] [Security] "Zero Scripts" policy implemented. `postinstall` and `prepare` scripts removed from `package.json` to mitigate supply chain risk alerts.
 - [2026-04-30] [Worktrees] Multi-root Git Worktree Support added to Scanner and Console. Specs are now aggregated across branches.
-- [2026-04-30] [Environment] Global bin PATH issues resolved with automated builds and stylized diagnostics in `index.js`.
+- [2026-04-30] [Environment] Global bin PATH issues resolved with stylized diagnostics in `index.js`.
 
 ## Last Actions
-- **Date:** 2026-04-30
-- **Scope:** Fix Command Not Found (Issue #3)
-- **Completed:** Added `prepare`/`postinstall` scripts to `package.json`, refactored `index.js` with a stylized diagnostic tool for PATH issues, and updated troubleshooting docs.
-- **Next:** Monitor for similar reports in other OS environments.
-- **Relevant Files:** index.js, package.json, README.md, docs/getting-started.md
+- **Date:** 2026-05-02
+- **Scope:** Security Hardening (Socket.dev Alerts)
+- **Completed:** Removed `postinstall`/`prepare` scripts, hardened `index.js` proxy with absolute path validation, and updated `security.md`.
+- **Next:** Monitor for any user confusion regarding the lack of automatic builds.
+- **Relevant Files:** index.js, package.json, .specforce/docs/security.md
 
 - **Date:** 2026-05-01
 - **Scope:** macOS CI & Coverage

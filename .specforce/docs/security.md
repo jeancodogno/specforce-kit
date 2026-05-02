@@ -19,6 +19,10 @@
 - **Log Sanitization & PII:** Redact environment variables and API keys from terminal output or generated logs.
 
 ## Platform Hardening
+- **Zero Scripts Policy:** The package MUST NOT contain automated lifecycle scripts (`postinstall`, `prepare`) that execute shell commands. This mitigates supply chain risks.
+- **Secure Native Proxy:** The Node.js wrapper (`index.js`) follows strict execution rules:
+    1. **No Shell:** It MUST use `spawnSync` with an argument array to prevent shell injection.
+    2. **Path Validation:** It MUST verify that the resolved binary path is absolute and exists on the filesystem before execution.
 - **Secure Path Resolution:** All file system operations MUST use a centralized secure path resolver. This utility MUST:
     1. Call `filepath.Clean(path)`.
     2. Ensure the resulting path remains within the project's root boundary.
