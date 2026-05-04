@@ -92,6 +92,9 @@ func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, 
 		return err
 	}
 
+	// [REQ-1] Auto-timestamped slugs
+	slug = spec.PrepareSlug(slug)
+
 	exists, status := spec.SpecExists(projectRoot, slug)
 	if exists {
 		var errObj error

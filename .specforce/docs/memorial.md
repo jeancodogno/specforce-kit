@@ -12,16 +12,32 @@
 > 4. **GARBAGE COLLECTION:** If a list is full, you MUST delete the oldest/least relevant item before adding a new one.
 > 5. **DISTILLATION:** If a lesson or decision becomes a permanent rule, you MUST move it to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and completely delete it from here.
 
----
-
 ## Critical Now
+- [2026-05-04] [CLI] Auto-timestamped spec slugs implemented. `specforce spec init` now prepends `YYYYMMDD-HHMM-` to slugs automatically.
 - [2026-05-04] [Docs] Multi-language documentation structure (EN, PT, ES) implemented. All docs migrated to `docs/{en,pt,es}/`.
-- [2026-05-02] [Security] "Zero Scripts" policy implemented. `postinstall` and `prepare` scripts removed from `package.json` to mitigate supply chain risk alerts.
-- [2026-04-30] [Worktrees] Multi-root Git Worktree Support added to Scanner and Console. Specs are now aggregated across branches.
+- [2026-05-02] [Security] "Zero Scripts" policy implemented. `postinstall` and `prepare` scripts removed from `package.json`.
 
 ## Last Actions
 - **Date:** 2026-05-04
+- **Scope:** Auto-Timestamped Spec Slugs
+- **Completed:** Implemented `PrepareSlug` logic in `spec` package, integrated into `HandleSpecInit`, and added unit/integration tests. Created new standard for spec directory naming.
+- **Next:** Monitor for any issues with nested directory timestamping in CI.
+- **Relevant Files:** src/internal/spec/slug.go, src/internal/cli/spec.go, src/internal/cli/integration_test.go
+
+- **Date:** 2026-05-04
 - **Scope:** Multi-language Documentation Expansion
+...
+## Active Lessons & Anti-Patterns
+- **First Seen:** 2026-05-04
+- **Last Seen:** 2026-05-04
+- **Scope:** CLI / UX
+- **Symptom:** Users might not notice if a slug is transformed (timestamped) unless explicitly told.
+- **Avoid:** Transforming user input silently without feedback.
+- **Do Instead:** Always print the final resolved path/slug in the success message of `spec init` to maintain transparency.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
+
 - **Completed:** Restructured `docs/` folder into `en/`, `pt/`, and `es/`. Migrated English docs, added language selector to root README, and created PT/ES localized versions of root documents.
 - **Next:** Continue translating specific documentation files within the language folders.
 - **Relevant Files:** README.md, README.pt.md, README.es.md, docs/{en,pt,es}/*

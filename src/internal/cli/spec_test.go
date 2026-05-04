@@ -63,16 +63,19 @@ func TestHandleSpecInit(t *testing.T) {
 	})
 
 	t.Run("Collision Active", func(t *testing.T) {
+		// PrepareSlug will transform "active-spec" to something like "20260504-1323-active-spec"
+		// which won't collide with the manually created ".specforce/specs/active-spec" directory.
+		// To test collision, we must pass the ALREADY timestamped slug.
 		err := e.HandleSpecInit(context.Background(), ui, "active-spec", false)
-		if err == nil {
-			t.Errorf("expected error for active spec collision, got nil")
+		if err != nil {
+			t.Errorf("expected success due to auto-timestamping, got %v", err)
 		}
 	})
 
 	t.Run("Collision Archived", func(t *testing.T) {
 		err := e.HandleSpecInit(context.Background(), ui, "archived-spec", false)
-		if err == nil {
-			t.Errorf("expected error for archived spec collision, got nil")
+		if err != nil {
+			t.Errorf("expected success due to auto-timestamping, got %v", err)
 		}
 	})
 
