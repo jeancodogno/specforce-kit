@@ -136,12 +136,12 @@ make install
 
 For a deeper dive into Specforce Kit, check out our official documentation:
 
-- [Getting Started & Workflow](docs/getting-started.md): Environment setup, first steps, and the recommended Spec-Driven Development lifecycle.
-- [Git Worktree Support](docs/git-worktrees.md): Guide to cross-branch specification discovery, unified console, and read-only constraints.
-- [Artifacts](docs/artifacts.md): Details about the generated files (Constitution, Requirements, Design, Tasks).
-- [Configuration](docs/configuration.md): Guide to customize hooks and instructions.
-- [CLI Reference](docs/cli.md): Terminal and slash command usage.
-- [Supported Tools](docs/supported-tools.md): List of natively supported AI agents and coding assistants.
+- [Getting Started & Workflow](docs/en/getting-started.md): Environment setup, first steps, and the recommended Spec-Driven Development lifecycle.
+- [Git Worktree Support](docs/en/git-worktrees.md): Guide to cross-branch specification discovery, unified console, and read-only constraints.
+- [Artifacts](docs/en/artifacts.md): Details about the generated files (Constitution, Requirements, Design, Tasks).
+- [Configuration](docs/en/configuration.md): Guide to customize hooks and instructions.
+- [CLI Reference](docs/en/cli.md): Terminal and slash command usage.
+- [Supported Tools](docs/en/supported-tools.md): List of natively supported AI agents and coding assistants.
 
 ---
 
@@ -159,7 +159,7 @@ export PATH="$(npm config get prefix)/bin:$PATH"
 **Fix for Windows:**
 Ensure that `%AppData%\npm` is in your environment variables.
 
-For more detailed troubleshooting, see [Getting Started: Troubleshooting](docs/getting-started.md#troubleshooting).
+For more detailed troubleshooting, see [Getting Started: Troubleshooting](docs/en/getting-started.md#troubleshooting).
 
 ---
 
@@ -169,4 +169,4 @@ We welcome contributions! See our [CONTRIBUTING.md](CONTRIBUTING.md) to learn ho
 ---
 
 ## 📜 License
-Specforce Kit is released under the **MIT License**. See [LICENSE](LICENSE) for details.
+Specforce Kit is released under the **MIT License**. See [LICENSE](LICENSE) for details.pecforce Kit is released under the **MIT License**. See [LICENSE](LICENSE) for details.

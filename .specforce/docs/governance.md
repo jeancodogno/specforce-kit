@@ -28,3 +28,11 @@
   - Approve Pull Requests or perform final merges.
 - **Conflict Resolution Protocol:**
   - If a user prompt or a draft Spec contradicts the Constitution, the AI MUST refuse the prompt and cite the violated Principle/Rule.
+
+## Documentation & Internationalization
+- **Primary Language:** English (Source of Truth).
+- **Supported Regions:** Portuguese (PT) and Spanish (ES).
+- **Structure:** Documentation must be organized in `docs/{en,pt,es}/` subdirectories.
+- **Consistency:** Filenames must remain identical across language folders.
+- **Navigation:** Root `README.md` and regional versions MUST contain a language selector at the top.
+- **Verification:** All internal links in documentation MUST be verified and relative to the current language folder during any restructuring.

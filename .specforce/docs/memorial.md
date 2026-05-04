@@ -15,11 +15,17 @@
 ---
 
 ## Critical Now
+- [2026-05-04] [Docs] Multi-language documentation structure (EN, PT, ES) implemented. All docs migrated to `docs/{en,pt,es}/`.
 - [2026-05-02] [Security] "Zero Scripts" policy implemented. `postinstall` and `prepare` scripts removed from `package.json` to mitigate supply chain risk alerts.
 - [2026-04-30] [Worktrees] Multi-root Git Worktree Support added to Scanner and Console. Specs are now aggregated across branches.
-- [2026-04-30] [Environment] Global bin PATH issues resolved with stylized diagnostics in `index.js`.
 
 ## Last Actions
+- **Date:** 2026-05-04
+- **Scope:** Multi-language Documentation Expansion
+- **Completed:** Restructured `docs/` folder into `en/`, `pt/`, and `es/`. Migrated English docs, added language selector to root README, and created PT/ES localized versions of root documents.
+- **Next:** Continue translating specific documentation files within the language folders.
+- **Relevant Files:** README.md, README.pt.md, README.es.md, docs/{en,pt,es}/*
+
 - **Date:** 2026-05-02
 - **Scope:** Security Hardening (Socket.dev Alerts)
 - **Completed:** Removed `postinstall`/`prepare` scripts, hardened `index.js` proxy with absolute path validation, and updated `security.md`.
@@ -33,12 +39,12 @@
 - **Relevant Files:** src/internal/spec/scanner.go, src/internal/agent/translator_test.go, src/internal/upgrade/*.go
 
 ## Active Lessons & Anti-Patterns
-- **First Seen:** 2026-05-01
-- **Last Seen:** 2026-05-01
-- **Scope:** CI / Platform
-- **Symptom:** `TestScanProject_WithWorktrees` failing on macOS but passing on Linux due to `/var` vs `/private/var` symlink.
-- **Avoid:** Direct comparison of `filepath.Abs` results across different environments without evaluating symlinks.
-- **Do Instead:** Use a helper (e.g., `evalPath`) that applies `filepath.EvalSymlinks` to canonicalize paths before equality checks.
+- **First Seen:** 2026-05-04
+- **Last Seen:** 2026-05-04
+- **Scope:** Documentation / Migration
+- **Symptom:** Links breaking during documentation folder restructuring.
+- **Avoid:** Moving documentation files without a recursive link verification step.
+- **Do Instead:** Use a systematic approach to update all relative paths in `README.md` and internal `.md` files immediately after moving files to nested subdirectories.
 - **Recurrence Count:** 1
 - **Status:** Active
 - **Distill To:** engineering.md
