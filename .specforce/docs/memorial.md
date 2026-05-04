@@ -85,6 +85,13 @@
 - **Distill To:** engineering.md
 
 ## Pending Decisions (Need Distillation)
+- **Date:** 2026-05-04
+- **Scope:** Parser / SDD Protocol
+- **Decision:** Transition the CLI parser to support "Natural LLM Task Formats" (standard markdown checklists `- [ ]`) instead of forcing strict `#### T1.1` headers, to reduce LLM formatting drift and align with OpenSpec.
+- **Why:** Imposing rigid formatting constraints wastes tokens, breaks automation when LLMs drift to natural checklists, and creates a high "translation tax".
+- **Validate By:** `src/internal/spec/tasks_test.go`
+- **Distill To:** engineering.md
+
 - **Date:** 2026-04-28
 - **Scope:** Architecture / Kit
 - **Decision:** Support `MappingConfigs` as a slice in `kit.yaml` to allow multiple destinations for the same category.

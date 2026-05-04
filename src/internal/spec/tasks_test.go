@@ -135,3 +135,63 @@ func TestUpdateTaskStatusFile_WithPhases(t *testing.T) {
 		t.Errorf("Unexpected content after update:\n%s", string(updatedContent))
 	}
 }
+
+func TestUpdateTaskStatusFile_WithChecklists(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "specforce-tasks-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	projectRoot := tempDir
+	slug := "checklist-feature"
+	content := `
+## 2. Tasks
+
+### Phase 1: Mixed
+- [ ] T1.1: Modern Checklist
+**Target:** src/one.go
+
+#### T1.2: Classic with Checkbox
+- [ ] T1.2: Classic with Checkbox
+**Target:** src/two.go
+
+- [/] T1.3: Working Checklist
+**Target:** src/three.go
+`
+	tasksPath := setupTasksTest(t, projectRoot, slug, content)
+
+	// Update T1.1 to finished -> expect [x]
+	if err := updateTaskStatusFile(projectRoot, slug, "T1.1", "finished"); err != nil {
+		t.Fatalf("updateTaskStatusFile failed for T1.1: %v", err)
+	}
+
+	// Update T1.2 to in-progress -> expect [/]
+	if err := updateTaskStatusFile(projectRoot, slug, "T1.2", "in-progress"); err != nil {
+		t.Fatalf("updateTaskStatusFile failed for T1.2: %v", err)
+	}
+
+	// Update T1.3 to finished -> expect [x]
+	if err := updateTaskStatusFile(projectRoot, slug, "T1.3", "finished"); err != nil {
+		t.Fatalf("updateTaskStatusFile failed for T1.3: %v", err)
+	}
+
+	updatedContent, _ := os.ReadFile(tasksPath)
+	expected := `
+## 2. Tasks
+
+### Phase 1: Mixed
+- [x] T1.1: Modern Checklist
+**Target:** src/one.go
+
+#### T1.2: Classic with Checkbox
+- [/] T1.2: Classic with Checkbox
+**Target:** src/two.go
+
+- [x] T1.3: Working Checklist
+**Target:** src/three.go
+`
+	if string(updatedContent) != expected {
+		t.Errorf("Unexpected content after checklist update:\n%s", string(updatedContent))
+	}
+}

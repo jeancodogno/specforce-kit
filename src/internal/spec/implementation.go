@@ -169,18 +169,23 @@ func extractStrategyAndMitigations(content []byte, report *ImplementationReport)
 
 func extractTasksFromContent(ctx context.Context, content []byte, report *ImplementationReport) error {
 	phaseHeaderRegex := regexp.MustCompile(`(?m)^### Phase (\d+): (.*)$`)
-	taskHeaderRegex := regexp.MustCompile(`(?m)^#{3,4} (T[\d.]+): (.*)$`)
+	taskHeaderRegex := regexp.MustCompile(`(?m)^(#{3,4}|- \[[ xX/]?\]) (T[\d.]+): (.*)$`)
 
 	phaseMatches := phaseHeaderRegex.FindAllSubmatchIndex(content, -1)
 	taskMatches := taskHeaderRegex.FindAllSubmatchIndex(content, -1)
 
+	seenTasks := make(map[string]bool)
 	for _, tm := range taskMatches {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
 		task := parseTaskBlock(content, tm, taskMatches, phaseMatches)
-		
+		if seenTasks[task.ID] {
+			continue
+		}
+		seenTasks[task.ID] = true
+
 		// Find or create phase
 		currentPhaseIdx := findPhaseIdxForTask(content, tm[0], phaseMatches, report)
 		report.Phases[currentPhaseIdx].Tasks = append(report.Phases[currentPhaseIdx].Tasks, task)
@@ -190,47 +195,75 @@ func extractTasksFromContent(ctx context.Context, content []byte, report *Implem
 }
 
 func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int) ImplementationTask {
+	prefix := string(content[tm[2]:tm[3]])
 	task := ImplementationTask{
-		ID:    string(content[tm[2]:tm[3]]),
-		Title: strings.TrimSpace(string(content[tm[4]:tm[5]])),
+		ID:    string(content[tm[4]:tm[5]]),
+		Title: strings.TrimSpace(string(content[tm[6]:tm[7]])),
 	}
 
-	// Find the absolute next header (could be Phase or Task or ##)
-	nextHeaderPos := len(content)
-	for _, nextTm := range taskMatches {
-		if nextTm[0] > tm[0] && nextTm[0] < nextHeaderPos {
-			nextHeaderPos = nextTm[0]
-			break
-		}
-	}
-	for _, pm := range phaseMatches {
-		if pm[0] > tm[0] && pm[0] < nextHeaderPos {
-			nextHeaderPos = pm[0]
-			break
-		}
-	}
-	nextSectionRegex := regexp.MustCompile(`(?m)^## `)
-	sectionMatch := nextSectionRegex.FindIndex(content[tm[1]:])
-	if sectionMatch != nil {
-		absSectionPos := tm[1] + sectionMatch[0]
-		if absSectionPos < nextHeaderPos {
-			nextHeaderPos = absSectionPos
-		}
-	}
-	
+	nextHeaderPos := findNextHeaderPos(content, tm[0], tm[1], taskMatches, phaseMatches)
 	taskBlock := content[tm[0]:nextHeaderPos]
+
 	task.State = extractField(taskBlock, `\*\*State:\*\* \x60?\[([^\]\x60\n]*)\]\x60?`)
+	isChecklist := strings.HasPrefix(prefix, "- [")
+	if task.State == "" && isChecklist {
+		task.State = mapCheckboxToState(prefix)
+	}
+
 	task.Target = extractField(taskBlock, `\*\*Target:\*\* \x60?([^\x60\n]*)\x60?`)
 	task.Context = extractField(taskBlock, `\*\*Context:\*\* \x60?([^\x60\n]*)\x60?`)
 	task.Verification = extractField(taskBlock, `(?s)\*\*Verification \(TDD\):\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
 
 	actionStepsRegex := regexp.MustCompile(`(?m)^- (.*)$`)
 	actionMatches := actionStepsRegex.FindAllSubmatch(taskBlock, -1)
-	for _, am := range actionMatches {
-		task.ActionSteps = append(task.ActionSteps, string(am[1]))
+	for i, am := range actionMatches {
+		if i == 0 && isChecklist {
+			continue
+		}
+		step := strings.TrimSpace(string(am[1]))
+		if step != "" {
+			task.ActionSteps = append(task.ActionSteps, step)
+		}
 	}
 
 	return task
+}
+
+func findNextHeaderPos(content []byte, taskStart, taskEnd int, taskMatches, phaseMatches [][]int) int {
+	nextHeaderPos := len(content)
+	for _, nextTm := range taskMatches {
+		if nextTm[0] > taskStart && nextTm[0] < nextHeaderPos {
+			nextHeaderPos = nextTm[0]
+			break
+		}
+	}
+	for _, pm := range phaseMatches {
+		if pm[0] > taskStart && pm[0] < nextHeaderPos {
+			nextHeaderPos = pm[0]
+			break
+		}
+	}
+	nextSectionRegex := regexp.MustCompile(`(?m)^## `)
+	sectionMatch := nextSectionRegex.FindIndex(content[taskEnd:])
+	if sectionMatch != nil {
+		absSectionPos := taskEnd + sectionMatch[0]
+		if absSectionPos < nextHeaderPos {
+			nextHeaderPos = absSectionPos
+		}
+	}
+	return nextHeaderPos
+}
+
+func mapCheckboxToState(prefix string) string {
+	char := prefix[3:4]
+	switch strings.ToLower(char) {
+	case "x":
+		return "FINISHED"
+	case "/":
+		return "IN-PROGRESS"
+	default:
+		return "PENDING"
+	}
 }
 
 func findPhaseIdxForTask(content []byte, taskStart int, phaseMatches [][]int, report *ImplementationReport) int {

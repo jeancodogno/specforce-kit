@@ -251,3 +251,66 @@ func TestImplementationReport_Tasks(t *testing.T) {
 		t.Errorf("Unexpected task order or IDs: %v", tasks)
 	}
 }
+
+func TestParseTasks_HybridFormat(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	slug := "hybrid-feature"
+	content := `
+# Implementation Roadmap
+
+### Phase 1: Mixed
+#### T1.1: Classic Header
+**State:** [FINISHED]
+**Target:** src/one.go
+
+- [ ] T1.2: Modern Checklist
+**Target:** src/two.go
+
+- [/] T1.3: Working Checklist
+**Target:** src/three.go
+
+- [x] T1.4: Done Checklist
+**Target:** src/four.go
+
+#### T1.5: Classic with Checkbox
+- [x] T1.5: Classic with Checkbox
+**Target:** src/five.go
+`
+	setupTasksFile(t, tmpDir, slug, content)
+
+	report, err := ParseTasks(context.Background(), tmpDir, slug)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	tasks := report.Tasks()
+	if len(tasks) != 5 {
+		t.Fatalf("Expected 5 tasks, got %d", len(tasks))
+	}
+
+	// Verify T1.1 (Classic)
+	if tasks[0].ID != "T1.1" || tasks[0].State != "FINISHED" {
+		t.Errorf("T1.1 mismatch: ID=%s, State=%s", tasks[0].ID, tasks[0].State)
+	}
+
+	// Verify T1.2 (Modern - [ ])
+	if tasks[1].ID != "T1.2" || tasks[1].State != "PENDING" {
+		t.Errorf("T1.2 mismatch: ID=%s, State=%s", tasks[1].ID, tasks[1].State)
+	}
+
+	// Verify T1.3 (Modern - [/])
+	if tasks[2].ID != "T1.3" || tasks[2].State != "IN-PROGRESS" {
+		t.Errorf("T1.3 mismatch: ID=%s, State=%s", tasks[2].ID, tasks[2].State)
+	}
+
+	// Verify T1.4 (Modern - [x])
+	if tasks[3].ID != "T1.4" || tasks[3].State != "FINISHED" {
+		t.Errorf("T1.4 mismatch: ID=%s, State=%s", tasks[3].ID, tasks[3].State)
+	}
+}
+

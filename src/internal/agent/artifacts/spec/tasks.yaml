@@ -1,4 +1,4 @@
-description: "Atomic, sequential implementation roadmap and TDD verification steps in a strict, CLI-scannable format."
+description: "Atomic, sequential implementation roadmap and TDD verification steps using natural Markdown checklist format."
 dependency: design
 instruction: |
   Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements.
@@ -6,9 +6,9 @@ instruction: |
   1. DO NOT write actual implementation code. You write the INTENT and the ACTION.
   2. Tasks MUST be strictly sequential. Do not use parallel execution flags.
   3. **Phases**: Group tasks into logical phases using `### Phase {N}: [Phase Name]` headers.
-  4. STRICT FORMATTING: Use `#### T{Phase}.{Task}:` as the header for EVERY task. The immediate next line MUST be the state tracker. 
-     - ENUM CONSTRAINT: The state MUST be exactly `**State:** [PENDING]`. 
-     - DO NOT invent new states. DO NOT use [TODO], [IN_PROGRESS], or [WAITING].
+  4. **Task Format**: Use standard Markdown checklist items for tasks: `- [ ] T{Phase}.{Task}: Title`.
+     - The checkbox state indicates progress (`- [ ]` for pending).
+     - You may also include a `**State:** [PENDING]` tag if more formal tracking is required.
   5. Target Flexibility: If a task is a global operation, set the Target to the CLI command (e.g., `CLI (npm run lint)`) or `Global Scope`.
 template: |
   ---
@@ -25,8 +25,7 @@ template: |
 
   ### Phase 1: [Phase Name]
 
-  #### T1.1: [SCAFFOLD/CLI] {Task Title}
-  **State:** `[PENDING]`
+  - [ ] T1.1: [SCAFFOLD/CLI] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
   **Context:** [REQ-X]
 
@@ -39,8 +38,7 @@ template: |
 
   ### Phase 2: [Phase Name]
 
-  #### T2.1: [CODE] {Task Title}
-  **State:** `[PENDING]`
+  - [ ] T2.1: [CODE] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
   **Context:** [REQ-X]
 
