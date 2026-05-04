@@ -537,6 +537,7 @@ func TestStandardizedNaming(t *testing.T) {
 				Mappings: map[string]core.MappingConfigs{
 					"commands": {core.MappingConfig{Path: "spf", Name: "spf-*", Ext: ".md"}},
 				},
+				Security: core.ToolSecurity{GlobalWrite: true},
 			},
 		},
 	}

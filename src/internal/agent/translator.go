@@ -13,9 +13,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// globalEnabledAgents defines which agents are allowed to write artifacts to global system paths.
-var globalEnabledAgents = []string{"codex"}
-
 // Transformer defines how to transform a blueprint into a target format.
 type Transformer func(bp *core.Blueprint, mapping core.MappingConfig) string
 
@@ -153,6 +150,8 @@ func processBlueprint(ctx context.Context, root string, kitFS fs.FS, kitConfig *
 		return err
 	}
 
+	toolRoute := kitConfig.Tools[agent]
+
 	for _, mapping := range mappings {
 		// REQ-2: Check if this artifact should be installed based on the target path
 		if !installer.ShouldInstall(mapping.Path, opts) {
@@ -160,7 +159,7 @@ func processBlueprint(ctx context.Context, root string, kitFS fs.FS, kitConfig *
 		}
 
 		var targetDir, targetFile string
-		if isGlobalEnabled(agent) {
+		if toolRoute.Security.GlobalWrite {
 			targetDir = mapping.Path
 			if !filepath.IsAbs(targetDir) {
 				targetDir = filepath.Join(root, targetDir)
@@ -208,63 +207,63 @@ func resolveMappings(kitConfig *core.KitConfig, path string, bp *core.Blueprint,
 		return nil, core.ErrToolMappingNotFound
 	}
 
-	rawMappings, hasMapping := toolRoute.Mappings[category]
-
-	var results []core.MappingConfig
-
-	if !hasMapping {
-		if bp.Metadata.Mapping == nil {
-			return nil, nil
-		}
-		override, ok := bp.Metadata.Mapping[agent]
-		if !ok {
-			return nil, nil
-		}
-		results = []core.MappingConfig{override}
-	} else {
-		// Process each mapping in the slice
-		for _, m := range rawMappings {
-			mapping := m
-			applyBlueprintOverrides(&mapping, bp, agent)
-			results = append(results, mapping)
-		}
+	rawMappings := getRawMappings(kitConfig, bp, toolRoute, agent, category)
+	if len(rawMappings) == 0 {
+		return nil, nil
 	}
 
-	for i := range results {
-		mapping := &results[i]
-		initialPath := mapping.Path
-		applyWildcards(mapping, slug, parts, initialPath)
+	results := make([]core.MappingConfig, 0, len(rawMappings))
+	for _, m := range rawMappings {
+		mapping := m
+		applyBlueprintOverrides(&mapping, bp, agent)
 
-		// Default naming logic: If mapping.Name is missing, resolve it based on source filename
-		if mapping.Name == "" {
-			mapping.Name = slug
+		if err := finalizeMapping(&mapping, toolRoute, slug, parts); err != nil {
+			return nil, err
 		}
-
-		// Resolve final target path
-		rawTarget := mapping.Target
-		if rawTarget == "" {
-			rawTarget = toolRoute.Target
-		}
-
-		target := core.ExpandPath(rawTarget)
-		if strings.HasPrefix(target, "~") {
-			return nil, fmt.Errorf("failed to resolve home directory for path: %s", target)
-		}
-
-		// Use filepath.Join to combine target and the mapping's internal path
-		mapping.Path = filepath.Clean(filepath.Join(target, mapping.Path))
+		results = append(results, mapping)
 	}
 
 	return results, nil
 }
 
-func isGlobalEnabled(agent string) bool {
-	for _, a := range globalEnabledAgents {
-		if a == agent {
-			return true
+func getRawMappings(kitConfig *core.KitConfig, bp *core.Blueprint, toolRoute core.ToolRoute, agent, category string) []core.MappingConfig {
+	if specific, ok := toolRoute.Mappings[category]; ok {
+		return specific
+	}
+	if bp.Metadata.Mapping != nil {
+		if override, ok := bp.Metadata.Mapping[agent]; ok {
+			return []core.MappingConfig{override}
 		}
 	}
-	return false
+	if defaults, ok := kitConfig.Defaults[category]; ok {
+		return defaults
+	}
+	return nil
+}
+
+func finalizeMapping(mapping *core.MappingConfig, toolRoute core.ToolRoute, slug string, parts []string) error {
+	initialPath := mapping.Path
+	applyWildcards(mapping, slug, parts, initialPath)
+
+	// Default naming logic: If mapping.Name is missing, resolve it based on source filename
+	if mapping.Name == "" {
+		mapping.Name = slug
+	}
+
+	// Resolve final target path
+	rawTarget := mapping.Target
+	if rawTarget == "" {
+		rawTarget = toolRoute.Target
+	}
+
+	target := core.ExpandPath(rawTarget)
+	if strings.HasPrefix(target, "~") {
+		return fmt.Errorf("failed to resolve home directory for path: %s", target)
+	}
+
+	// Use filepath.Join to combine target and the mapping's internal path
+	mapping.Path = filepath.Clean(filepath.Join(target, mapping.Path))
+	return nil
 }
 
 func applyBlueprintOverrides(mapping *core.MappingConfig, bp *core.Blueprint, agent string) {

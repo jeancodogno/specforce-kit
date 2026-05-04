@@ -13,11 +13,17 @@
 > 5. **DISTILLATION:** If a lesson or decision becomes a permanent rule, you MUST move it to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and completely delete it from here.
 
 ## Critical Now
+- [2026-05-04] [Agent/Kit] Agent/Skill reorganization (v1.x) implemented. Dynamic Registry with multi-source discovery (Embedded + Local) and variable injection (`{{context}}`) are now active.
 - [2026-05-04] [CLI] Auto-timestamped spec slugs implemented. `specforce spec init` now prepends `YYYYMMDD-HHMM-` to slugs automatically.
 - [2026-05-04] [Docs] Multi-language documentation structure (EN, PT, ES) implemented. All docs migrated to `docs/{en,pt,es}/`.
-- [2026-05-02] [Security] "Zero Scripts" policy implemented. `postinstall` and `prepare` scripts removed from `package.json`.
 
 ## Last Actions
+- **Date:** 2026-05-04
+- **Scope:** Agent & Skill Reorganization (v1.x)
+- **Completed:** Refactored `agent.Registry` for multi-source discovery, updated `kit.yaml` schema with `defaults` and `security` metadata, and implemented `InstructionManager` for dynamic `{{variable}}` injection. Updated EN/PT/ES docs.
+- **Next:** Monitor for any variable injection collisions in complex templates.
+- **Relevant Files:** src/internal/agent/registry.go, src/internal/agent/translator.go, src/internal/agent/instructions.go, kit.yaml, docs/en/configuration.md
+
 - **Date:** 2026-05-04
 - **Scope:** Auto-Timestamped Spec Slugs
 - **Completed:** Implemented `PrepareSlug` logic in `spec` package, integrated into `HandleSpecInit`, and added unit/integration tests. Created new standard for spec directory naming.
@@ -26,18 +32,6 @@
 
 - **Date:** 2026-05-04
 - **Scope:** Multi-language Documentation Expansion
-...
-## Active Lessons & Anti-Patterns
-- **First Seen:** 2026-05-04
-- **Last Seen:** 2026-05-04
-- **Scope:** CLI / UX
-- **Symptom:** Users might not notice if a slug is transformed (timestamped) unless explicitly told.
-- **Avoid:** Transforming user input silently without feedback.
-- **Do Instead:** Always print the final resolved path/slug in the success message of `spec init` to maintain transparency.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
-
 - **Completed:** Restructured `docs/` folder into `en/`, `pt/`, and `es/`. Migrated English docs, added language selector to root README, and created PT/ES localized versions of root documents.
 - **Next:** Continue translating specific documentation files within the language folders.
 - **Relevant Files:** README.md, README.pt.md, README.es.md, docs/{en,pt,es}/*
@@ -57,6 +51,26 @@
 ## Active Lessons & Anti-Patterns
 - **First Seen:** 2026-05-04
 - **Last Seen:** 2026-05-04
+- **Scope:** Agent / Infrastructure
+- **Symptom:** Cognitive complexity spikes in FS-walking functions (like `scanSkills`) when adding metadata parsing logic.
+- **Avoid:** Nesting heavy conditional logic inside `WalkDir` functions.
+- **Do Instead:** Extract metadata loading into surgical helper functions (e.g., `loadSkillMetadata`) to keep the traversal loop clean and testable.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
+
+- **First Seen:** 2026-05-04
+- **Last Seen:** 2026-05-04
+- **Scope:** CLI / UX
+- **Symptom:** Users might not notice if a slug is transformed (timestamped) unless explicitly told.
+- **Avoid:** Transforming user input silently without feedback.
+- **Do Instead:** Always print the final resolved path/slug in the success message of `spec init` to maintain transparency.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
+
+- **First Seen:** 2026-05-04
+- **Last Seen:** 2026-05-04
 - **Scope:** Documentation / Migration
 - **Symptom:** Links breaking during documentation folder restructuring.
 - **Avoid:** Moving documentation files without a recursive link verification step.
@@ -74,6 +88,7 @@
 - **Recurrence Count:** 1
 - **Status:** Active
 - **Distill To:** engineering.md
+
 - **First Seen:** 2026-04-30
 - **Last Seen:** 2026-04-30
 - **Scope:** Proxy / Environment

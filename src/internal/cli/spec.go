@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 	"github.com/jeancodogno/specforce-kit/src/internal/project"
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
@@ -272,6 +273,19 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 		fmt.Printf("Unknown spec artifact slug: %s\n", slug)
 		fmt.Println("Use 'specforce spec artifact' to list available slugs.")
 		return nil
+	}
+
+	// Dynamic instruction and template injection
+	kitFS, _ := e.GetKitFS(ui)
+	config := core.LoadConfig(".")
+	mgr := agent.NewInstructionManager(kitFS, config)
+
+	art.Instruction = mgr.InjectVariables(art.Instruction)
+	art.Template = mgr.InjectVariables(art.Template)
+
+	// Merge with category-specific instructions from config
+	if custom, ok := config.Instructions[art.Name]; ok {
+		art.Instruction += "\n\n" + strings.Join(custom, "\n")
 	}
 
 	if jsonMode {

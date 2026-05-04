@@ -19,6 +19,7 @@ type HooksConfig struct {
 type ProjectConfig struct {
 	Instructions map[string][]string `yaml:"instructions"`
 	Hooks        HooksConfig         `yaml:"hooks"`
+	Context      map[string]string   `yaml:"context"`
 }
 
 // DefaultConfigContent is the default content for the .specforce/config.yaml file.
@@ -47,6 +48,11 @@ const DefaultConfigContent = `instructions:
   # archive:
   #   - "Always update the project memorial with lessons learned"
   #   - "Ensure all temporary artifacts are cleaned up"
+
+# Global context variables for instruction injection
+# context:
+#   project_name: "Specforce Kit"
+#   technical_stack: "Go, Bubbletea, Cobra"
 
 hooks:
   # Example: Run linting and tests automatically when finishing tasks

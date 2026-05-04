@@ -11,7 +11,7 @@ func TestKitManifests(t *testing.T) {
 	}
 
 	registry := &Registry{}
-	err = registry.Initialize(kitFS)
+	err = registry.Initialize(kitFS, "")
 	if err != nil {
 		t.Fatalf("failed to initialize registry with kit FS: %v", err)
 	}

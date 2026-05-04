@@ -22,7 +22,31 @@ instructions:
     - "Summarize any technical debt introduced during implementation."
 ```
 
-## 2. Validation Hooks (Quality Gates)
+## 2. Injeção de Variáveis em Instruções
+
+Para tornar as instruções ainda mais poderosas, você pode definir variáveis de projeto no bloco `context`. Essas variáveis podem ser injetadas em qualquer instrução ou template de artefato usando a sintaxe `{{nome_da_variavel}}`.
+
+No `config.yaml`:
+
+```yaml
+# Variáveis de contexto global
+context:
+  project_name: "Specforce Kit"
+  tech_stack: "Go, React, PostgreSQL"
+  primary_branch: "main"
+
+instructions:
+  tasks:
+    - "Lembre-se: o código será mergeado na branch {{primary_branch}}."
+    - "Toda nova funcionalidade no {{project_name}} deve respeitar a stack {{tech_stack}}."
+```
+
+### Por que usar variáveis?
+- **Fonte Única de Verdade:** Atualize o nome do projeto ou a stack uma única vez, e todas as instruções voltadas para o agente serão sincronizadas.
+- **Templates Reutilizáveis:** Use o mesmo conjunto de instruções em projetos diferentes, alterando apenas o bloco `context`.
+- **Consistência:** Garante que os agentes sempre tenham dados de projeto corretos e não alucinados.
+
+## 3. Validation Hooks (Quality Gates)
 
 Hooks are external commands executed by Specforce before or after a state transition. Their main use is to act as **Quality Gates** to prevent the agent from finishing tasks if the code is inadequate.
 

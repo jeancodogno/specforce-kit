@@ -169,7 +169,7 @@ func (e *Executor) ResolveSelectedAgents(ctx context.Context, ui core.UI, agents
 	}
 
 	// Ensure registry is initialized
-	if err := e.Registry.Initialize(kitFS); err != nil {
+	if err := e.Registry.Initialize(kitFS, "."); err != nil {
 		return nil, fmt.Errorf("failed to initialize agent registry: %w", err)
 	}
 

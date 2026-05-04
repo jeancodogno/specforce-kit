@@ -30,7 +30,7 @@ tools:
 	}
 
 	reg := &agent.Registry{}
-	_ = reg.Initialize(kitFS)
+	_ = reg.Initialize(kitFS, "")
 
 	t.Run("no existing agents", func(t *testing.T) {
 		got := DetectExistingAgents(ctx, tmpDir, reg)
