@@ -61,7 +61,7 @@ If a hook fails, the state transition will be blocked.
 `
 
 // EnsureAgentsMD creates or updates the AGENTS.md file in the project root.
-func EnsureAgentsMD(root string, ui core.UI) error {
+func EnsureAgentsMD(root string, ui core.UI, selectedAgents []string) error {
 	root = filepath.Clean(root)
 	path := filepath.Join(root, "AGENTS.md")
 	replacement := generateAgentsContent()
@@ -91,17 +91,18 @@ func EnsureAgentsMD(root string, ui core.UI) error {
 		return fmt.Errorf("failed to write AGENTS.md: %w", err)
 	}
 
-	return ensurePlatformConfigs(root)
+	return ensurePlatformConfigs(root, selectedAgents)
 }
 
-func ensurePlatformConfigs(root string) error {
+func ensurePlatformConfigs(root string, selectedAgents []string) error {
 	// 1. Gemini
 	geminiDir := filepath.Join(root, ".gemini")
-	if err := os.MkdirAll(geminiDir, 0750); err != nil {
-		return fmt.Errorf("failed to create .gemini directory: %w", err)
-	}
-	geminiSettings := filepath.Join(geminiDir, "settings.json")
-	settingsContent := `{
+	if shouldManageDir(root, ".gemini", []string{"gemini-cli"}, selectedAgents) {
+		if err := os.MkdirAll(geminiDir, 0750); err != nil {
+			return fmt.Errorf("failed to create .gemini directory: %w", err)
+		}
+		geminiSettings := filepath.Join(geminiDir, "settings.json")
+		settingsContent := `{
   "context": {
     "fileName": [
       "AGENTS.md",
@@ -109,33 +110,59 @@ func ensurePlatformConfigs(root string) error {
     ]
   }
 }`
-	// Always write the file to ensure the configuration is correct and up to date
-	if err := os.WriteFile(geminiSettings, []byte(settingsContent), 0600); err != nil {
-		return fmt.Errorf("failed to write .gemini/settings.json: %w", err)
+		// Always write the file to ensure the configuration is correct and up to date
+		if err := os.WriteFile(geminiSettings, []byte(settingsContent), 0600); err != nil {
+			return fmt.Errorf("failed to write .gemini/settings.json: %w", err)
+		}
 	}
 
 	// 2. Symlinks
-	agents := []string{".agent", ".claude"}
-	for _, agent := range agents {
-		rulesDir := filepath.Join(root, agent, "rules")
-		if err := os.MkdirAll(rulesDir, 0750); err != nil {
-			return fmt.Errorf("failed to create %s/rules directory: %w", agent, err)
-		}
+	agentMappings := map[string][]string{
+		".agent":  {"antigravity"},
+		".claude": {"claude"},
+	}
 
-		linkPath := filepath.Join(rulesDir, "AGENTS.md")
-		if _, err := os.Lstat(linkPath); err == nil {
-			// Remove existing link or file if it exists to ensure it's correct
-			if err := os.Remove(linkPath); err != nil {
-				return fmt.Errorf("failed to remove existing link at %s: %w", linkPath, err)
+	for dir, requiredAgents := range agentMappings {
+		if shouldManageDir(root, dir, requiredAgents, selectedAgents) {
+			rulesDir := filepath.Join(root, dir, "rules")
+			if err := os.MkdirAll(rulesDir, 0750); err != nil {
+				return fmt.Errorf("failed to create %s/rules directory: %w", dir, err)
 			}
-		}
 
-		if err := os.Symlink("../../AGENTS.md", linkPath); err != nil {
-			return fmt.Errorf("failed to create symlink at %s: %w", linkPath, err)
+			linkPath := filepath.Join(rulesDir, "AGENTS.md")
+			if _, err := os.Lstat(linkPath); err == nil {
+				// Remove existing link or file if it exists to ensure it's correct
+				if err := os.Remove(linkPath); err != nil {
+					return fmt.Errorf("failed to remove existing link at %s: %w", linkPath, err)
+				}
+			}
+
+			if err := os.Symlink("../../AGENTS.md", linkPath); err != nil {
+				return fmt.Errorf("failed to create symlink at %s: %w", linkPath, err)
+			}
 		}
 	}
 
 	return nil
+}
+
+func shouldManageDir(root, dir string, requiredAgents, selectedAgents []string) bool {
+	// REQ-2 AC-3: If directory exists, we manage it regardless of selection
+	path := filepath.Join(root, dir)
+	if info, err := os.Stat(path); err == nil && info.IsDir() {
+		return true
+	}
+
+	// REQ-1: Manage if tool is selected
+	for _, ra := range requiredAgents {
+		for _, sa := range selectedAgents {
+			if ra == sa {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func generateAgentsContent() string {

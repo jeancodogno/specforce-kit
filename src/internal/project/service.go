@@ -50,6 +50,10 @@ func (s *Service) InitializeProject(ctx context.Context, ui core.UI, config Init
 		}
 	}
 
+	if err := EnsureAgentsMD(config.ProjectRoot, ui, config.SelectedAgents); err != nil {
+		return fmt.Errorf("failed to finalize project with AGENTS.md: %w", err)
+	}
+
 	for _, a := range config.SelectedAgents {
 		if err := agent.AdaptArtifacts(ctx, config.ProjectRoot, s.kitFS, a, ui, installer.Options{}); err != nil {
 			return fmt.Errorf("failed to adapt artifacts for %s: %w", a, err)
@@ -85,7 +89,7 @@ func (s *Service) UpdateTools(ctx context.Context, ui core.UI, selectedAgents []
 		ui.Success("Agent tools and instructions updated successfully.")
 	}
 
-	if err := EnsureAgentsMD(s.projectRoot, ui); err != nil {
+	if err := EnsureAgentsMD(s.projectRoot, ui, selectedAgents); err != nil {
 		return fmt.Errorf("failed to update AGENTS.md: %w", err)
 	}
 

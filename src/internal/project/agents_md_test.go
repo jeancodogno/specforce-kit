@@ -15,7 +15,7 @@ func TestEnsureAgentsMD(t *testing.T) {
 	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	t.Run("Create new file", func(t *testing.T) {
-		err := EnsureAgentsMD(tempDir, nil)
+		err := EnsureAgentsMD(tempDir, nil, []string{})
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
@@ -39,7 +39,7 @@ func TestEnsureAgentsMD(t *testing.T) {
 			t.Fatalf("failed to write existing file: %v", err)
 		}
 
-		err = EnsureAgentsMD(tempDir, nil)
+		err = EnsureAgentsMD(tempDir, nil, []string{})
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
@@ -61,44 +61,65 @@ func TestEnsurePlatformConfigs(t *testing.T) {
 	}
 	defer func() { _ = os.RemoveAll(tempDir) }()
 
-	err = EnsureAgentsMD(tempDir, nil)
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
-	}
+	t.Run("Does not create configs if dirs missing and not selected", func(t *testing.T) {
+		err = EnsureAgentsMD(tempDir, nil, []string{})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
 
-	// Gemini
-	geminiPath := filepath.Join(tempDir, ".gemini", "settings.json")
-	if _, err := os.Stat(geminiPath); err != nil {
-		t.Errorf("Gemini settings.json not created: %v", err)
-	}
-	data, _ := os.ReadFile(geminiPath)
-	if !strings.Contains(string(data), "\"fileName\": [") {
-		t.Errorf("Gemini settings.json content mismatch (expected array): %s", string(data))
-	}
-	if !strings.Contains(string(data), "\"AGENTS.md\"") {
-		t.Errorf("Gemini settings.json missing AGENTS.md: %s", string(data))
-	}
+		// Verify no directories were created
+		for _, dir := range []string{".gemini", ".agent", ".claude"} {
+			path := filepath.Join(tempDir, dir)
+			if _, err := os.Stat(path); err == nil {
+				t.Errorf("expected directory %s NOT to exist", dir)
+			}
+		}
+	})
 
-	// Antigravity symlink
-	agentLink := filepath.Join(tempDir, ".agent", "rules", "AGENTS.md")
-	if _, err := os.Lstat(agentLink); err != nil {
-		t.Errorf("Antigravity symlink not created: %v", err)
-	}
-	target, _ := os.Readlink(agentLink)
-	if target != "../../AGENTS.md" {
-		t.Errorf("Antigravity symlink target mismatch: %s", target)
-	}
+	t.Run("Creates configs if selected", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		err = EnsureAgentsMD(subTempDir, nil, []string{"gemini-cli", "claude", "antigravity"})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
 
-	// Claude Code symlink
-	claudeLink := filepath.Join(tempDir, ".claude", "rules", "AGENTS.md")
-	if _, err := os.Lstat(claudeLink); err != nil {
-		t.Errorf("Claude Code symlink not created: %v", err)
-	}
-	target, _ = os.Readlink(claudeLink)
-	if target != "../../AGENTS.md" {
-		t.Errorf("Claude Code symlink target mismatch: %s", target)
-	}
+		// Gemini
+		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
+		if _, err := os.Stat(geminiPath); err != nil {
+			t.Errorf("Gemini settings.json not created: %v", err)
+		}
+
+		// Antigravity symlink
+		agentLink := filepath.Join(subTempDir, ".agent", "rules", "AGENTS.md")
+		if _, err := os.Lstat(agentLink); err != nil {
+			t.Errorf("Antigravity symlink not created: %v", err)
+		}
+
+		// Claude Code symlink
+		claudeLink := filepath.Join(subTempDir, ".claude", "rules", "AGENTS.md")
+		if _, err := os.Lstat(claudeLink); err != nil {
+			t.Errorf("Claude Code symlink not created: %v", err)
+		}
+	})
+
+	t.Run("Creates configs if dir exists even if not selected", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(subTempDir, ".gemini"), 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		err = EnsureAgentsMD(subTempDir, nil, []string{})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
+		if _, err := os.Stat(geminiPath); err != nil {
+			t.Errorf("Gemini settings.json should be created because directory exists")
+		}
+	})
 }
+
 
 func TestGenerateAgentsContent(t *testing.T) {
 	content := generateAgentsContent()

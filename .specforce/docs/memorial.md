@@ -13,11 +13,17 @@
 > 5. **DISTILLATION:** If a lesson or decision becomes a permanent rule, you MUST move it to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and completely delete it from here.
 
 ## Critical Now
+- [2026-05-05] [Project/Init] Conditional tool folder creation implemented. `.gemini`, `.claude`, and `.agent` directories are now only created if selected or already existing.
 - [2026-05-04] [Agent/Kit] Agent/Skill reorganization (v1.x) implemented. Dynamic Registry with multi-source discovery (Embedded + Local) and variable injection (`{{context}}`) are now active.
 - [2026-05-04] [CLI] Auto-timestamped spec slugs implemented. `specforce spec init` now prepends `YYYYMMDD-HHMM-` to slugs automatically.
-- [2026-05-04] [Docs] Multi-language documentation structure (EN, PT, ES) implemented. All docs migrated to `docs/{en,pt,es}/`.
 
 ## Last Actions
+- **Date:** 2026-05-05
+- **Scope:** Conditional Tool Folder Creation (Init Fix)
+- **Completed:** Refactored `EnsureAgentsMD` and `ensurePlatformConfigs` in `project` package to accept `selectedAgents`. Removed premature `EnsureAgentsMD` call from `BootstrapProject`. Orchestrated final configuration in `Service.InitializeProject` after tool selection is known.
+- **Next:** Monitor for any other tools that might need similar conditional logic in the future.
+- **Relevant Files:** src/internal/project/agents_md.go, src/internal/project/service.go, src/internal/project/bootstrapper.go
+
 - **Date:** 2026-05-04
 - **Scope:** Agent & Skill Reorganization (v1.x)
 - **Completed:** Refactored `agent.Registry` for multi-source discovery, updated `kit.yaml` schema with `defaults` and `security` metadata, and implemented `InstructionManager` for dynamic `{{variable}}` injection. Updated EN/PT/ES docs.
@@ -42,13 +48,17 @@
 - **Next:** Monitor for any user confusion regarding the lack of automatic builds.
 - **Relevant Files:** index.js, package.json, .specforce/docs/security.md
 
-- **Date:** 2026-05-01
-- **Scope:** macOS CI & Coverage
-- **Completed:** Fixed `ScanProject` path discrepancies using `filepath.EvalSymlinks`, added resilience to `os.UserHomeDir` tests, and increased `upgrade` coverage to >80%.
-- **Next:** Monitor macOS-specific path issues in future features.
-- **Relevant Files:** src/internal/spec/scanner.go, src/internal/agent/translator_test.go, src/internal/upgrade/*.go
-
 ## Active Lessons & Anti-Patterns
+- **First Seen:** 2026-05-05
+- **Last Seen:** 2026-05-05
+- **Scope:** Project / Initialization
+- **Symptom:** Project root becomes cluttered with unused tool directories (.gemini, .claude) during `init`.
+- **Avoid:** Unconditionally creating platform-specific directories in "bootstrapping" phases before user preferences (selections) are resolved.
+- **Do Instead:** Defer platform-specific configuration and directory creation until after the selection logic is complete. Pass the list of `selectedAgents` down to the configuration logic.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
+
 - **First Seen:** 2026-05-04
 - **Last Seen:** 2026-05-04
 - **Scope:** Agent / Infrastructure

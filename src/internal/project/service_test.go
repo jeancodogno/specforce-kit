@@ -2,6 +2,8 @@ package project_test
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 	"testing/fstest"
 
@@ -132,4 +134,45 @@ tools:
 			t.Fatalf("UpdateTools failed with nil UI: %v", err)
 		}
 	})
+}
+
+func TestService_InitializeProject_ConditionalCreation(t *testing.T) {
+	kitFS := fstest.MapFS{
+		"kit.yaml": &fstest.MapFile{Data: []byte(`
+tools:
+  gemini-cli:
+    name: "Gemini CLI"
+    target: ".gemini/"
+`)},
+		"agents/gemini-cli.yaml": &fstest.MapFile{Data: []byte("content: hello")},
+	}
+	tmpDir := t.TempDir()
+	artifactsFS := fstest.MapFS{}
+
+	svc := project.NewService(kitFS, artifactsFS, tmpDir)
+	ui := &mockUI{}
+
+	config := project.InitConfig{
+		ProjectRoot:    tmpDir,
+		SelectedAgents: []string{"gemini-cli"},
+	}
+
+	err := svc.InitializeProject(context.Background(), ui, config)
+	if err != nil {
+		t.Fatalf("InitializeProject failed: %v", err)
+	}
+
+	// .gemini SHOULD exist
+	if _, err := os.Stat(filepath.Join(tmpDir, ".gemini")); os.IsNotExist(err) {
+		t.Errorf("expected directory .gemini to exist")
+	}
+
+	// .claude, .agent SHOULD NOT exist
+	unselected := []string{".claude", ".agent"}
+	for _, dir := range unselected {
+		path := filepath.Join(tmpDir, dir)
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("expected directory %s NOT to exist (not selected)", dir)
+		}
+	}
 }

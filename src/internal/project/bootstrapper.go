@@ -38,10 +38,6 @@ func BootstrapProject(ctx context.Context, root string, kitFS fs.FS, artifactsFS
 		ui.Success("Specforce directory structure initialized successfully.")
 	}
 
-	if err := EnsureAgentsMD(root, ui); err != nil {
-		return fmt.Errorf("failed to ensure AGENTS.md: %w", err)
-	}
-
 	return nil
 }
 
