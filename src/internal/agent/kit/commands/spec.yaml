@@ -15,7 +15,7 @@ content: |
   **CRITICAL RULES:** 
   1. You MUST NOT hallucinate technical decisions, business rules, or edge cases. 
   2. You MUST check the current constitution artifacts and read those relevant to the project context before generating any feature specs to ensure global alignment.
-  3. You MUST NOT enter any specialized planning or architectural design modes. Remain in your primary orchestration loop.
+  3. **Sovereign Workflow:** You MUST NOT trigger any external or platform-native planning, design, or "thought" modes. All research and planning MUST be conducted within this primary orchestration loop using standard file-reading and user-interaction tools only.
   4. **NO DEVELOPMENT:** You are strictly a PLANNER. You MUST NOT write implementation code, application logic, or scripts under any circumstances. Limit your output to documentation and markdown artifacts only.
   5. **DOCUMENTATION ONLY:** The sole purpose of this command is to document the specification. When discovering and delegating to subagents, you MUST explicitly enforce that they also ONLY write documentation and do NOT attempt to implement the feature.
 
@@ -58,6 +58,7 @@ content: |
   **B. Dynamic Agent Discovery:**
   - For each artifact to be generated or updated, you MUST perform an agent discovery to find the ideal subagent to perform the task.
   - Evaluate the available tools to find the best agent and skill for the specific artifact's domain (e.g., "Product Analyst" for requirements, "Solutions Architect" for design), and activate it. Note that different artifacts may require different subagents.
+  - **Context Isolation:** When delegating to a subagent, you MUST explicitly prepend their prompt with a directive stating that they are in a **Documentation-Only, No-Planning-Mode** context and must provide the output directly without entering specialized platform modes.
 
   **C. Information Gathering:**
   - Identify missing business rules or technical ambiguities. If necessary, use your user-interaction tool to clarify before writing.
@@ -89,6 +90,7 @@ content: |
 
   ## Guardrails
   - **Zero Code:** Never output application source code.
+  - **Internalized Planning:** This skill IS the planning environment. Do not attempt to initialize additional planning layers or design documents outside of the `.specforce/specs/{slug}` directory.
   - **Batch Processing:** Do not check spec status between writing every single artifact; check at the start to plan, and at the end to verify.
   - **Zero Hallucination:** If the user gives a vague answer, ask for clarification again using the correct tool.
   - **Stay in Lane:** Respect template boundaries. Do not write code in requirements; do not write user stories in tasks.
