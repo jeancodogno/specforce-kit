@@ -9,12 +9,13 @@ import (
 
 // ArtifactStatus represents the presence and description of a single spec document.
 type ArtifactStatus struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Path        string `json:"path"`
-	Exists      bool   `json:"exists"`
-	Blocked     bool   `json:"blocked"`
-	Dependency  string `json:"dependency"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	Path             string   `json:"path"`
+	Exists           bool     `json:"exists"`
+	Blocked          bool     `json:"blocked"`
+	Dependency       string   `json:"dependency"`
+	ValidationErrors []string `json:"validation_errors,omitempty"`
 }
 
 // SpecStatus represents the overall completion state of a specific feature spec.
@@ -24,6 +25,7 @@ type SpecStatus struct {
 	Progress  int              `json:"progress"`
 	Total     int              `json:"total"`
 	Found     int              `json:"found"`
+	IsValid   bool             `json:"is_valid"`
 }
 
 // GetStatus checks the filesystem for the required artifacts from the registry and returns a progress summary.
@@ -34,6 +36,7 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 		Slug:      slug,
 		Artifacts: make([]ArtifactStatus, 0, len(artifacts)),
 		Total:     len(artifacts),
+		IsValid:   true,
 	}
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
@@ -41,49 +44,29 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 		return SpecStatus{}, fmt.Errorf("feature directory not found: %s", specDir)
 	}
 
-	// Pre-scan for existing files to resolve dependencies
-	existsMap := make(map[string]bool)
-	for _, art := range artifacts {
-		if err := ctx.Err(); err != nil {
-			return SpecStatus{}, err
-		}
-		fullPath := filepath.Join(specDir, art.Name+".md")
-		if _, err := os.Stat(fullPath); err == nil {
-			existsMap[art.Name] = true
-		}
+	existsMap, err := scanArtifactExistence(ctx, specDir, artifacts)
+	if err != nil {
+		return SpecStatus{}, err
 	}
 
 	for _, art := range artifacts {
 		if err := ctx.Err(); err != nil {
 			return status, err
 		}
-		// Artifact paths within the spec directory
-		fileName := art.Name + ".md"
-		relPath := filepath.Join(".specforce", "specs", slug, fileName)
 
-		exists := existsMap[art.Name]
-		if exists {
+		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, art, existsMap, registry)
+		if err != nil {
+			return status, err
+		}
+
+		if len(artStatus.ValidationErrors) > 0 {
+			status.IsValid = false
+		}
+		if artStatus.Exists {
 			status.Found++
 		}
 
-		blocked := false
-		if art.Dependency != "" {
-			// Check if dependency exists in registry first (as per REQ-1 scenario 4)
-			if _, depInRegistry := registry.Get(art.Dependency); !depInRegistry {
-				blocked = true
-			} else if !existsMap[art.Dependency] {
-				blocked = true
-			}
-		}
-
-		status.Artifacts = append(status.Artifacts, ArtifactStatus{
-			Name:        art.Name,
-			Description: art.Description,
-			Path:        relPath,
-			Exists:      exists,
-			Blocked:     blocked,
-			Dependency:  art.Dependency,
-		})
+		status.Artifacts = append(status.Artifacts, artStatus)
 	}
 
 	if status.Total > 0 {
@@ -91,4 +74,52 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 	}
 
 	return status, nil
+}
+
+func scanArtifactExistence(ctx context.Context, specDir string, artifacts []Artifact) (map[string]bool, error) {
+	existsMap := make(map[string]bool)
+	for _, art := range artifacts {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		fullPath := filepath.Join(specDir, art.Name+".md")
+		if _, err := os.Stat(fullPath); err == nil {
+			existsMap[art.Name] = true
+		}
+	}
+	return existsMap, nil
+}
+
+func processArtifactStatus(ctx context.Context, projectRoot, slug string, art Artifact, existsMap map[string]bool, registry *Registry) (ArtifactStatus, error) {
+	fileName := art.Name + ".md"
+	relPath := filepath.Join(".specforce", "specs", slug, fileName)
+	exists := existsMap[art.Name]
+
+	blocked := false
+	if art.Dependency != "" {
+		if _, depInRegistry := registry.Get(art.Dependency); !depInRegistry {
+			blocked = true
+		} else if !existsMap[art.Dependency] {
+			blocked = true
+		}
+	}
+
+	var validationErrors []string
+	if art.Name == "tasks" && exists {
+		var err error
+		validationErrors, err = ValidateTasks(ctx, projectRoot, slug)
+		if err != nil {
+			return ArtifactStatus{}, fmt.Errorf("failed to validate tasks.md: %w", err)
+		}
+	}
+
+	return ArtifactStatus{
+		Name:             art.Name,
+		Description:      art.Description,
+		Path:             relPath,
+		Exists:           exists,
+		Blocked:          blocked,
+		Dependency:       art.Dependency,
+		ValidationErrors: validationErrors,
+	}, nil
 }

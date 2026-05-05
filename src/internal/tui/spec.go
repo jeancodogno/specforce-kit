@@ -29,6 +29,12 @@ func RenderSpecStatus(status spec.SpecStatus) string {
 		description := descStyle.Render(artifact.Description)
 
 		fmt.Fprintf(&builder, " %s %s %s\n", glyph, name, description)
+
+		// Render validation errors if they exist
+		for _, err := range artifact.ValidationErrors {
+			indent := strings.Repeat(" ", 4)
+			fmt.Fprintf(&builder, "%s%s\n", indent, errorStyle.Render("- "+err))
+		}
 	}
 
 	return builder.String()
