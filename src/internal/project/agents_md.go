@@ -17,14 +17,20 @@ This project uses **Specforce** for Spec-Driven Development (SDD). As an AI agen
 ## 1. Spec-Driven Development (SDD) Protocol
 You MUST operate exclusively through the Specforce workflow engines (commands/skills). They define your mindset and mandatory steps:
 
-- **Discovery (` + "`/discovery`" + `):** Purely conversational and read-only mode for feature brainstorming or diagnostic investigation. Use this to explore ideas or research bugs before planning.
-- **Planning (` + "`/spec`" + `):** Always activate this workflow when a new feature intent or structural change is detected. It governs requirements discovery, constitutional alignment, and task decomposition.
-- **Governance (` + "`/constitution`" + `):** Use to ensure your proposals respect the project's architecture, security, and principles.
-- **Execution (` + "`/implement`" + `):** Activate this engine to perform the deterministic execution cycle following the approved roadmap.
-- **Archival (` + "`/archive`" + `):** Activate this workflow once implementation is verified to harvest lessons learned, update the Project Constitution, and clean up active specs.
+- **Discovery (` + "`/spf:discovery`" + `):** Activate for brainstorming, research, bug investigation, or root cause analysis. Purely read-only.
+- **Planning (` + "`/spf:spec`" + `):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
+- **Governance (` + "`/spf:constitution`" + `):** Use to ensure proposals respect architecture, security, and principles.
+- **Execution (` + "`/spf:implement`" + `):** Activate to perform the deterministic implementation cycle following an approved roadmap.
+- **Archival (` + "`/spf:archive`" + `):** Activate once verified to harvest lessons, update Memorial, and clean up specs.
 
 ### Proactive Mandate
-Do NOT wait for explicit slash commands from the user. If the conversation context shifts to "planning" or "implementation," you MUST automatically invoke the corresponding workflow command/skill to proceed.
+Do NOT wait for explicit slash commands. You MUST automatically activate the correct workflow based on the user's technical intent:
+1. **Discovery Intent** (vague idea, "how to", bug report) --> Activate ` + "`spf.discovery`" + `.
+2. **Planning Intent** (new feature, structural pivot, confirmed fix) --> Activate ` + "`spf.spec`" + `.
+3. **Execution Intent** (approved roadmap exists, "go", "implement") --> Activate ` + "`spf.implement`" + `.
+
+**CRITICAL: DIRECT EDIT PROHIBITION**
+You are STRICTLY FORBIDDEN from using mutation tools (` + "`replace`" + `, ` + "`write_file`" + `) to modify the codebase unless a valid, approved specification exists. If the intent requires a change but no spec is active, you MUST pivot to ` + "`spf.discovery`" + ` or ` + "`spf.spec`" + ` first.
 
 - **Specs First:** Never write implementation code until a fully approved Specification (requirements.md, design.md, tasks.md) exists.
 - **Total Consistency:** If a change is required at any point (even mid-implementation), you MUST update ALL related artifacts. You are strictly forbidden from updating only tasks.md while leaving requirements.md or design.md inconsistent.

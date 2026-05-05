@@ -13,11 +13,17 @@
 > 5. **DISTILLATION:** If a lesson or decision becomes a permanent rule, you MUST move it to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and completely delete it from here.
 
 ## Critical Now
+- [2026-05-05] [Agent/Protocol] SDD Trigger Optimization implemented. Agents now have explicit mandates for triggering `spf.discovery` (vague intent/bug investigation) and `spf.spec` (planning). Direct edits to codebase without an approved spec are now strictly prohibited in `AGENTS.md`.
 - [2026-05-05] [Project/Init] Conditional tool folder creation implemented. `.gemini`, `.claude`, and `.agent` directories are now only created if selected or already existing.
 - [2026-05-04] [Agent/Kit] Agent/Skill reorganization (v1.x) implemented. Dynamic Registry with multi-source discovery (Embedded + Local) and variable injection (`{{context}}`) are now active.
-- [2026-05-04] [CLI] Auto-timestamped spec slugs implemented. `specforce spec init` now prepends `YYYYMMDD-HHMM-` to slugs automatically.
 
 ## Last Actions
+- **Date:** 2026-05-05
+- **Scope:** SDD Protocol Trigger Optimization
+- **Completed:** Updated `AGENTS.md` and Go template in `agents_md.go` with explicit triggers and direct edit prohibitions. Clarified "Primary Orchestration Only" in `engineering.md`. Refined metadata keywords in source kit (`discovery.yaml`, `spec.yaml`) to improve agent auto-triggering.
+- **Next:** Monitor agent behavior to ensure they don't bypass the protocol during complex bug investigations.
+- **Relevant Files:** AGENTS.md, src/internal/project/agents_md.go, src/internal/agent/kit/commands/*, .specforce/docs/engineering.md
+
 - **Date:** 2026-05-05
 - **Scope:** Conditional Tool Folder Creation (Init Fix)
 - **Completed:** Refactored `EnsureAgentsMD` and `ensurePlatformConfigs` in `project` package to accept `selectedAgents`. Removed premature `EnsureAgentsMD` call from `BootstrapProject`. Orchestrated final configuration in `Service.InitializeProject` after tool selection is known.
@@ -42,13 +48,17 @@
 - **Next:** Continue translating specific documentation files within the language folders.
 - **Relevant Files:** README.md, README.pt.md, README.es.md, docs/{en,pt,es}/*
 
-- **Date:** 2026-05-02
-- **Scope:** Security Hardening (Socket.dev Alerts)
-- **Completed:** Removed `postinstall`/`prepare` scripts, hardened `index.js` proxy with absolute path validation, and updated `security.md`.
-- **Next:** Monitor for any user confusion regarding the lack of automatic builds.
-- **Relevant Files:** index.js, package.json, .specforce/docs/security.md
-
 ## Active Lessons & Anti-Patterns
+- **First Seen:** 2026-05-05
+- **Last Seen:** 2026-05-05
+- **Scope:** Agent / SDD Protocol
+- **Symptom:** Agents bypass the SDD pipeline and edit code directly when user intent is slightly vague or a bug is reported.
+- **Avoid:** Providing generic "proactive" mandates without explicit trigger conditions or strict prohibitions on tool usage.
+- **Do Instead:** Define explicit intent-to-workflow mappings (Discovery for vague/bugs, Spec for planning, Implement for roads) and strictly forbid mutation tools (`replace`/`write_file`) if no approved spec exists.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
+
 - **First Seen:** 2026-05-05
 - **Last Seen:** 2026-05-05
 - **Scope:** Project / Initialization

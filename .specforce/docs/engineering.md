@@ -50,7 +50,7 @@
 ## Agent Orchestration Protocol
 1. **Mandatory Discovery:** Agents MUST call `specforce spec list` and `specforce constitution status --json` before initializing a new specification to ensure they have the full project context.
 2. **Interrogation over Hallucination:** Agents MUST NOT guess user intent. They must use interrogation tools to ask clarifying questions until a clear feature idea is reached.
-3. **Primary Orchestration Only:** Agents MUST remain in their primary orchestration loop and NOT use specialized "plan" or "design" modes for requirement discovery.
+3. **Primary Orchestration Only:** Agents MUST remain in their primary orchestration loop and NOT use specialized "plan" or "design" modes for requirement discovery. Note that the `spf.spec` skill IS the mandatory orchestration tool for planning; this rule only prohibits the use of internal LLM "Blackbox" planning features that bypass Specforce's transparent artifact generation.
 4. **Mandatory Skill Header Injection:** For agents using "Skills" (e.g., Kimi Code), all generated `SKILL.md` files (from skills or commands) MUST include a YAML frontmatter header with `name` and `description` to ensure native discovery.
 5. **Binary-Path Standard:** All agent-triggered CLI commands MUST use the global binary `specforce` (not `./specforce`) to ensure cross-platform consistency.
 

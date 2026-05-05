@@ -1,5 +1,5 @@
 name: spf.discovery
-description: "Conversational Feature Brainstorming & Diagnostic Investigation. Purely read-only mode for exploration and research."
+description: "Conversational Feature Brainstorming, Research, Bug Investigation & Root Cause Analysis. Purely read-only mode for exploration and research."
 mapping:
   open-code:
     name: spf.discovery
