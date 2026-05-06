@@ -1,3 +1,5 @@
+[ [English](../en/configuration.md) | [Português](../pt/configuration.md) | [Español](configuration.md) ]
+
 # Specforce Configuration
 
 Configuring Specforce's internal behavior is done through the `.specforce/config.yaml` file. With it, you add layers of intelligence, security, and standardization that apply invisibly to your AI agents.

@@ -1,3 +1,5 @@
+[ [English](../en/supported-tools.md) | [Português](../pt/supported-tools.md) | [Español](supported-tools.md) ]
+
 # Supported AI Agents and Tools
 
 Specforce is designed to be independent of any specific tool or ecosystem (tool-agnostic). However, we offer native *Slash Commands* integration out-of-the-box for the most popular AI coding assistants:

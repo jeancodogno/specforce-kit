@@ -1,3 +1,5 @@
+[ [English](../en/git-worktrees.md) | [Português](git-worktrees.md) | [Español](../es/git-worktrees.md) ]
+
 ---
 slug: git-worktrees
 lens: Balanced full-stack

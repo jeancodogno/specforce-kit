@@ -1,3 +1,5 @@
+[ [English](../en/getting-started.md) | [Português](getting-started.md) | [Español](../es/getting-started.md) ]
+
 # Getting Started with Specforce Kit
 
 Welcome to the **Specforce Kit**! This guide will help you set up your environment and take your first steps with Spec-Driven Development (SDD).

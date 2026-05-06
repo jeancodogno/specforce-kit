@@ -1,3 +1,5 @@
+[ [English](../en/cli.md) | [Português](../pt/cli.md) | [Español](cli.md) ]
+
 # Command Line Interface (CLI)
 
 Specforce provides a comprehensive set of terminal commands to manage the software development lifecycle, orchestrate AI agents, and monitor project status.

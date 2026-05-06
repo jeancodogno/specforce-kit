@@ -10,6 +10,23 @@
 
 # Specforce Kit
 
+<p align="center">
+  <a href="https://github.com/jeancodogno/specforce-kit/releases"><img src="https://img.shields.io/github/v/release/jeancodogno/specforce-kit?style=flat-square" alt="Latest Release"></a>
+  <a href="https://github.com/jeancodogno/specforce-kit/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/jeancodogno/specforce-kit/ci.yml?branch=main&style=flat-square" alt="CI Status"></a>
+  <a href="https://goreportcard.com/report/github.com/jeancodogno/specforce-kit"><img src="https://img.shields.io/badge/go%20report-A+-brightgreen?style=flat-square" alt="Go Report Card"></a>
+  <a href="https://www.npmjs.com/package/@jeancodogno/specforce-kit"><img src="https://img.shields.io/npm/v/@jeancodogno/specforce-kit?style=flat-square" alt="NPM Version"></a>
+  <a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/jeancodogno/specforce-kit?style=flat-square" alt="Go Version"></a>
+  <a href="https://github.com/jeancodogno/specforce-kit/issues"><img src="https://img.shields.io/github/issues/jeancodogno/specforce-kit?style=flat-square" alt="GitHub issues"></a>
+  <a href="https://github.com/jeancodogno/specforce-kit/pulls"><img src="https://img.shields.io/github/issues-pr/jeancodogno/specforce-kit?style=flat-square" alt="GitHub pull requests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/jeancodogno/specforce-kit?style=flat-square" alt="License"></a>
+</p>
+
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/lang-en-red.svg?style=flat-square" alt="English"></a>
+  <a href="README.pt.md"><img src="https://img.shields.io/badge/lang-pt--br-green.svg?style=flat-square" alt="Português"></a>
+  <a href="README.es.md"><img src="https://img.shields.io/badge/lang-es-yellow.svg?style=flat-square" alt="Español"></a>
+</p>
+
 > **The Orchestration Layer for AI-Native Engineering.**
 
 Specforce Kit is a professional-grade framework designed to coordinate AI agents (Claude Code, Cursor, KiloCode) through **Spec-Driven Development (SDD)**. It provides the standardized **Kits**, **Constitution**, and **Orchestration Tools** required to transform AI from a "vibe-based" assistant into a deterministic engineering force.

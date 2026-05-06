@@ -1,3 +1,5 @@
+[ [English](../en/artifacts.md) | [Português](../pt/artifacts.md) | [Español](artifacts.md) ]
+
 # Specforce Artifacts
 
 To efficiently orchestrate AI agents and avoid the accumulation of unnecessary context, Specforce divides the project's knowledge into different documents, known as **Artifacts**.
