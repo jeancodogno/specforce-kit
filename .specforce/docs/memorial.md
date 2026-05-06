@@ -133,3 +133,10 @@
 - **Why:** Enables "Commands as Skills" without logic duplication.
 - **Validate By:** `src/internal/agent/dual_install_test.go`
 - **Distill To:** architecture.md
+
+- **Date:** 2026-05-06
+- **Scope:** SDD Protocol / Requirements
+- **Decision:** Shift from global UI/UX and NFR blocks to localized context within each functional requirement ([REQ-x]), utilizing a flexible "Attribute: Value" tagging system.
+- **Why:** Reduces implementation "hallucination" by providing localized technical and visual constraints exactly where the behavior is defined. Prevents "N/A" bloat in templates while ensuring "Performance" and "Safety" are explicitly addressed.
+- **Validate By:** `src/internal/agent/artifacts/spec/requirements.yaml` and resulting `requirements.md` artifacts.
+- **Distill To:** engineering.md, ui-ux.md

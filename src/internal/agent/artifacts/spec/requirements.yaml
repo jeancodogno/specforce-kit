@@ -5,8 +5,11 @@ instruction: |
   1. **Zero Code Mandate:** DO NOT write technical implementation details, JSON payloads, or database schemas. Stick to pure business domain and user value.
   2. **BDD Rigor:** Acceptance Criteria MUST follow the strict GIVEN/WHEN/THEN syntax. For every requirement, you MUST define at least one "Edge Case" or failure state.
   3. **Scope Containment:** Pay heavy attention to the "Out of Scope" section. Explicitly list features or edge cases that downstream agents MUST NOT build.
-  4. **Conditional Omission:** If the `lens` is "Backend-heavy" or "Integration", you MUST completely delete the `## 5. UI/UX Contract` section. Do not leave placeholders or write "Not applicable".
-  5. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and the correct `lens`.
+  4. **Conditional Omission:** If the `lens` is "Backend-heavy" or "Integration", you MUST completely delete the `## 5. Global UI/UX Contract` section. Do not leave placeholders or write "Not applicable".
+  5. **Localized Context Mandate:** Every functional requirement `[REQ-x]` block MUST include localized `UI/UX Specifics` and `Technical Constraints (NFR)` sub-sections.
+  6. **Flexible NFR Tags:** Technical Constraints MUST use a flexible `**[Category]:** [Value]` format. You MUST explicitly include a **[Performance]** tag for every requirement.
+  7. **Global Baselines:** You MUST include `## 5. Global UI/UX Contract` and `## 6. Global Non-Functional Requirements (NFRs)` sections to establish feature-wide standards.
+  8. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and the correct `lens`.
 template: |
   ---
   slug: {FEATURE_SLUG}
@@ -33,6 +36,17 @@ template: |
   1. **[Happy Path]** GIVEN [context] WHEN [action] THEN [outcome].
   2. **[Edge Case]** GIVEN [context] WHEN [exception/error] THEN [fallback/behavior].
 
+  **UI/UX Specifics:**
+  - **View/Component:** [e.g., Status Card, Input Form, Progress Bar].
+  - **Feedback Logic:** [e.g., Border turns Mint Green on success, Spinner during I/O].
+  - **Keybindings:** [e.g., 'enter' to confirm, 'tab' to switch fields].
+
+  **Technical Constraints (NFR):**
+  - **[Performance]:** [e.g., Latency < 50ms, async processing for files > 10MB].
+  - **[Safety & Security]:** [e.g., Atomic operation, 0600 file permissions].
+  - **[Integrity]:** [e.g., Idempotency required, path sanitization].
+  - **[Observability]:** [e.g., Audit log via core.UI, real-time progress reporting].
+
   ### [REQ-2] {Title}
   *(Repeat structure as needed)*
 
@@ -40,11 +54,16 @@ template: |
   *Strict domain rules that the system must never violate, regardless of the user story. These must be technically testable.*
   - [e.g., A user cannot be deleted if they have active invoices].
 
-  ## 5. UI/UX Contract
-  *(Render this section ONLY if the lens includes UI. Otherwise, omit entirely).*
-  - **Visual Posture:** [e.g., High-density data table, minimal modal].
-  - **State Behavior:** [Rules for loading, empty, error, and recovery states].
-  - **Accessibility:** [Expected standard, e.g., ARIA labels, tab navigation].se, omit entirely).*
-  - **Visual Posture:** [e.g., High-density data table, minimal modal].
-  - **State Behavior:** [Rules for loading, empty, error, and recovery states].
-  - **Accessibility:** [Expected standard, e.g., ARIA labels, tab navigation].
+  ## 5. Global UI/UX Contract (TUI Ghost Protocol)
+  *(Render this section ONLY if the lens includes UI. Aligned with .specforce/docs/ui-ux.md)*
+  - **Density Posture:** [e.g., Compact (80x24) | Standard (80x40)].
+  - **Signature Moves:** [e.g., Branding box header, ASCII-Braille logos, Mint Green accents].
+  - **Interaction Model:** [e.g., Cursor-based selection, standard keybindings (esc:back, q:quit)].
+  - **State Behavior:** [Rules for 'Loading' (spinners), 'Empty' (placeholder text), and 'Error' (red borders)].
+
+  ## 6. Global Non-Functional Requirements (NFRs)
+  *Technical constraints and quality gates. Aligned with .specforce/docs/engineering.md*
+  - **[Performance]:** [e.g., Latency < 100ms, instantaneous template generation].
+  - **[Reliability]:** [e.g., Fail-fast with clear errors, no silent failures].
+  - **[Security]:** [e.g., 0600 file permissions, command validation].
+  - **[Maintainability]:** [e.g., 80% coverage gate, standard Go formatting].
