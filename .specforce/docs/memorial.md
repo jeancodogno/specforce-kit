@@ -19,24 +19,26 @@
 
 ## Last Actions
 - **Date:** 2026-05-06
-- **Scope:** Specialized Bugfix Templates & YAML Metadata
-- **Completed:** Introduced `spec.Metadata` (`spec.yaml`) to track spec types (feature/bug) and lens. Updated `Registry` to support category-aware artifacts with `{type}-{name}.yaml` naming convention. Enhanced `spec init` with `--type` flag and `spec status` with type-aware filtering. Added specialized `bug-requirements` and `bug-design` templates.
-- **Next:** Monitor for any edge cases where spec type might need manual adjustment or migration of old specs to the YAML format.
-- **Relevant Files:** src/internal/spec/metadata.go, src/internal/spec/registry.go, src/internal/cli/spec.go, src/internal/agent/artifacts/spec/bug-*.yaml
+- **Scope:** Shields.io & Navigation Integration
+- **Completed:** Integrated 8 technical metric badges (CI, Release, NPM, Go, Go Report, Issues, PRs, License) and established a visual Language Switcher system across 3 READMEs and 18 technical documentation files. Implemented localized relative navigation headers in all docs subdirectories.
+- **Next:** Monitor for link breakage if documentation files are renamed or moved across language directories.
+- **Relevant Files:** README.md, README.pt.md, README.es.md, docs/**/*
 
 - **Date:** 2026-05-06
-- **Scope:** Hardened Spec Verification (Planning Phase)
+- **Scope:** Specialized Bugfix Templates & YAML Metadata
+- **Completed:** Introduced `spec.Metadata` (`spec.yaml`) to track spec types (feature/bug) and lens. Updated `Registry` to support category-aware artifacts with `{type}-{name}.yaml` naming convention. Enhanced `spec init` with `--type` flag and `spec status` with type-aware filtering. Added specialized `bug-requirements` and `bug-design` templates.
+- **Relevant Files:** src/internal/spec/metadata.go, src/internal/spec/registry.go, src/internal/cli/spec.go, src/internal/agent/artifacts/spec/bug-*.yaml
 
 ## Active Lessons & Anti-Patterns
 - **First Seen:** 2026-05-06
 - **Last Seen:** 2026-05-06
-- **Scope:** Architecture / Metadata
-- **Symptom:** Difficulty in managing specification-wide state (type, lens, domain) when metadata is buried in Markdown frontmatter.
-- **Avoid:** Relying solely on semi-structured Markdown headers for critical system-level decisions like template selection.
-- **Do Instead:** Decouple metadata into a dedicated machine-readable file (`spec.yaml`) within the specification directory. This enables robust, type-aware behavior across all CLI commands and agent prompts.
+- **Scope:** UI-UX / Documentation
+- **Symptom:** Users get "lost" when navigating technical documentation in non-English languages due to a lack of immediate "language-back" or "language-cross" links.
+- **Avoid:** Relying on a single global language switcher at the project root (README).
+- **Do Instead:** Prepend a standardized relative navigation header to EVERY technical documentation file to ensure immediate context switching at the point of consumption.
 - **Recurrence Count:** 1
 - **Status:** Active
-- **Distill To:** architecture.md
+- **Distill To:** ui-ux.md, governance.md
 
 - **First Seen:** 2026-05-06
 - **Last Seen:** 2026-05-06
