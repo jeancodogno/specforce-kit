@@ -10,7 +10,7 @@ import (
 	"github.com/jeancodogno/specforce-kit/src/internal/cli/cobra"
 )
 
-var version = "0.2.2"
+var version = "1.0.0"
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
