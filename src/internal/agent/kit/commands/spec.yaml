@@ -69,7 +69,8 @@ content: |
   - Write the completed content to the exact `path` specified in the Status JSON using your file-writing tool.
 
   ### 3. Verification & Handoff
-  - ONLY after writing all planned artifacts for this session, execute `specforce spec status <slug> --json` ONE final time to verify that `"progress": 100`.
+  - **MANDATORY FINAL CHECK:** ONLY after writing all planned artifacts for this session, you MUST execute `specforce spec status <slug> --json` ONE final time in the terminal.
+  - Analyze the JSON output. You MUST NOT provide a final summary or conclude the session unless `"progress": 100` AND `"is_valid": true`.
   - **If Initializing:** Output a final summary once verified.
   - **If Updating:** If the update invalidates downstream dependencies, ask the user if they want you to update them.
 
@@ -89,6 +90,7 @@ content: |
   ```
 
   ## Guardrails
+  - **MANDATORY FINAL CHECK:** You MUST NOT conclude the session or provide a final summary without first executing `specforce spec status <slug> --json` and verifying that all artifacts are present and valid.
   - **Zero-Doubt Policy:** Any artifact containing a placeholder or ambiguity marker is considered a failure and MUST be regenerated after clarification.
   - **Zero Code:** Never output application source code.
   - **Internalized Planning:** This skill IS the planning environment. Do not attempt to initialize additional planning layers or design documents outside of the `.specforce/specs/{slug}` directory.

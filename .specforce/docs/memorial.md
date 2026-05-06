@@ -18,6 +18,12 @@
 - [2026-05-04] [Agent/Kit] Agent/Skill reorganization (v1.x) implemented. Dynamic Registry with multi-source discovery (Embedded + Local) and variable injection (`{{context}}`) are now active.
 
 ## Last Actions
+- **Date:** 2026-05-06
+- **Scope:** Hardened Spec Verification (Planning Phase)
+- **Completed:** Modified `spec.yaml` to mandate `specforce spec status <slug> --json` as a final terminal verification step. Hardened guardrails to block final summary if artifacts are missing or invalid.
+- **Next:** Monitor agent compliance and identify if similar terminal gates are needed for `implement.yaml`.
+- **Relevant Files:** src/internal/agent/kit/commands/spec.yaml, .specforce/specs/20260506-1136-hardened-spec-verification/*
+
 - **Date:** 2026-05-05
 - **Scope:** SDD Protocol Trigger Optimization
 - **Completed:** Updated `AGENTS.md` and Go template in `agents_md.go` with explicit triggers and direct edit prohibitions. Clarified "Primary Orchestration Only" in `engineering.md`. Refined metadata keywords in source kit (`discovery.yaml`, `spec.yaml`) to improve agent auto-triggering.
@@ -42,13 +48,17 @@
 - **Next:** Monitor for any issues with nested directory timestamping in CI.
 - **Relevant Files:** src/internal/spec/slug.go, src/internal/cli/spec.go, src/internal/cli/integration_test.go
 
-- **Date:** 2026-05-04
-- **Scope:** Multi-language Documentation Expansion
-- **Completed:** Restructured `docs/` folder into `en/`, `pt/`, and `es/`. Migrated English docs, added language selector to root README, and created PT/ES localized versions of root documents.
-- **Next:** Continue translating specific documentation files within the language folders.
-- **Relevant Files:** README.md, README.pt.md, README.es.md, docs/{en,pt,es}/*
-
 ## Active Lessons & Anti-Patterns
+- **First Seen:** 2026-05-06
+- **Last Seen:** 2026-05-06
+- **Scope:** SDD Protocol / Verification
+- **Symptom:** AI agents might conclude a specification turn without verifying that all files were correctly written or that they are structurally valid according to CLI rules.
+- **Avoid:** Relying on internal agent state or "hope" for artifact persistence.
+- **Do Instead:** Mandate a final, terminal-based verification call (`status --json`) as the final gate. Block the "success" message if the external CLI state doesn't confirm 100% progress.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** engineering.md
+
 - **First Seen:** 2026-05-05
 - **Last Seen:** 2026-05-05
 - **Scope:** Agent / SDD Protocol
