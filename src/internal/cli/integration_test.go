@@ -38,7 +38,7 @@ func TestIntegration_SpecInitTimestamp(t *testing.T) {
 
 func testRootSlug(t *testing.T, executor *Executor, ui core.UI) {
 	slug := "root-feature"
-	err := executor.HandleSpecInit(context.Background(), ui, slug, false)
+	err := executor.HandleSpecInit(context.Background(), ui, slug, false, "")
 	if err != nil {
 		t.Fatalf("HandleSpecInit failed: %v", err)
 	}
@@ -56,7 +56,7 @@ func testRootSlug(t *testing.T, executor *Executor, ui core.UI) {
 
 func testNestedSlug(t *testing.T, executor *Executor, ui core.UI) {
 	slug := "team-x/api-v1"
-	err := executor.HandleSpecInit(context.Background(), ui, slug, false)
+	err := executor.HandleSpecInit(context.Background(), ui, slug, false, "")
 	if err != nil {
 		t.Fatalf("HandleSpecInit failed: %v", err)
 	}
@@ -74,7 +74,7 @@ func testNestedSlug(t *testing.T, executor *Executor, ui core.UI) {
 
 func testIdempotency(t *testing.T, executor *Executor, ui core.UI) {
 	slug := "20240101-1200-legacy-spec"
-	err := executor.HandleSpecInit(context.Background(), ui, slug, false)
+	err := executor.HandleSpecInit(context.Background(), ui, slug, false, "")
 	if err != nil {
 		t.Fatalf("HandleSpecInit failed: %v", err)
 	}

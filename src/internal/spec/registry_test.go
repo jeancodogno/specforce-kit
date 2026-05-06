@@ -103,3 +103,52 @@ func TestNewRegistry_MissingFields(t *testing.T) {
 		t.Error("expected nil registry on error")
 	}
 }
+
+func TestRegistry_TypeAwareness(t *testing.T) {
+	fs := fstest.MapFS{
+		"requirements.yaml": {
+			Data: []byte("description: Feature Req\ninstruction: Feature Inst\ntemplate: Feature Temp\n"),
+		},
+		"bug-requirements.yaml": {
+			Data: []byte("description: Bug Req\ninstruction: Bug Inst\ntemplate: Bug Temp\n"),
+		},
+		"design.yaml": {
+			Data: []byte("description: Design Desc\ninstruction: Design Inst\ntemplate: Design Temp\n"),
+		},
+	}
+
+	registry, err := NewRegistry(fs)
+	if err != nil {
+		t.Fatalf("NewRegistry failed: %v", err)
+	}
+
+	// 1. Test GetForType with specific type
+	art, ok := registry.GetForType("bug", "requirements")
+	if !ok {
+		t.Fatal("bug-requirements not found")
+	}
+	if art.Description != "Bug Req" {
+		t.Errorf("expected 'Bug Req', got %q", art.Description)
+	}
+	if art.Name != "requirements" {
+		t.Errorf("expected Name to be 'requirements' (normalized), got %q", art.Name)
+	}
+
+	// 2. Test GetForType fallback
+	art, ok = registry.GetForType("bug", "design")
+	if !ok {
+		t.Fatal("design not found (fallback)")
+	}
+	if art.Description != "Design Desc" {
+		t.Errorf("expected 'Design Desc', got %q", art.Description)
+	}
+
+	// 3. Test ListForType
+	list := registry.ListForType("bug")
+	if len(list) != 2 {
+		t.Errorf("expected 2 artifacts, got %d", len(list))
+	}
+	if list[0].Description != "Bug Req" {
+		t.Errorf("expected first artifact to be 'Bug Req', got %q", list[0].Description)
+	}
+}

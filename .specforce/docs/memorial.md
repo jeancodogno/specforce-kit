@@ -19,105 +19,28 @@
 
 ## Last Actions
 - **Date:** 2026-05-06
+- **Scope:** Specialized Bugfix Templates & YAML Metadata
+- **Completed:** Introduced `spec.Metadata` (`spec.yaml`) to track spec types (feature/bug) and lens. Updated `Registry` to support category-aware artifacts with `{type}-{name}.yaml` naming convention. Enhanced `spec init` with `--type` flag and `spec status` with type-aware filtering. Added specialized `bug-requirements` and `bug-design` templates.
+- **Next:** Monitor for any edge cases where spec type might need manual adjustment or migration of old specs to the YAML format.
+- **Relevant Files:** src/internal/spec/metadata.go, src/internal/spec/registry.go, src/internal/cli/spec.go, src/internal/agent/artifacts/spec/bug-*.yaml
+
+- **Date:** 2026-05-06
 - **Scope:** Hardened Spec Verification (Planning Phase)
-- **Completed:** Modified `spec.yaml` to mandate `specforce spec status <slug> --json` as a final terminal verification step. Hardened guardrails to block final summary if artifacts are missing or invalid.
-- **Next:** Monitor agent compliance and identify if similar terminal gates are needed for `implement.yaml`.
-- **Relevant Files:** src/internal/agent/kit/commands/spec.yaml, .specforce/specs/20260506-1136-hardened-spec-verification/*
-
-- **Date:** 2026-05-05
-- **Scope:** SDD Protocol Trigger Optimization
-- **Completed:** Updated `AGENTS.md` and Go template in `agents_md.go` with explicit triggers and direct edit prohibitions. Clarified "Primary Orchestration Only" in `engineering.md`. Refined metadata keywords in source kit (`discovery.yaml`, `spec.yaml`) to improve agent auto-triggering.
-- **Next:** Monitor agent behavior to ensure they don't bypass the protocol during complex bug investigations.
-- **Relevant Files:** AGENTS.md, src/internal/project/agents_md.go, src/internal/agent/kit/commands/*, .specforce/docs/engineering.md
-
-- **Date:** 2026-05-05
-- **Scope:** Conditional Tool Folder Creation (Init Fix)
-- **Completed:** Refactored `EnsureAgentsMD` and `ensurePlatformConfigs` in `project` package to accept `selectedAgents`. Removed premature `EnsureAgentsMD` call from `BootstrapProject`. Orchestrated final configuration in `Service.InitializeProject` after tool selection is known.
-- **Next:** Monitor for any other tools that might need similar conditional logic in the future.
-- **Relevant Files:** src/internal/project/agents_md.go, src/internal/project/service.go, src/internal/project/bootstrapper.go
-
-- **Date:** 2026-05-04
-- **Scope:** Agent & Skill Reorganization (v1.x)
-- **Completed:** Refactored `agent.Registry` for multi-source discovery, updated `kit.yaml` schema with `defaults` and `security` metadata, and implemented `InstructionManager` for dynamic `{{variable}}` injection. Updated EN/PT/ES docs.
-- **Next:** Monitor for any variable injection collisions in complex templates.
-- **Relevant Files:** src/internal/agent/registry.go, src/internal/agent/translator.go, src/internal/agent/instructions.go, kit.yaml, docs/en/configuration.md
-
-- **Date:** 2026-05-04
-- **Scope:** Auto-Timestamped Spec Slugs
-- **Completed:** Implemented `PrepareSlug` logic in `spec` package, integrated into `HandleSpecInit`, and added unit/integration tests. Created new standard for spec directory naming.
-- **Next:** Monitor for any issues with nested directory timestamping in CI.
-- **Relevant Files:** src/internal/spec/slug.go, src/internal/cli/spec.go, src/internal/cli/integration_test.go
 
 ## Active Lessons & Anti-Patterns
 - **First Seen:** 2026-05-06
 - **Last Seen:** 2026-05-06
+- **Scope:** Architecture / Metadata
+- **Symptom:** Difficulty in managing specification-wide state (type, lens, domain) when metadata is buried in Markdown frontmatter.
+- **Avoid:** Relying solely on semi-structured Markdown headers for critical system-level decisions like template selection.
+- **Do Instead:** Decouple metadata into a dedicated machine-readable file (`spec.yaml`) within the specification directory. This enables robust, type-aware behavior across all CLI commands and agent prompts.
+- **Recurrence Count:** 1
+- **Status:** Active
+- **Distill To:** architecture.md
+
+- **First Seen:** 2026-05-06
+- **Last Seen:** 2026-05-06
 - **Scope:** SDD Protocol / Verification
-- **Symptom:** AI agents might conclude a specification turn without verifying that all files were correctly written or that they are structurally valid according to CLI rules.
-- **Avoid:** Relying on internal agent state or "hope" for artifact persistence.
-- **Do Instead:** Mandate a final, terminal-based verification call (`status --json`) as the final gate. Block the "success" message if the external CLI state doesn't confirm 100% progress.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-05-05
-- **Last Seen:** 2026-05-05
-- **Scope:** Agent / SDD Protocol
-- **Symptom:** Agents bypass the SDD pipeline and edit code directly when user intent is slightly vague or a bug is reported.
-- **Avoid:** Providing generic "proactive" mandates without explicit trigger conditions or strict prohibitions on tool usage.
-- **Do Instead:** Define explicit intent-to-workflow mappings (Discovery for vague/bugs, Spec for planning, Implement for roads) and strictly forbid mutation tools (`replace`/`write_file`) if no approved spec exists.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-05-05
-- **Last Seen:** 2026-05-05
-- **Scope:** Project / Initialization
-- **Symptom:** Project root becomes cluttered with unused tool directories (.gemini, .claude) during `init`.
-- **Avoid:** Unconditionally creating platform-specific directories in "bootstrapping" phases before user preferences (selections) are resolved.
-- **Do Instead:** Defer platform-specific configuration and directory creation until after the selection logic is complete. Pass the list of `selectedAgents` down to the configuration logic.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-05-04
-- **Last Seen:** 2026-05-04
-- **Scope:** Agent / Infrastructure
-- **Symptom:** Cognitive complexity spikes in FS-walking functions (like `scanSkills`) when adding metadata parsing logic.
-- **Avoid:** Nesting heavy conditional logic inside `WalkDir` functions.
-- **Do Instead:** Extract metadata loading into surgical helper functions (e.g., `loadSkillMetadata`) to keep the traversal loop clean and testable.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-05-04
-- **Last Seen:** 2026-05-04
-- **Scope:** CLI / UX
-- **Symptom:** Users might not notice if a slug is transformed (timestamped) unless explicitly told.
-- **Avoid:** Transforming user input silently without feedback.
-- **Do Instead:** Always print the final resolved path/slug in the success message of `spec init` to maintain transparency.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-05-04
-- **Last Seen:** 2026-05-04
-- **Scope:** Documentation / Migration
-- **Symptom:** Links breaking during documentation folder restructuring.
-- **Avoid:** Moving documentation files without a recursive link verification step.
-- **Do Instead:** Use a systematic approach to update all relative paths in `README.md` and internal `.md` files immediately after moving files to nested subdirectories.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
-
-- **First Seen:** 2026-05-01
-- **Last Seen:** 2026-05-01
-- **Scope:** Testing / Platform
-- **Symptom:** Tests relying on `os.Unsetenv("HOME")` to force `os.UserHomeDir` failure fail on macOS because of system fallback.
-- **Avoid:** Assuming `os.UserHomeDir` will always fail if environment variables are removed.
-- **Do Instead:** Explicitly check if the function still succeeds after `Unsetenv` and use `t.Skip` to handle platforms with persistent home directory resolution.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** engineering.md
 
 - **First Seen:** 2026-04-30
 - **Last Seen:** 2026-04-30

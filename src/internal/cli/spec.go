@@ -52,9 +52,18 @@ func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) e
 
 func (e *Executor) handleSpecInitCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
 	if len(args) < 2 {
-		return fmt.Errorf("missing slug for spec init. Usage: specforce spec init <slug>")
+		return fmt.Errorf("missing slug for spec init. Usage: specforce spec init <slug> [--type feature|bug]")
 	}
-	return e.HandleSpecInit(ctx, ui, args[1], jsonMode)
+	
+	specType := "feature"
+	for i, arg := range args {
+		if arg == "--type" && i+1 < len(args) {
+			specType = args[i+1]
+			break
+		}
+	}
+	
+	return e.HandleSpecInit(ctx, ui, args[1], jsonMode, specType)
 }
 
 func (e *Executor) handleSpecStatusCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
@@ -87,7 +96,7 @@ func (e *Executor) handleSpecArchiveCmd(ctx context.Context, ui core.UI, args []
 }
 
 // HandleSpecInit processes the 'spec init' command.
-func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, jsonMode bool) error {
+func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, jsonMode bool, specType string) error {
 	projectRoot, err := spec.FindProjectRoot()
 	if err != nil {
 		return err
@@ -96,25 +105,18 @@ func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, 
 	// [REQ-1] Auto-timestamped slugs
 	slug = spec.PrepareSlug(slug)
 
-	exists, status := spec.SpecExists(projectRoot, slug)
-	if exists {
-		var errObj error
-		if status == "active" {
-			errObj = core.ErrSpecAlreadyActive
-		} else {
-			errObj = core.ErrSpecAlreadyArchived
-		}
+	if specType == "" {
+		specType = "feature"
+	}
 
-		if jsonMode {
-			res := map[string]string{
-				"status": "error",
-				"error":  errObj.Error(),
-			}
-			data, _ := json.MarshalIndent(res, "", "  ")
-			fmt.Println(string(data))
-			return nil
-		}
-		return errObj
+	// Validate type
+	validTypes := map[string]bool{"feature": true, "bug": true}
+	if !validTypes[specType] {
+		return fmt.Errorf("invalid spec type: %s. Supported: feature, bug", specType)
+	}
+
+	if err := e.ensureSpecAvailable(projectRoot, slug, jsonMode); err != nil {
+		return err
 	}
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
@@ -122,17 +124,59 @@ func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, 
 		return fmt.Errorf("failed to create spec directory %s: %w", specDir, err)
 	}
 
+	// Save Metadata
+	meta := &spec.Metadata{
+		Slug: slug,
+		Name: slug,
+		Type: specType,
+	}
+	if err := spec.SaveMetadata(projectRoot, slug, meta); err != nil {
+		return fmt.Errorf("failed to save spec metadata: %w", err)
+	}
+
 	if jsonMode {
-		res := map[string]string{
+		return e.outputJSON(map[string]string{
 			"status":  "ok",
 			"message": fmt.Sprintf("Spec directory initialized: .specforce/specs/%s", slug),
+			"type":    specType,
+		})
+	}
+
+	fmt.Printf("[OK] Spec directory initialized: .specforce/specs/%s (Type: %s)\n", slug, specType)
+	return nil
+}
+
+func (e *Executor) ensureSpecAvailable(projectRoot, slug string, jsonMode bool) error {
+	exists, status := spec.SpecExists(projectRoot, slug)
+	if !exists {
+		return nil
+	}
+
+	var errObj error
+	if status == "active" {
+		errObj = core.ErrSpecAlreadyActive
+	} else {
+		errObj = core.ErrSpecAlreadyArchived
+	}
+
+	if jsonMode {
+		res := map[string]string{
+			"status": "error",
+			"error":  errObj.Error(),
 		}
 		data, _ := json.MarshalIndent(res, "", "  ")
 		fmt.Println(string(data))
 		return nil
 	}
+	return errObj
+}
 
-	fmt.Printf("[OK] Spec directory initialized: .specforce/specs/%s\n", slug)
+func (e *Executor) outputJSON(data interface{}) error {
+	bytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	fmt.Println(string(bytes))
 	return nil
 }
 

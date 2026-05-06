@@ -122,6 +122,62 @@ func (r *Registry) List() []Artifact {
 	return list
 }
 
+// GetForType returns an artifact by its name, checking for typed versions first.
+func (r *Registry) GetForType(typeName, artifactName string) (Artifact, bool) {
+	// Try typed version: "{type}-{name}"
+	typedName := fmt.Sprintf("%s-%s", typeName, artifactName)
+	if art, ok := r.artifacts[typedName]; ok {
+		// Return with the original artifact name to keep filenames consistent
+		art.Name = artifactName
+		return art, true
+	}
+
+	// Fallback to default
+	art, ok := r.artifacts[artifactName]
+	return art, ok
+}
+
+// ListForType returns all loaded artifacts resolved for a specific type.
+func (r *Registry) ListForType(typeName string) []Artifact {
+	// Standard order: requirements, design, tasks
+	order := []string{"requirements", "design", "tasks"}
+	list := make([]Artifact, 0, len(order))
+
+	for _, name := range order {
+		if art, ok := r.GetForType(typeName, name); ok {
+			list = append(list, art)
+		}
+	}
+
+	// Catch any artifacts not in the explicit order
+	// We iterate through all artifacts and resolve them
+	seen := make(map[string]bool)
+	for _, art := range list {
+		seen[art.Name] = true
+	}
+
+	for name := range r.artifacts {
+		// Extract base name if it's a typed artifact (e.g., "bug-requirements" -> "requirements")
+		baseName := name
+		for _, t := range []string{"bug", "feature"} { // Hardcoded for now, or we could detect prefix
+			prefix := t + "-"
+			if strings.HasPrefix(name, prefix) {
+				baseName = strings.TrimPrefix(name, prefix)
+				break
+			}
+		}
+
+		if !seen[baseName] {
+			if art, ok := r.GetForType(typeName, baseName); ok {
+				list = append(list, art)
+				seen[baseName] = true
+			}
+		}
+	}
+
+	return list
+}
+
 func (r *Registry) checkCircularDependencies() error {
 	for name := range r.artifacts {
 		visited := make(map[string]bool)

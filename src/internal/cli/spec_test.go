@@ -56,7 +56,7 @@ func TestHandleSpecInit(t *testing.T) {
 	ui := tui.NewUI()
 
 	t.Run("Success", func(t *testing.T) {
-		err := e.HandleSpecInit(context.Background(), ui, "new-spec", false)
+		err := e.HandleSpecInit(context.Background(), ui, "new-spec", false, "")
 		if err != nil {
 			t.Errorf("expected success, got %v", err)
 		}
@@ -66,21 +66,21 @@ func TestHandleSpecInit(t *testing.T) {
 		// PrepareSlug will transform "active-spec" to something like "20260504-1323-active-spec"
 		// which won't collide with the manually created ".specforce/specs/active-spec" directory.
 		// To test collision, we must pass the ALREADY timestamped slug.
-		err := e.HandleSpecInit(context.Background(), ui, "active-spec", false)
+		err := e.HandleSpecInit(context.Background(), ui, "active-spec", false, "")
 		if err != nil {
 			t.Errorf("expected success due to auto-timestamping, got %v", err)
 		}
 	})
 
 	t.Run("Collision Archived", func(t *testing.T) {
-		err := e.HandleSpecInit(context.Background(), ui, "archived-spec", false)
+		err := e.HandleSpecInit(context.Background(), ui, "archived-spec", false, "")
 		if err != nil {
 			t.Errorf("expected success due to auto-timestamping, got %v", err)
 		}
 	})
 
 	t.Run("JSON Success", func(t *testing.T) {
-		err := e.HandleSpecInit(context.Background(), ui, "json-spec", true)
+		err := e.HandleSpecInit(context.Background(), ui, "json-spec", true, "")
 		if err != nil {
 			t.Errorf("expected success, got %v", err)
 		}

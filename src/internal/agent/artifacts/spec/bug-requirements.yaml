@@ -1,0 +1,49 @@
+description: "Root Cause Analysis (RCA), reproduction steps, and regression-proof acceptance criteria."
+instruction: |
+  Generate a high-fidelity bugfix specification focusing on the "Why" and "Where" of the failure. Adhere strictly to the following execution rules:
+
+  1. **Diagnostic Rigor:** You MUST document the exact observations (logs, errors) that led to the discovery.
+  2. **Reproduction Mandate:** You MUST provide concrete, step-by-step instructions to reproduce the bug.
+  3. **BDD Regression:** Acceptance Criteria MUST focus on the FIX and ensuring no regressions. Use strict GIVEN/WHEN/THEN syntax.
+  4. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and `lens: Bugfix`.
+template: |
+  ---
+  slug: {FEATURE_SLUG}
+  lens: Bugfix
+  ---
+
+  # Bugfix: {FEATURE_NAME}
+
+  ## 1. Issue Description
+  [Briefly describe the bug and its impact on the system or user.]
+
+  ## 2. Evidence & Observations
+  *Paste relevant logs, error messages, or screenshots descriptions.*
+  - **Symptom:** [e.g., Command fails with 'null pointer' when flag X is missing]
+  - **Trace:** [e.g., Error occurs at internal/parser/engine.go:124]
+
+  ## 3. Reproduction Steps
+  1. [Step 1: Environment setup]
+  2. [Step 2: Action to trigger]
+  3. [Step 3: Expected vs Actual outcome]
+
+  ## 4. Root Cause Analysis (RCA)
+  *Explain why the bug exists based on your discovery.*
+  - [e.g., The state machine doesn't account for the 'Cancelled' state during transition Y].
+
+  ## 5. Acceptance Criteria (Regression Tests)
+  *Every fix MUST be verified. Define success and failure.*
+
+  ### [FIX-1] {Title}
+  **Scenario: [Regression]**
+  GIVEN [context that previously failed]
+  WHEN [action that triggered the bug]
+  THEN [corrected outcome/behavior].
+
+  ### [FIX-2] {Title}
+  *(Repeat structure as needed)*
+
+  ## 6. Technical Constraints (NFR)
+  - **[Performance]:** [e.g., Fix must not increase memory usage by > 5%].
+  - **[Safety]:** [e.g., Add bounds checking, nil guard].
+  - **[Observability]:** [e.g., Improve error logging for this specific failure].

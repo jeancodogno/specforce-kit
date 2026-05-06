@@ -30,7 +30,13 @@ type SpecStatus struct {
 
 // GetStatus checks the filesystem for the required artifacts from the registry and returns a progress summary.
 func GetStatus(ctx context.Context, projectRoot string, slug string, registry *Registry) (SpecStatus, error) {
-	artifacts := registry.List()
+	// Load Metadata to determine spec type
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return SpecStatus{}, fmt.Errorf("failed to load metadata for %s: %w", slug, err)
+	}
+
+	artifacts := registry.ListForType(meta.Type)
 
 	status := SpecStatus{
 		Slug:      slug,

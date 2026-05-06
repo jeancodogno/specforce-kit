@@ -1,0 +1,38 @@
+description: "Technical fix blueprint, regression testing strategy, and code path inventory."
+instruction: |
+  Generate a deterministic technical design for a bugfix. Focus on the code changes and validation logic. Adhere strictly to the following execution rules:
+
+  1. **Fix Blueprint:** You MUST explicitly map the code paths that require modification.
+  2. **Regression Strategy:** Define how the fix will be validated against regressions (e.g., specific test files or manual checks).
+  3. **Dependency Impact:** List any side effects this fix might have on related components.
+  4. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and `lens: Bugfix`.
+template: |
+  ---
+  slug: {FEATURE_SLUG}
+  lens: Bugfix
+  ---
+
+  # Technical Design: {FEATURE_NAME} (Fix Blueprint)
+
+  ## 1. Code Path Inventory
+  *Identify the exact files and lines (if possible) that will be modified.*
+  - `[File/Path.ext]` -> [Description of the fix/change]
+
+  ## 2. Regression Strategy (Verification Plan)
+  *How do we prove it's fixed and didn't break anything else?*
+  - **Unit Tests:** [List specific test cases to add/update]
+  - **Integration Tests:** [Verify cross-component behavior]
+  - **Manual Verification:** [Concrete CLI commands to run]
+
+  ## 3. Side Effects & Risks
+  *Identify potential impact on other parts of the system.*
+  - **Performance:** [e.g., New nil check adds negligible overhead]
+  - **Compatibility:** [e.g., No breaking changes to the internal API]
+
+  ## 4. Proposed Fix (Abstract Logic)
+  ```go
+  // Describe the logic change without writing final production code
+  if obj == nil {
+      return fmt.Errorf("guard triggered")
+  }
+  ```

@@ -7,6 +7,7 @@ import (
 
 var jsonMode bool
 var forceArchive bool
+var specType string
 
 var specCmd = &cobra.Command{
 	Use:   "spec",
@@ -24,8 +25,7 @@ var specInitCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		executor := GetExecutor()
 		appUI := tui.NewUI()
-		// We'll pass the slug as the first argument in a slice
-		return executor.HandleSpecInit(cmd.Context(), appUI, args[0], jsonMode)
+		return executor.HandleSpecInit(cmd.Context(), appUI, args[0], jsonMode, specType)
 	},
 }
 
@@ -80,6 +80,7 @@ var specArchiveCmd = &cobra.Command{
 
 func init() {
 	specInitCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
+	specInitCmd.Flags().StringVar(&specType, "type", "feature", "type of specification (feature, bug)")
 	specListCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specStatusCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specArtifactCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
