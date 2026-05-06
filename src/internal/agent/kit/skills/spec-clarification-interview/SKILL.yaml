@@ -1,7 +1,7 @@
 name: spec-clarification-interview
-description: Use when a requirements document has ambiguity or [UNCLEAR] markers and
-  needs a one-question-at-a-time clarification interview that updates the source requirement
-  incrementally.
+description: Mandatory gate for resolving unknowns. Use when a requirements document
+  has ambiguity or [UNCLEAR] markers and needs a one-question-at-a-time clarification
+  interview that updates the source requirement directly.
 version: 1.0
 priority: HIGH
 content: '# Spec Clarification Interview

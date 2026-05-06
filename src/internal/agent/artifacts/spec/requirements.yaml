@@ -32,7 +32,6 @@ template: |
   **Scenarios:**
   1. **[Happy Path]** GIVEN [context] WHEN [action] THEN [outcome].
   2. **[Edge Case]** GIVEN [context] WHEN [exception/error] THEN [fallback/behavior].
-  3. **[Ambiguity]** [Explicitly state what is unclear, or define the ASSUMPTION made].
 
   ### [REQ-2] {Title}
   *(Repeat structure as needed)*
@@ -43,6 +42,9 @@ template: |
 
   ## 5. UI/UX Contract
   *(Render this section ONLY if the lens includes UI. Otherwise, omit entirely).*
+  - **Visual Posture:** [e.g., High-density data table, minimal modal].
+  - **State Behavior:** [Rules for loading, empty, error, and recovery states].
+  - **Accessibility:** [Expected standard, e.g., ARIA labels, tab navigation].se, omit entirely).*
   - **Visual Posture:** [e.g., High-density data table, minimal modal].
   - **State Behavior:** [Rules for loading, empty, error, and recovery states].
   - **Accessibility:** [Expected standard, e.g., ARIA labels, tab navigation].

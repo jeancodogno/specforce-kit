@@ -61,7 +61,7 @@ content: |
   - **Context Isolation:** When delegating to a subagent, you MUST explicitly prepend their prompt with a directive stating that they are in a **Documentation-Only, No-Planning-Mode** context and must provide the output directly without entering specialized platform modes.
 
   **C. Information Gathering:**
-  - Identify missing business rules or technical ambiguities. If necessary, use your user-interaction tool to clarify before writing.
+  - Identify missing business rules or technical ambiguities. You MUST use your user-interaction tool to clarify ALL technical and business ambiguities before proceeding.
 
   **D. Artifact Generation/Modification:**
   - Generate or rewrite the markdown content strictly adhering to the JSON `template` structure and the `instruction` rules.
@@ -89,6 +89,7 @@ content: |
   ```
 
   ## Guardrails
+  - **Zero-Doubt Policy:** Any artifact containing a placeholder or ambiguity marker is considered a failure and MUST be regenerated after clarification.
   - **Zero Code:** Never output application source code.
   - **Internalized Planning:** This skill IS the planning environment. Do not attempt to initialize additional planning layers or design documents outside of the `.specforce/specs/{slug}` directory.
   - **Batch Processing:** Do not check spec status between writing every single artifact; check at the start to plan, and at the end to verify.

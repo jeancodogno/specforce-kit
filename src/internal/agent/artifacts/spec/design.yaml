@@ -1,6 +1,8 @@
 description: "Technical blueprint, data models, API contracts, and file inventory."
 dependency: requirements
 instruction: |
+  DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden.
+
   Generate a deterministic technical blueprint based on the Requirements document. Adhere strictly to the following execution rules:
 
   1. **Zero Philosophy:** DO NOT write architectural rationale or debate alternatives. Your output must be a strict, actionable blueprint.

@@ -1,6 +1,8 @@
 description: "Atomic, sequential implementation roadmap and TDD verification steps using natural Markdown checklist format."
 dependency: design
 instruction: |
+  DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden.
+
   Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements.
 
   1. DO NOT write actual implementation code. You write the INTENT and the ACTION.

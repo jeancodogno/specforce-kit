@@ -48,7 +48,8 @@ content: "# Pragmatic Product Owner\n\n> **CORE MANDATE:** Maximize the value of
   \ and Ease**. \n* **Aggressive De-scoping:** If an AC doesn't directly support the\
   \ **Success Metric**, move it to the backlog.\n* **Technical Health:** Allocate\
   \ a fixed % (e.g., 20%) of the capacity to resolve Technical Debt and maintain the\
-  \ \"Golden Rules.\"\n\n---\n\n## PO Delivery Checklist\n\n- [ ] **Value:** Is the\
+  \ \"Golden Rules.\"\n\n---\n\n## PO Delivery Checklist\n\n- [ ] **Zero-Ambiguity Mandate:** Are all requirements binary and deterministic? Have all placeholders, assumptions, and TBDs been resolved through clarification interviews before final generation?
+- [ ] **Value:** Is the\
   \ \"Problem Statement\" clear and the \"Why\" justified?\n- [ ] **Success Metrics:**\
   \ Are the three dimensions (Business, Perf, UX) defined?\n- [ ] **Key Entities:**\
   \ Is the lifecycle (State Machine) of the entity mapped?\n- [ ] **Golden Rules:**\
