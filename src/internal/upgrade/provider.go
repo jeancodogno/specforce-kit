@@ -37,7 +37,7 @@ func FetchJSON(ctx context.Context, client *http.Client, url string, v interface
 // NewHTTPClient returns a pre-configured HTTP client for providers.
 func NewHTTPClient() *http.Client {
 	return &http.Client{
-		Timeout: 2 * time.Second,
+		Timeout: 10 * time.Second,
 	}
 }
 

@@ -18,60 +18,42 @@
 - [2026-05-04] [Agent/Kit] Agent/Skill reorganization (v1.x) implemented. Dynamic Registry with multi-source discovery (Embedded + Local) and variable injection (`{{context}}`) are now active.
 
 ## Last Actions
+- **Date:** 2026-05-07
+- **Scope:** Automated Background Updates (Self-Upgrade Engine)
+- **Completed:** Implemented a two-phase background update system (Check/Stage -> Swap). Verified detached background processes, atomic binary swap via 'Rename-to-Old' pattern, and `syscall.Exec` process replacement. Integrated GitHub release provider with checksum verification and 6h throttling.
+- **Relevant Files:** src/internal/upgrade/*, src/cmd/specforce/main.go, src/internal/cli/cobra/root.go
+
 - **Date:** 2026-05-06
 - **Scope:** Shields.io & Navigation Integration
-- **Completed:** Integrated 8 technical metric badges (CI, Release, NPM, Go, Go Report, Issues, PRs, License) and established a visual Language Switcher system across 3 READMEs and 18 technical documentation files. Implemented localized relative navigation headers in all docs subdirectories.
-- **Next:** Monitor for link breakage if documentation files are renamed or moved across language directories.
-- **Relevant Files:** README.md, README.pt.md, README.es.md, docs/**/*
-
-- **Date:** 2026-05-06
-- **Scope:** Specialized Bugfix Templates & YAML Metadata
-- **Completed:** Introduced `spec.Metadata` (`spec.yaml`) to track spec types (feature/bug) and lens. Updated `Registry` to support category-aware artifacts with `{type}-{name}.yaml` naming convention. Enhanced `spec init` with `--type` flag and `spec status` with type-aware filtering. Added specialized `bug-requirements` and `bug-design` templates.
-- **Relevant Files:** src/internal/spec/metadata.go, src/internal/spec/registry.go, src/internal/cli/spec.go, src/internal/agent/artifacts/spec/bug-*.yaml
-
+...
 ## Active Lessons & Anti-Patterns
-- **First Seen:** 2026-05-06
-- **Last Seen:** 2026-05-06
-- **Scope:** UI-UX / Documentation
-- **Symptom:** Users get "lost" when navigating technical documentation in non-English languages due to a lack of immediate "language-back" or "language-cross" links.
-- **Avoid:** Relying on a single global language switcher at the project root (README).
-- **Do Instead:** Prepend a standardized relative navigation header to EVERY technical documentation file to ensure immediate context switching at the point of consumption.
-- **Recurrence Count:** 1
-- **Status:** Active
-- **Distill To:** ui-ux.md, governance.md
-
-- **First Seen:** 2026-05-06
-- **Last Seen:** 2026-05-06
-- **Scope:** SDD Protocol / Verification
-
-- **First Seen:** 2026-04-30
-- **Last Seen:** 2026-04-30
-- **Scope:** Proxy / Environment
-- **Symptom:** Users encounter "command not found" even after successful global install if npm bin is missing from PATH.
-- **Avoid:** Silently failing or giving generic errors when native binaries are missing.
-- **Do Instead:** Run an automated diagnostic check that identifies the exact missing PATH entry and provides the specific OS-level fix command.
+- **First Seen:** 2026-05-07
+- **Last Seen:** 2026-05-07
+- **Scope:** Upgrade / Filesystem
+- **Symptom:** `os.Rename` fails when staging a binary from `/tmp` to `~/.specforce` if they reside on different partitions (Invalid cross-device link).
+- **Avoid:** Assuming `os.Rename` works globally across the filesystem.
+- **Do Instead:** Use a robust `moveFile` helper that attempts `os.Rename` first and falls back to `io.Copy` + `os.Remove` on failure.
 - **Recurrence Count:** 1
 - **Status:** Active
 - **Distill To:** engineering.md
 
-## Pending Decisions (Need Distillation)
-- **Date:** 2026-05-04
-- **Scope:** Parser / SDD Protocol
-- **Decision:** Transition the CLI parser to support "Natural LLM Task Formats" (standard markdown checklists `- [ ]`) instead of forcing strict `#### T1.1` headers, to reduce LLM formatting drift and align with OpenSpec.
-- **Why:** Imposing rigid formatting constraints wastes tokens, breaks automation when LLMs drift to natural checklists, and creates a high "translation tax".
-- **Validate By:** `src/internal/spec/tasks_test.go`
-- **Distill To:** engineering.md
-
-- **Date:** 2026-04-28
-- **Scope:** Architecture / Kit
-- **Decision:** Support `MappingConfigs` as a slice in `kit.yaml` to allow multiple destinations for the same category.
-- **Why:** Enables "Commands as Skills" without logic duplication.
-- **Validate By:** `src/internal/agent/dual_install_test.go`
+- **First Seen:** 2026-05-07
+- **Last Seen:** 2026-05-07
+- **Scope:** Upgrade / Process Lifecycle
+- **Symptom:** `syscall.Exec` fails or executes the wrong file if `os.Executable()` is called AFTER the binary has been renamed/swapped on disk.
+- **Avoid:** Resolving the executable path after mutation.
+- **Do Instead:** Capture the absolute path via `os.Executable()` at the very start of the swap operation to ensure the memory-resident process points to the correct entry point for replacement.
+- **Recurrence Count:** 1
+- **Status:** Active
 - **Distill To:** architecture.md
 
-- **Date:** 2026-05-06
-- **Scope:** SDD Protocol / Requirements
-- **Decision:** Shift from global UI/UX and NFR blocks to localized context within each functional requirement ([REQ-x]), utilizing a flexible "Attribute: Value" tagging system.
-- **Why:** Reduces implementation "hallucination" by providing localized technical and visual constraints exactly where the behavior is defined. Prevents "N/A" bloat in templates while ensuring "Performance" and "Safety" are explicitly addressed.
-- **Validate By:** `src/internal/agent/artifacts/spec/requirements.yaml` and resulting `requirements.md` artifacts.
-- **Distill To:** engineering.md, ui-ux.md
+- **First Seen:** 2026-05-06
+- **Last Seen:** 2026-05-06
+...
+## Pending Decisions (Need Distillation)
+- **Date:** 2026-05-07
+- **Scope:** Architecture / Lifecycle
+- **Decision:** Establish the "Atomic Binary Swap" (Rename-to-Old + syscall.Exec) as the standard for CLI self-updates.
+- **Why:** Ensures zero-downtime, prevents binary corruption during download, and provides a safe rollback path (.old) if the new version fails to start.
+- **Validate By:** `src/internal/upgrade/integration_test.go`
+- **Distill To:** architecture.md

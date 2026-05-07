@@ -28,5 +28,5 @@ hooks:
     - "make test"
   # on_phase_finished:
   #   - "go test ./src/internal/..."
-  # on_all_tasks_finished:
-  #   - "go test ./..."
+  on_all_tasks_finished:
+    - "make security"

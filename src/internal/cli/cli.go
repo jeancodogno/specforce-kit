@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
-	"github.com/jeancodogno/specforce-kit/src/internal/installer"
 	"github.com/jeancodogno/specforce-kit/src/internal/project"
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
 	"github.com/jeancodogno/specforce-kit/src/internal/tui"
@@ -35,21 +33,6 @@ func NewExecutor(Version string) *Executor {
 		ArtifactsRoot: "src/internal/agent/artifacts",
 		Registry:      &agent.Registry{},
 	}
-}
-
-func (e *Executor) HandleInstall(ctx context.Context, ui core.UI) error {
-	if tui.IsTTY() {
-		tui.PrintBranding()
-	}
-	err := installer.Install(ctx, ui)
-	if err != nil {
-		switch {
-		case errors.Is(err, core.ErrInstallerPermissionDenied):
-			// installer already printed the sudo suggestion; exit gracefully
-			return nil
-		}
-	}
-	return err
 }
 
 func (e *Executor) HandleInit(ctx context.Context, ui core.UI, agents ...string) error {
@@ -248,7 +231,6 @@ func (e *Executor) PrintUsage() {
 	fmt.Println("\nUsage:")
 	fmt.Println("  specforce [flags] [command]")
 	fmt.Println("\nAvailable Commands:")
-	fmt.Println("  install       Global framework installation")
 	fmt.Println("  init          Project initialization with TUI")
 	fmt.Println("  constitution  Manage project constitution docs")
 	fmt.Println("  spec          Manage feature specification artifacts")

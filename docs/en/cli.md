@@ -13,9 +13,6 @@ These commands manage the overall Specforce installation and project initializat
 ### `specforce init`
 Initializes a new Specforce project in the current directory. It creates the `.specforce/` state directory and generates default constitution templates inside `docs/`. This is the first command you run when bringing Specforce into an existing or new project.
 
-### `specforce install`
-Handles the global installation of the Specforce framework. This command ensures the `specforce` binary and required assets are correctly set up on your machine.
-
 ### `specforce console`
 Launches the **Specforce Console TUI (Text User Interface)**. This is your command center. You can visualize project health, monitor active specifications in real-time, and audit task implementations. It is highly recommended to leave this running in a separate terminal pane while you work.
 

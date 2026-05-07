@@ -160,9 +160,9 @@ func TestBinaryInstaller_DownloadAndVerify(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case fmt.Sprintf("/repos/jeancodogno/specforce-kit/releases/download/v1.0.0/%s", assetName):
+		case fmt.Sprintf("/jeancodogno/specforce-kit/releases/download/v1.0.0/%s", assetName):
 			_, _ = w.Write([]byte(binaryContent))
-		case "/repos/jeancodogno/specforce-kit/releases/download/v1.0.0/specforce-kit_1.0.0_checksums.txt":
+		case "/jeancodogno/specforce-kit/releases/download/v1.0.0/specforce-kit_1.0.0_checksums.txt":
 			_, _ = w.Write([]byte(checksumContent))
 		default:
 			w.WriteHeader(http.StatusNotFound)

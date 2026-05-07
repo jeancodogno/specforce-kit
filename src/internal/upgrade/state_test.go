@@ -29,7 +29,7 @@ func TestNewStateManager(t *testing.T) {
 	}
 }
 
-func TestStateManager(t *testing.T) {
+func TestStateManager_Persistence(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "upgrade-test-*")
 	if err != nil {
 		t.Fatal(err)
@@ -46,15 +46,17 @@ func TestStateManager(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to load initial state: %v", err)
 	}
-	if !state.LastCheckAt.IsZero() {
-		t.Errorf("expected zero time for initial load, got %v", state.LastCheckAt)
+	if !state.LastCheckedAt.IsZero() {
+		t.Errorf("expected zero time for initial load, got %v", state.LastCheckedAt)
 	}
 
 	// Test Save
 	now := time.Now().Truncate(time.Second)
-	state.LastCheckAt = now
+	state.LastCheckedAt = now
 	state.LatestVersion = "v1.0.0"
+	state.StagedVersion = "v1.0.0"
 	state.IgnoredVersion = "v0.9.0"
+	state.UpdateReady = true
 
 	err = mgr.Save(state)
 	if err != nil {
@@ -67,13 +69,46 @@ func TestStateManager(t *testing.T) {
 		t.Fatalf("failed to load saved state: %v", err)
 	}
 
-	if !loaded.LastCheckAt.Equal(now) {
-		t.Errorf("expected LastCheckAt %v, got %v", now, loaded.LastCheckAt)
+	if !loaded.LastCheckedAt.Equal(now) {
+		t.Errorf("expected LastCheckedAt %v, got %v", now, loaded.LastCheckedAt)
 	}
 	if loaded.LatestVersion != "v1.0.0" {
 		t.Errorf("expected LatestVersion v1.0.0, got %s", loaded.LatestVersion)
 	}
+	if loaded.StagedVersion != "v1.0.0" {
+		t.Errorf("expected StagedVersion v1.0.0, got %s", loaded.StagedVersion)
+	}
 	if loaded.IgnoredVersion != "v0.9.0" {
 		t.Errorf("expected IgnoredVersion v0.9.0, got %s", loaded.IgnoredVersion)
+	}
+	if !loaded.UpdateReady {
+		t.Error("expected UpdateReady to be true")
+	}
+}
+
+func TestStateManager_Staging(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "upgrade-test-staging-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	statePath := filepath.Join(tempDir, "state.json")
+	mgr := &StateManager{
+		path: statePath,
+	}
+
+	// Test EnsureStagedDir
+	err = mgr.EnsureStagedDir()
+	if err != nil {
+		t.Fatalf("failed to ensure staged dir: %v", err)
+	}
+	stagedDir := mgr.GetStagedDir()
+	info, err := os.Stat(stagedDir)
+	if err != nil {
+		t.Fatalf("staged dir does not exist: %v", err)
+	}
+	if !info.IsDir() {
+		t.Error("expected staged path to be a directory")
 	}
 }

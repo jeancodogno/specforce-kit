@@ -139,12 +139,13 @@ Specforce Kit is designed to be tool-agnostic but comes with pre-built kits and 
 npm i -g @jeancodogno/specforce-kit
 ```
 
-**From Source (Requires Go 1.26+ & Make)**
+**From Source (Requires Go 1.24+ & Make)**
 ```bash
 git clone https://github.com/jeancodogno/specforce-kit.git
 cd specforce-kit
 make build
-make install
+# Binary 'specforce' is created in the root. 
+# You can move it to your PATH manually or run it from here.
 ```
 
 ---

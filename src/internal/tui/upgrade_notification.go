@@ -28,7 +28,7 @@ func RenderUpdateNotification(current, latest string) string {
 	content := fmt.Sprintf("%s A new version of Specforce is available!\n\n", titleStyle.Render("UPDATE AVAILABLE"))
 	content += fmt.Sprintf("  Current: %s\n", current)
 	content += fmt.Sprintf("  Latest:  %s\n\n", versionStyle.Render(latest))
-	content += "  Run " + lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Render("specforce install") + " to upgrade."
+	content += "  It will be downloaded in the background and applied automatically."
 
 	return boxStyle.Render(content)
 }

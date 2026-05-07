@@ -21,7 +21,7 @@ type BinaryInstaller struct {
 // NewBinaryInstaller creates a new BinaryInstaller.
 func NewBinaryInstaller() *BinaryInstaller {
 	return &BinaryInstaller{
-		Client: NewHTTPClient(),
+		Client: &http.Client{},
 	}
 }
 
@@ -46,9 +46,9 @@ func (i *BinaryInstaller) DownloadAndVerify(ctx context.Context, version, baseUR
 	// or we pass the download URL directly if we had it.
 	// Since we are implementation, let's assume we have a helper to get the asset URL.
 	
-	downloadURL := fmt.Sprintf("%s/repos/jeancodogno/specforce-kit/releases/download/%s/%s", 
+	downloadURL := fmt.Sprintf("%s/jeancodogno/specforce-kit/releases/download/%s/%s", 
 		baseURL, version, assetName)
-	checksumURL := fmt.Sprintf("%s/repos/jeancodogno/specforce-kit/releases/download/%s/%s", 
+	checksumURL := fmt.Sprintf("%s/jeancodogno/specforce-kit/releases/download/%s/%s", 
 		baseURL, version, checksumName)
 
 	// 1. Download Binary to Temp File

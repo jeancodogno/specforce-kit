@@ -12,9 +12,11 @@ import (
 
 // State represents the persistent information for the auto-update service.
 type State struct {
-	LastCheckAt    time.Time `json:"last_check_at"`
+	LastCheckedAt  time.Time `json:"last_checked_at"`
 	LatestVersion  string    `json:"latest_version"`
+	StagedVersion  string    `json:"staged_version"`
 	IgnoredVersion string    `json:"ignored_version"`
+	UpdateReady    bool      `json:"update_ready"`
 }
 
 // StateManager handles loading and saving the update state.
@@ -30,6 +32,16 @@ func NewStateManager() (*StateManager, error) {
 	return &StateManager{
 		path: filepath.Join(configDir, "state.json"),
 	}, nil
+}
+
+// GetStagedDir returns the absolute path to the staging directory.
+func (m *StateManager) GetStagedDir() string {
+	return filepath.Join(filepath.Dir(m.path), "upgrade", "staged")
+}
+
+// EnsureStagedDir ensures the staging directory exists with correct permissions.
+func (m *StateManager) EnsureStagedDir() error {
+	return os.MkdirAll(m.GetStagedDir(), 0700)
 }
 
 // Load retrieves the state from disk. Returns a default state if file doesn't exist.

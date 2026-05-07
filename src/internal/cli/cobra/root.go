@@ -38,6 +38,14 @@ well-defined specifications.`,
 		// Check for update if TTY and not an agent command
 		isTTY := tui.IsTTY()
 		isAgentCmd := false
+
+		// Cleanup .old file from previous upgrade if it exists
+		if exe, err := os.Executable(); err == nil {
+			if _, err := os.Stat(exe + ".old"); err == nil {
+				_ = os.Remove(exe + ".old")
+			}
+		}
+
 		for c := cmd; c != nil; c = c.Parent() {
 			if c.Annotations["IsAgentCommand"] == "true" {
 				isAgentCmd = true
@@ -50,7 +58,7 @@ well-defined specifications.`,
 		}
 
 		if isTTY && !isAgentCmd {
-			upgradeService.CheckForUpdate(cmd.Context())
+			upgradeService.CheckForUpdate()
 		}
 
 		return nil
