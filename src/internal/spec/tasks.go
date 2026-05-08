@@ -40,6 +40,7 @@ func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, err
 		return nil, fmt.Errorf("security: %w", err)
 	}
 
+	// #nosec G304 - Path is secured by core.SecurePath
 	content, err := os.ReadFile(tasksPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read tasks.md: %w", err)

@@ -63,6 +63,16 @@ func TestStateManager_Persistence(t *testing.T) {
 		t.Fatalf("failed to save state: %v", err)
 	}
 
+	// Verify file permissions
+	info, err := os.Stat(statePath)
+	if err != nil {
+		t.Fatalf("failed to stat state file: %v", err)
+	}
+	expectedMode := os.FileMode(0600)
+	if info.Mode().Perm() != expectedMode {
+		t.Errorf("expected file mode %v, got %v", expectedMode, info.Mode().Perm())
+	}
+
 	// Test Load (Existing)
 	loaded, err := mgr.Load()
 	if err != nil {

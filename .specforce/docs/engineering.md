@@ -35,7 +35,8 @@
     - **Explicit Error Ignoring (Tests):** In test files, if an error from a function like `os.RemoveAll` or `os.Chdir` is safe to ignore, use `_ =` to make the omission explicit and satisfy linting requirements.
 - **Permission Hardening:** All I/O operations MUST use the most restrictive permissions possible:
     - **Directories:** Use `0750` for all directory creation (`os.MkdirAll`).
-    - **Files:** Use `0600` for all sensitive or system-internal files (e.g., config, tasks, implementation reports). Use `0644` only where public read access by external tools is strictly required.
+    - **Files:** Use `0600` for all sensitive or system-internal files (e.g., config, tasks, implementation reports, upgrade state). Use `0644` only where public read access by external tools is strictly required.
+- **Static Analysis & Justification:** Security scans (`gosec`, `govulncheck`) MUST be clean of critical and high findings. Global linter exclusions (e.g., in `Makefile`) are strictly forbidden. Any false positive (e.g., G304 path traversal) MUST be handled via granular, source-level justifications using `#nosec` comments that explicitly link the safety to a specific architectural pattern (e.g., "Path validated by core.SecurePath").
 
 - **Automated Native Builds:** To support users installing from Git or source, the `package.json` MUST include `prepare` and `postinstall` scripts (e.g., `"prepare": "make build || true"`) that attempt to build the native binary automatically. These scripts MUST use the `|| true` guard to ensure the installation process is not blocked if build tools (Go/Make) are missing.
 - **Environment Diagnostics Pattern:** CLI entry points or proxies (e.g., `index.js`) MUST NOT fail silently when a native binary is missing. Instead, they MUST execute a stylized diagnostic check that:

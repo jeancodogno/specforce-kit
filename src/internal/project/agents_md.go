@@ -74,7 +74,7 @@ func EnsureAgentsMD(root string, ui core.UI, selectedAgents []string) error {
 
 	var existing string
 	if _, err := os.Stat(path); err == nil {
-		// #nosec G304
+		// #nosec G304 - path is AGENTS.md in project root
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("failed to read existing AGENTS.md: %w", err)
@@ -92,7 +92,7 @@ func EnsureAgentsMD(root string, ui core.UI, selectedAgents []string) error {
 		ui.SubTask("Updating AGENTS.md...")
 	}
 
-	// #nosec G306 G304
+	// #nosec G306, G304, G703 - path is AGENTS.md in project root, permissions are restricted, and content is generated from a trusted template
 	if err := os.WriteFile(path, []byte(merged), 0600); err != nil {
 		return fmt.Errorf("failed to write AGENTS.md: %w", err)
 	}
@@ -117,6 +117,7 @@ func ensurePlatformConfigs(root string, selectedAgents []string) error {
   }
 }`
 		// Always write the file to ensure the configuration is correct and up to date
+		// #nosec G306 - permissions are restricted to owner
 		if err := os.WriteFile(geminiSettings, []byte(settingsContent), 0600); err != nil {
 			return fmt.Errorf("failed to write .gemini/settings.json: %w", err)
 		}

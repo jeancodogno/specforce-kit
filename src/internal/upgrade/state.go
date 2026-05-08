@@ -71,7 +71,7 @@ func (m *StateManager) Save(state *State) error {
 	defer m.mu.Unlock()
 
 	dir := filepath.Dir(m.path)
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return err
 	}
 
@@ -82,7 +82,7 @@ func (m *StateManager) Save(state *State) error {
 
 	// Atomic write: write to a temporary file first
 	tmpFile := m.path + ".tmp"
-	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, data, 0600); err != nil {
 		return err
 	}
 

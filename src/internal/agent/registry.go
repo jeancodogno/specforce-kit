@@ -37,6 +37,7 @@ func (r *Registry) Initialize(kitFS fs.FS, rootDir string) error {
 	if rootDir != "" {
 		localPath := filepath.Join(rootDir, ".specforce", "kit.yaml")
 		if _, err := os.Stat(localPath); err == nil {
+			// #nosec G304 - Path is constructed from project root and points to a trusted local file
 			data, err := os.ReadFile(localPath)
 			if err == nil {
 				if err := r.parseAgents(data); err != nil {

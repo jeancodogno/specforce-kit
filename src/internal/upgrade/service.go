@@ -202,13 +202,14 @@ func (s *Service) moveFile(src, dst string) error {
 	}
 
 	// Fallback to copy + delete (different filesystems)
+	// #nosec G304 - src is a temporary file managed by the upgrade service
 	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = in.Close() }()
 
-	// #nosec G304 - src and dst are internal paths managed by upgrade service
+	// #nosec G304 - dst is an internal path managed by the upgrade service
 	out, err := os.Create(dst)
 	if err != nil {
 		return err

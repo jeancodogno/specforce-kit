@@ -5,6 +5,9 @@
 - **Token/Session Lifecycle:** N/A (Stateless CLI).
 - **Authorization Model:** Implicit (The user running the CLI must have RW permissions on the project directory).
 - **Tenant Isolation (IDOR Prevention):** N/A (Single-tenant; project scope is the current directory).
+- **Permission Hardening:** 
+    - **Files:** Sensitive data (upgrade states, metadata) MUST be stored with `0600` permissions.
+    - **Directories:** All framework-managed directories MUST use `0750` permissions.
 
 ## Data Protection & Cryptography
 - **Data in Transit:** N/A (Internal tool; all data flows remain local).
@@ -33,3 +36,7 @@
 - The AI MUST NEVER hardcode passwords, tokens, or API keys in the source code. All secrets MUST be mocked via environment variables.
 - The AI MUST ALWAYS use parameterized inputs when interacting with external processes or generating dynamic content. Raw string concatenation for executable logic is strictly forbidden.
 - The AI MUST strictly validate all inputs at the project boundary (CLI arguments, file reads) before processing domain logic.
+
+## Dependency & Toolchain Hardening
+- **Min-Max Versioning:** The project MUST track the Go toolchain version in `go.mod`. Security patches for the standard library MUST be applied immediately upon release (e.g., Go 1.26.3 to fix net/http vulnerabilities).
+- **Vulnerability Scanning:** Continuous monitoring via `govulncheck` is mandatory in all CI pipelines. Zero-day vulnerabilities in the standard library or direct dependencies MUST be addressed within 24 hours of discovery.

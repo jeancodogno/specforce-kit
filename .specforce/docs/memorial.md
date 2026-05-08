@@ -13,39 +13,39 @@
 > 5. **DISTILLATION:** If a lesson or decision becomes a permanent rule, you MUST move it to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and completely delete it from here.
 
 ## Critical Now
+- [2026-05-08] [Security] Security Hardening v2026-05-08 implemented. Upgraded to Go 1.26.3 to fix critical net/http vulnerabilities. Enforced 0600 file permissions and removed global gosec exclusions in favor of granular #nosec justifications.
 - [2026-05-05] [Agent/Protocol] SDD Trigger Optimization implemented. Agents now have explicit mandates for triggering `spf.discovery` (vague intent/bug investigation) and `spf.spec` (planning). Direct edits to codebase without an approved spec are now strictly prohibited in `AGENTS.md`.
 - [2026-05-05] [Project/Init] Conditional tool folder creation implemented. `.gemini`, `.claude`, and `.agent` directories are now only created if selected or already existing.
-- [2026-05-04] [Agent/Kit] Agent/Skill reorganization (v1.x) implemented. Dynamic Registry with multi-source discovery (Embedded + Local) and variable injection (`{{context}}`) are now active.
 
 ## Last Actions
+- **Date:** 2026-05-08
+- **Scope:** Security Hardening (v2026-05-08)
+- **Completed:** Upgraded Go to 1.26.3 across toolchain and CI. Hardened file permissions for sensitive metadata (upgrade state, spec metadata, AGENTS.md) to 0600. Refined `gosec` scanning by removing global exclusions and implementing granular `#nosec G304/G306/G703` justifications linked to `core.SecurePath` and `os.OpenRoot`.
+- **Relevant Files:** go.mod, Makefile, src/internal/upgrade/state.go, src/internal/spec/metadata.go, src/internal/project/agents_md.go, src/internal/upgrade/service.go, src/internal/spec/tasks.go
+
 - **Date:** 2026-05-07
 - **Scope:** Automated Background Updates (Self-Upgrade Engine)
-- **Completed:** Implemented a two-phase background update system (Check/Stage -> Swap). Verified detached background processes, atomic binary swap via 'Rename-to-Old' pattern, and `syscall.Exec` process replacement. Integrated GitHub release provider with checksum verification and 6h throttling.
-- **Relevant Files:** src/internal/upgrade/*, src/cmd/specforce/main.go, src/internal/cli/cobra/root.go
-
-- **Date:** 2026-05-06
-- **Scope:** Shields.io & Navigation Integration
 ...
 ## Active Lessons & Anti-Patterns
-- **First Seen:** 2026-05-07
-- **Last Seen:** 2026-05-07
-- **Scope:** Upgrade / Filesystem
-- **Symptom:** `os.Rename` fails when staging a binary from `/tmp` to `~/.specforce` if they reside on different partitions (Invalid cross-device link).
-- **Avoid:** Assuming `os.Rename` works globally across the filesystem.
-- **Do Instead:** Use a robust `moveFile` helper that attempts `os.Rename` first and falls back to `io.Copy` + `os.Remove` on failure.
+- **First Seen:** 2026-05-08
+- **Last Seen:** 2026-05-08
+- **Scope:** Security / Static Analysis
+- **Symptom:** Global security scan exclusions in `Makefile` hide new vulnerabilities and reduce visibility into the project's security posture.
+- **Avoid:** Using `-exclude` flags in `gosec` for broad categories like path traversal (G304).
+- **Do Instead:** Use granular `// #nosec` comments at the specific code site with a clear justification (e.g., "Path validated by core.SecurePath").
 - **Recurrence Count:** 1
 - **Status:** Active
 - **Distill To:** engineering.md
 
-- **First Seen:** 2026-05-07
-- **Last Seen:** 2026-05-07
-- **Scope:** Upgrade / Process Lifecycle
-- **Symptom:** `syscall.Exec` fails or executes the wrong file if `os.Executable()` is called AFTER the binary has been renamed/swapped on disk.
-- **Avoid:** Resolving the executable path after mutation.
-- **Do Instead:** Capture the absolute path via `os.Executable()` at the very start of the swap operation to ensure the memory-resident process points to the correct entry point for replacement.
+- **First Seen:** 2026-05-08
+- **Last Seen:** 2026-05-08
+- **Scope:** Security / Permissions
+- **Symptom:** Standard `0644` permissions on configuration or state files allow other local users to read sensitive framework data.
+- **Avoid:** Using default `0644` permissions for internal state files.
+- **Do Instead:** Explicitly use `0600` for files and `0750` for directories created by the framework.
 - **Recurrence Count:** 1
 - **Status:** Active
-- **Distill To:** architecture.md
+- **Distill To:** security.md
 
 - **First Seen:** 2026-05-06
 - **Last Seen:** 2026-05-06

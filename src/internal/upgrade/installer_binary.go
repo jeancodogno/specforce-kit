@@ -120,6 +120,7 @@ func (i *BinaryInstaller) findHashInChecksums(r io.Reader, assetName string) (st
 }
 
 func (i *BinaryInstaller) verifyHash(filePath, expectedHash string) error {
+	// #nosec G304 - filePath is a temporary file created by DownloadAndVerify
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -179,12 +180,14 @@ func (i *BinaryInstaller) moveFile(src, dst string) error {
 	}
 
 	// Fallback to copy + delete (different filesystems)
+	// #nosec G304 - src is managed internally by the upgrade service
 	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = in.Close() }()
 
+	// #nosec G304 - dst is managed internally by the upgrade service
 	out, err := os.Create(dst)
 	if err != nil {
 		return err

@@ -20,6 +20,7 @@ type Metadata struct {
 func LoadMetadata(projectRoot, slug string) (*Metadata, error) {
 	metaPath := filepath.Join(projectRoot, ".specforce", "specs", slug, "spec.yaml")
 	
+	// #nosec G304 - metaPath is constructed from projectRoot and points to an internal spec file
 	data, err := os.ReadFile(metaPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -56,5 +57,5 @@ func SaveMetadata(projectRoot, slug string, meta *Metadata) error {
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
-	return os.WriteFile(metaPath, data, 0644)
+	return os.WriteFile(metaPath, data, 0600)
 }
