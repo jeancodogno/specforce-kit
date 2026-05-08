@@ -38,6 +38,11 @@ func LoadMetadata(projectRoot, slug string) (*Metadata, error) {
 		return nil, fmt.Errorf("failed to parse metadata: %w", err)
 	}
 
+	// Default to feature if not specified
+	if meta.Type == "" {
+		meta.Type = "feature"
+	}
+
 	return &meta, nil
 }
 

@@ -29,8 +29,9 @@ content: |
   - Execute `specforce constitution status --json` to identify relevant project documents. Read necessary constitution artifacts to align with global project rules.
   - Analyze the user's input. If the intent is to **Initialize** a new spec:
     - Use your discovered user-interaction tool to ask the user clarifying questions about their intent until a clear, unambiguous idea of the feature is reached. Consolidate questions into a single interaction.
+    - Determine if the specification is a **feature** or a **bug**.
     - Determine the `slug` for the new spec. It MUST be in `kebab-case`.
-    - Execute `specforce spec init <slug>` to create the directory.
+    - Execute `specforce spec init <slug> --type <feature|bug>` to create the directory.
   - If the intent is to **Update** an existing spec, identify the specific artifact(s) to modify.
 
   ### 2. Artifact Processing (Batch Execution)
@@ -39,6 +40,7 @@ content: |
   specforce spec status <slug> --json
   ```
   - Analyze the JSON output to identify all artifacts where `"exists": false` (if Initializing) or the specific targets (if Updating). 
+  - **Type-Aware Retrieval:** You MUST use the exact `name` field from the JSON artifacts array (e.g., `bug-requirements`) when fetching artifact details.
   - Process these required artifacts sequentially in your internal memory using the following steps for EACH artifact:
 
   **CRITICAL BATCH INSTRUCTION:**
@@ -48,9 +50,9 @@ content: |
     - You must iterate through your internal list and write every missing file before proceeding to Step 3.
     
   **A. Load Context:**
-  - Execute the command to get the instructions and schema for the current targeted artifact:
+  - Execute the command to get the instructions and schema for the current targeted artifact using its prefixed name:
   ```bash
-  specforce spec artifact <artifact-name> --json
+  specforce spec artifact <prefixed-artifact-name> --json
   ```
   - **Dependency Loading:** If the artifact has a `"dependency"`, you MUST read the completed dependency file before proceeding.
   - **Update Context:** If **Updating**, you MUST read the current contents of the existing artifact file first.

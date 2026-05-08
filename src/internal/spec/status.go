@@ -21,6 +21,7 @@ type ArtifactStatus struct {
 // SpecStatus represents the overall completion state of a specific feature spec.
 type SpecStatus struct {
 	Slug      string           `json:"slug"`
+	Type      string           `json:"type"`
 	Artifacts []ArtifactStatus `json:"artifacts"`
 	Progress  int              `json:"progress"`
 	Total     int              `json:"total"`
@@ -40,6 +41,7 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 
 	status := SpecStatus{
 		Slug:      slug,
+		Type:      meta.Type,
 		Artifacts: make([]ArtifactStatus, 0, len(artifacts)),
 		Total:     len(artifacts),
 		IsValid:   true,
@@ -60,7 +62,7 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 			return status, err
 		}
 
-		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, art, existsMap, registry)
+		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, meta.Type, art, existsMap, registry)
 		if err != nil {
 			return status, err
 		}
@@ -96,10 +98,12 @@ func scanArtifactExistence(ctx context.Context, specDir string, artifacts []Arti
 	return existsMap, nil
 }
 
-func processArtifactStatus(ctx context.Context, projectRoot, slug string, art Artifact, existsMap map[string]bool, registry *Registry) (ArtifactStatus, error) {
+func processArtifactStatus(ctx context.Context, projectRoot, slug, specType string, art Artifact, existsMap map[string]bool, registry *Registry) (ArtifactStatus, error) {
 	fileName := art.Name + ".md"
 	relPath := filepath.Join(".specforce", "specs", slug, fileName)
 	exists := existsMap[art.Name]
+
+	prefixedName := fmt.Sprintf("%s-%s", specType, art.Name)
 
 	blocked := false
 	if art.Dependency != "" {
@@ -120,7 +124,7 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug string, art Ar
 	}
 
 	return ArtifactStatus{
-		Name:             art.Name,
+		Name:             prefixedName,
 		Description:      art.Description,
 		Path:             relPath,
 		Exists:           exists,

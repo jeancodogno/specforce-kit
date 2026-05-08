@@ -87,10 +87,23 @@ func loadArtifact(artifactsFS fs.FS, path, fileName string) (Artifact, error) {
 	return art, nil
 }
 
-// Get returns an artifact by its name.
+// Get returns an artifact by its name. It supports prefixed lookups (e.g., "bug-requirements").
 func (r *Registry) Get(name string) (Artifact, bool) {
-	art, ok := r.artifacts[name]
-	return art, ok
+	// 1. Try exact match (could be base name or already a full prefixed name in the registry)
+	if art, ok := r.artifacts[name]; ok {
+		return art, true
+	}
+
+	// 2. Try to resolve if it has a known prefix
+	for _, t := range []string{"bug", "feature"} {
+		prefix := t + "-"
+		if strings.HasPrefix(name, prefix) {
+			baseName := strings.TrimPrefix(name, prefix)
+			return r.GetForType(t, baseName)
+		}
+	}
+
+	return Artifact{}, false
 }
 
 // List returns all loaded artifacts.

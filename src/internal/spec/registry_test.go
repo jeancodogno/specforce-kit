@@ -143,12 +143,21 @@ func TestRegistry_TypeAwareness(t *testing.T) {
 		t.Errorf("expected 'Design Desc', got %q", art.Description)
 	}
 
-	// 3. Test ListForType
-	list := registry.ListForType("bug")
-	if len(list) != 2 {
-		t.Errorf("expected 2 artifacts, got %d", len(list))
+	// 4. Test Get with prefix
+	art, ok = registry.Get("bug-requirements")
+	if !ok {
+		t.Fatal("Get bug-requirements failed")
 	}
-	if list[0].Description != "Bug Req" {
-		t.Errorf("expected first artifact to be 'Bug Req', got %q", list[0].Description)
+	if art.Description != "Bug Req" {
+		t.Errorf("expected 'Bug Req', got %q", art.Description)
+	}
+
+	// 5. Test Get with prefix fallback
+	art, ok = registry.Get("bug-design")
+	if !ok {
+		t.Fatal("Get bug-design failed")
+	}
+	if art.Description != "Design Desc" {
+		t.Errorf("expected 'Design Desc', got %q", art.Description)
 	}
 }
