@@ -19,16 +19,19 @@ specforce implementation status <slug> --json
 - **CRITICAL:** You must evaluate the code and design not just as a developer, but as the guardian of the project's global architecture.
 
 ### 3. Specification Retrospective
-- Operating as the Principal Architect, use your file-reading tools to scan the completed feature's `requirements.md` and `design.md`.
-- Look specifically for "Precedents"  -  things that are being done for the first time in this project:
+- Operating as the Principal Architect, use your file-reading tools to scan the completed feature's `requirements.md`, `design.md`, and `tasks.md`.
+- **Analyze Challenges & Bugs:** Look for tasks that took multiple attempts, required bug fixes, or encountered unexpected technical roadblocks.
+- **Identify Precedents:** Look specifically for things that are being done for the first time in this project:
   - New architectural patterns (e.g., a new caching strategy).
   - New engineering standards (e.g., a new library adoption, API rule).
   - New global business invariants.
 
-### 6. Constitution Impact Analysis
-- For every artifact in the Constitution list (provided above), evaluate: Does this feature introduce a precedent that is NOT yet documented in any of these global standards?
+### 4. Constitution Impact Analysis
+- For every artifact in the Constitution list (provided above), evaluate:
+  - **Precedents:** Does this feature introduce a precedent that is NOT yet documented in any of these global standards?
+  - **Error Prevention:** Do the challenges and bugs encountered indicate a missing rule or lack of clarity in the Constitution? If so, formulate a rule to prevent the same error from repeating.
 
-### 7. Knowledge Harvesting (Memorial Update)
+### 5. Knowledge Harvesting (Memorial Update)
 - Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, or critical decisions as a new memory fragment in the distributed memorial directory:
   ```bash
   .specforce/memorial/
@@ -37,21 +40,21 @@ specforce implementation status <slug> --json
 - **Content:** The file MUST include YAML frontmatter with `date`, `scope` (feature slug), `author` (agent ID), and `type` (Action, Lesson, or Decision).
 - This ensures cross-session memory without causing merge conflicts in multi-dev environments.
 
-### 8. Information Gathering (Tool Discovery) & Constitution Update
-- If you identify new patterns that should become global standards, you MUST scan your environment tools for the capability to prompt the user (e.g., the "ask user" tool).
-- Ask the user: *"The feature [<slug>] introduced [Pattern X]. Should I update the project's Constitution to reflect this as a new standard before archiving?"*
+### 6. Information Gathering (Tool Discovery) & Constitution Update
+- If you identify new patterns or missing rules to prevent errors, you MUST scan your environment tools for the capability to prompt the user (e.g., the "ask user" tool).
+- Ask the user: *"The feature [<slug>] encountered [Challenge X] and introduced [Pattern/Rule Y]. Should I update the project's Constitution to reflect this as a new standard before archiving to prevent this from repeating?"*
 - If the user approves, identify the appropriate artifact from the previously executed `constitution status --json` output.
 - Use the exact `path` specified in the JSON to perform the update with your file-writing tools. 
 - If the artifact does not yet exist (`"exists": false`), you MUST create it at the provided `path` with the new content.
-- If no updates are required, or the user declines, proceed immediately to Step 9.
+- If no updates are required, or the user declines, proceed immediately to Step 7.
 
-### 9. Archival Execution
+### 7. Archival Execution
 - Once the Constitution and Memorial are up to date (or bypassed), execute the command to formally archive the specification:
 ```bash
 specforce spec archive <slug>
 ```
 
-### 10. Verification & Handoff
+### 8. Verification & Handoff
 - After the archive command is executed successfully, you MUST output a final summary using the exact Markdown format below:
 
 **Format:**
