@@ -46,7 +46,7 @@
     - Adheres to the "Ghost in the Machine" aesthetic using consistent ANSI colors (Mint Green for success/fixes, Error Red for failures).
 
 - **Instruction-Driven Agent Pattern:** Agent command definitions (`.yaml`) SHOULD NOT contain complex, hardcoded logic or multi-step instructions. Instead, they MUST trigger a dedicated Specforce CLI command (e.g., `specforce archive instructions`) to retrieve a dynamic instruction set. This allows the framework to inject global context (Constitution), core kit rules, and project-specific overrides from `config.yaml` without updating the agent's definition.
-- **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST update the project's `.specforce/docs/memorial.md` with lessons learned, established precedents, and critical architectural decisions discovered during the implementation.
+- **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST update the project's distributed memorial directory (`.specforce/memorial/`) with lessons learned, established precedents, and critical architectural decisions discovered during the implementation.
 
 ## Agent Orchestration Protocol
 1. **Mandatory Discovery:** Agents MUST call `specforce spec list` and `specforce constitution status --json` before initializing a new specification to ensure they have the full project context.

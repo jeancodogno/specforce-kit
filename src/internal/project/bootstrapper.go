@@ -24,6 +24,7 @@ func BootstrapProject(ctx context.Context, root string, kitFS fs.FS, artifactsFS
 		".specforce/docs",
 		".specforce/specs",
 		".specforce/archive",
+		".specforce/memorial",
 	}
 
 	if ui != nil {

@@ -29,11 +29,13 @@ specforce implementation status <slug> --json
 - For every artifact in the Constitution list (provided above), evaluate: Does this feature introduce a precedent that is NOT yet documented in any of these global standards?
 
 ### 7. Knowledge Harvesting (Memorial Update)
-- Operating as the Principal Architect, you MUST update the project's memorial:
+- Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, or critical decisions as a new memory fragment in the distributed memorial directory:
   ```bash
-  .specforce/docs/memorial.md
+  .specforce/memorial/
   ```
-- Record key lessons learned, architectural precedents established, and any critical "gotchas" discovered during implementation. This ensures cross-session memory and long-term project health.
+- **Action:** Create a NEW Markdown file in `.specforce/memorial/` with a filename in the format `YYYYMMDD-HHMM-{feature-slug}.md`.
+- **Content:** The file MUST include YAML frontmatter with `date`, `scope` (feature slug), `author` (agent ID), and `type` (Action, Lesson, or Decision).
+- This ensures cross-session memory without causing merge conflicts in multi-dev environments.
 
 ### 8. Information Gathering (Tool Discovery) & Constitution Update
 - If you identify new patterns that should become global standards, you MUST scan your environment tools for the capability to prompt the user (e.g., the "ask user" tool).

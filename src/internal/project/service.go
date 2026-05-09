@@ -54,6 +54,14 @@ func (s *Service) InitializeProject(ctx context.Context, ui core.UI, config Init
 		return fmt.Errorf("failed to finalize project with AGENTS.md: %w", err)
 	}
 
+	// Initialize Distributed Memorial
+	memSvc := NewMemorialService(config.ProjectRoot)
+	if err := memSvc.Initialize(ctx); err != nil {
+		if ui != nil {
+			ui.Warn(fmt.Sprintf("Failed to initialize distributed memorial: %v", err))
+		}
+	}
+
 	for _, a := range config.SelectedAgents {
 		if err := agent.AdaptArtifacts(ctx, config.ProjectRoot, s.kitFS, a, ui, installer.Options{}); err != nil {
 			return fmt.Errorf("failed to adapt artifacts for %s: %w", a, err)

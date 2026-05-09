@@ -1,55 +1,28 @@
-description: "Cross-session memory, durable lessons learned, and critical project reminders."
+description: "Routing and Rules of Engagement for the Distributed Memorial."
 instruction: |
-  Generate the Memorial document strictly using the provided template. You are filling in a blueprint for a Spec-Driven Development (SDD) framework. 
+  Generate the Memorial Routing document strictly using the provided template. This file acts as the primary entry point for AI agents to understand how project memory is structured.
   
-  Adhere to the following rules for bootstrapping this file:
-  
-  1. DO NOT invent or hallucinate past actions, lessons, or pending decisions. This is the initialization phase. Leave the structural placeholders empty but ready for use.
-  2. The section "> FOR AI AGENTS" is the most critical part of this file. It MUST be copied verbatim into the final `memorial.md` document. This block serves as the runtime prompt for all future agents interacting with the repository.
-  3. Keep the exact Markdown formatting for the data blocks (Critical Now, Last Actions, etc.) so future agents have a strict schema to follow when appending data.
+  Adhere to the following rules:
+  1. The section "> FOR AI AGENTS" is the most critical part of this file. It MUST be copied verbatim.
+  2. Explain that the memorial is now distributed across individual fragment files in the same directory.
 
-  CRITICAL: The final output must be pure Markdown, ready to be saved as `memorial.md`.
+  CRITICAL: The final output must be pure Markdown, ready to be saved as `ROUTING.md`.
 template: |
-  # Memorial (Active Memory)
+  # Project Memorial (Distributed)
 
   > **FOR AI AGENTS: RULES OF ENGAGEMENT**
-  > This is your cross-session memory file. You MUST obey these rules:
-  > 1. **READ THIS FIRST** before starting any task, debugging, or writing code in this repository.
-  > 2. **TRIAGE:** Read `Critical Now` first, then `Last Actions`. Only read lessons if they match your current scope.
-  > 3. **STRICT LIMITS (DO NOT BLOAT):** >    - Max 3 `Critical Now` bullets.
-  >    - Max 5 `Last Actions` entries. 
-  >    - Max 7 `Active Lessons`. 
-  >    - Max 5 `Pending Decisions`.
-  > 4. **GARBAGE COLLECTION:** If a list is full, you MUST delete the oldest/least relevant item before adding a new one.
-  > 5. **DISTILLATION:** If a lesson or decision becomes a permanent rule, you MUST move it to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and completely delete it from here.
+  > This is your cross-session memory. You MUST obey these rules:
+  > 1. **READ THIS CONTEXT FIRST** before starting any task in this repository.
+  > 2. **TRIAGE:** Read the most recent fragments in this directory (`.specforce/memorial/*.md`) to understand recent changes, architectural precedents, and active lessons.
+  > 3. **STRICT LIMITS:** The CLI will provide a consolidated view of the most relevant fragments. Do not attempt to read every single file unless specifically searching for a pattern.
+  > 4. **DISTILLATION:** If a lesson or decision becomes a permanent rule, it MUST be moved to the official Constitution files (`engineering.md`, `architecture.md`, etc.) and the corresponding fragment should be marked as distilled or archived.
 
   ---
 
-  ## Critical Now
-  - [YYYY-MM-DD] [Scope] [System initialized. Awaiting first actions.]
+  ## Memorial Structure
+  This directory contains individual memory fragments stored as timestamped Markdown files. Each fragment follows a strict schema:
+  - **Action:** Records what was implemented in a specific feature.
+  - **Lesson:** Records a recurring pattern, bug fix, or anti-pattern discovery.
+  - **Decision:** Records a critical architectural choice and its rationale.
 
-  ## Last Actions
-  - **Date:**
-  - **Scope:**
-  - **Completed:**
-  - **Next:**
-  - **Relevant Files:**
-  
-  ## Active Lessons & Anti-Patterns
-  - **First Seen:**
-  - **Last Seen:**
-  - **Scope:**
-  - **Symptom:**
-  - **Avoid:**
-  - **Do Instead:**
-  - **Recurrence Count:**
-  - **Status:**
-  - **Distill To:**
-  
-  ## Pending Decisions (Need Distillation)
-  - **Date:**
-  - **Scope:**
-  - **Decision:**
-  - **Why:**
-  - **Validate By:**
-  - **Distill To:**
+  Use these fragments to maintain technical continuity across sessions.

@@ -19,7 +19,7 @@
 - **Permitted AI Autonomous Actions:**
   - Propose new Spec drafts for requested features.
   - Generate implementation code based on approved Specs.
-  - Update the Project Memorial (`.specforce/docs/memorial.md`) with lessons learned and architectural precedents during archival or implementation.
+  - Update the Project Memorial (`.specforce/memorial/`) with lessons learned and architectural precedents during archival or implementation.
   - Refactor existing code within the scope of a feature.
 - **Prohibited AI Actions (Requires Human Approval):**
   - Modify the project Constitution (`.specforce/docs/`).
