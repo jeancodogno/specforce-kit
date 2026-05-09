@@ -65,7 +65,7 @@ func getHappyPathCases() []validateTasksTestCase {
 			content: `### Phase 1: Setup
 - [ ] T1.1: Init
 **Target:** CLI
-**Context:** REQ-1
+**Context:** US-1
 **Action Steps:**
 - Run init
 **Verification (TDD):**
@@ -81,7 +81,7 @@ func getHierarchyErrorCases() []validateTasksTestCase {
 			name: "Task Before Phase",
 			content: `- [ ] T1.1: Early Task
 **Target:** CLI
-**Context:** REQ-1
+**Context:** US-1
 **Action Steps:**
 - Do something
 **Verification (TDD):**
@@ -104,7 +104,7 @@ Check it`,
 			content: `### Phase 1: Phase One
 - [ ] T2.1: Wrong Phase Task
 **Target:** CLI
-**Context:** REQ-1
+**Context:** US-1
 **Action Steps:**
 - Do something
 **Verification (TDD):**
@@ -116,14 +116,14 @@ Check it`,
 			content: `### Phase 1: Phase One
 - [ ] T1.1: First Task
 **Target:** CLI
-**Context:** REQ-1
+**Context:** US-1
 **Action Steps:**
 - Do something
 **Verification (TDD):**
 Check it
 - [ ] T1.3: Gapped Task
 **Target:** CLI
-**Context:** REQ-1
+**Context:** US-1
 **Action Steps:**
 - Do something
 **Verification (TDD):**
@@ -152,7 +152,7 @@ func getFieldAndPhaseErrorCases() []validateTasksTestCase {
 ### Phase 2: Next
 - [ ] T2.1: Task
 **Target:** CLI
-**Context:** REQ-1
+**Context:** US-1
 **Action Steps:**
 - Step
 **Verification (TDD):**
@@ -164,7 +164,7 @@ Verify`,
 			content: `### Phase 1: Phase One
 - [ ] T1.1: Task
 **Target:** CLI
-**Context:** REQ-1
+**Context:** US-1
 **Action Steps:**
 **Verification (TDD):**
 - Step that looks like action step but is under verification`,

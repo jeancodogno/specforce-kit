@@ -33,7 +33,7 @@ Before proposing architectural changes or adding new patterns, you MUST review t
 - security.md: AuthZ, roles, permissions, and data protection rules.
 - engineering.md: Coding standards, testing strategy, and refactoring guidelines.
 - governance.md: Project lifecycle rules, ownership, and AI boundaries.
-- memorial.md: Durable lessons learned and cross-session memory.
+- memorial/: Distributed cross-session memory and lessons learned.
 
 ## 3. Custom Hooks Configuration
 Specforce allows developers to gate state transitions (e.g., finishing a task) using custom hooks. You can configure these in the project root's config.yaml:
@@ -53,6 +53,7 @@ If a hook fails, the state transition will be blocked.
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
 
 
 

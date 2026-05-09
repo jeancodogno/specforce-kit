@@ -29,7 +29,7 @@ template: |
 
   - [ ] T1.1: [SCAFFOLD/CLI] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
-  **Context:** [REQ-X]
+  **Context:** [US-X]
 
   **Action Steps:**
   - [Step 1: Concrete change]
@@ -42,7 +42,7 @@ template: |
 
   - [ ] T2.1: [CODE] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
-  **Context:** [REQ-X]
+  **Context:** [US-X]
 
   **Action Steps:**
   - [Step 1: Concrete change]

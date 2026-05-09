@@ -6,7 +6,7 @@ instruction: |
   2. **BDD Rigor:** Acceptance Criteria MUST follow the strict GIVEN/WHEN/THEN syntax. For every requirement, you MUST define at least one "Edge Case" or failure state.
   3. **Scope Containment:** Pay heavy attention to the "Out of Scope" section. Explicitly list features or edge cases that downstream agents MUST NOT build.
   4. **Conditional Omission:** If the `lens` is "Backend-heavy" or "Integration", you MUST completely delete the `## 5. Global UI/UX Contract` section. Do not leave placeholders or write "Not applicable".
-  5. **Localized Context Mandate:** Every functional requirement `[REQ-x]` block MUST include localized `UI/UX Specifics` and `Technical Constraints (NFR)` sub-sections.
+  5. **Localized Context Mandate:** Every functional requirement `[US-x]` block MUST include localized `UI/UX Specifics` and `Technical Constraints (NFR)` sub-sections.
   6. **Flexible NFR Tags:** Technical Constraints MUST use a flexible `**[Category]:** [Value]` format. You MUST explicitly include a **[Performance]** tag for every requirement.
   7. **Global Baselines:** You MUST include `## 5. Global UI/UX Contract` and `## 6. Global Non-Functional Requirements (NFRs)` sections to establish feature-wide standards.
   8. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and the correct `lens`.
@@ -29,7 +29,7 @@ template: |
   ## 3. Acceptance Criteria (BDD)
   *Every requirement MUST be testable. Define success and failure.*
 
-  ### [REQ-1] {Title}
+  ### [US-1] {Title}
   **User Story:** AS A [persona], I WANT TO [action], SO THAT [value].
   
   **Scenarios:**
@@ -47,7 +47,7 @@ template: |
   - **[Integrity]:** [e.g., Idempotency required, path sanitization].
   - **[Observability]:** [e.g., Audit log via core.UI, real-time progress reporting].
 
-  ### [REQ-2] {Title}
+  ### [US-2] {Title}
   *(Repeat structure as needed)*
 
   ## 4. Business Invariants

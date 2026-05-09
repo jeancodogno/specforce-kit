@@ -88,6 +88,10 @@
 - **Idempotency Guards:** Operations that mutate persistent state (e.g., `BootstrapProject`) MUST guard against re-execution by checking existing state and returning the appropriate domain sentinel error if the operation would be redundant.
 
 ## Specification & Task Organization
+- **Requirement Prefix Standardization:** To maintain consistency with industry-standard User Story terminology:
+    - **Features:** Functional requirements MUST use the `[US-x]` prefix.
+    - **Bugfixes:** Requirements focusing on fixes MUST use the `[FIX-x]` prefix.
+    - **Traceability:** The requirement ID (e.g., `[US-1]`) MUST be used in the `**Context:**` field of the implementation roadmap to ensure bi-directional traceability.
 - **Hierarchical Task Structure:** Implementation roadmaps (`tasks.md`) MUST use a hierarchical structure to group atomic tasks. 
     - **Phases (H3):** Use `### Phase {N}: {Title}` for logical groupings.
     - **Tasks (H4):** Use `#### T{Phase}.{Task}: {Title}` for individual implementation steps.
