@@ -22,7 +22,7 @@ content: |
   1. **Threat Modeling (Security-First):** Explicitly define Authorization gates, Voters/Policies, and input validation rules. Assume the endpoint will be attacked.
   2. **Data & Persistence:** Define the exact schema changes, indexes, and caching strategies. Use Mermaid `erDiagram` if new relationships are introduced.
   3. **API Contracts & Interfaces:** Define explicit JSON contracts (Request/Response) with exact status codes. Domain logic must remain isolated from HTTP controllers.
-  4. **Surface Blueprint (UI-Heavy features):** Before defining state wiring, define the UI component hierarchy, layout posture, and localization boundaries.
+  4. **Surface Blueprint (UI-Heavy features):** You MUST visualize the interface layout (Web, TUI, etc.) using ASCII wireframes (Ghost Protocol: thin borders, 80-char width). Define component hierarchy, layout posture, and localization boundaries.
   5. **Observability & Resilience:** Identify race conditions, single points of failure, and explicit locations where Structured Logs and Correlation IDs must be injected.
 
   ## 4. Architect Guardrails (Non-Negotiable)

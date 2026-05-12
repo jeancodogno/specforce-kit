@@ -70,6 +70,29 @@ content: |
   └─────────────────────────────────────────────────┘
   ```
 
+  ## Interface Wireframing (ASCII Layouts)
+
+  When exploring UI features (Web, Mobile, TUI, etc.), visualize density and hierarchy using ASCII wireframes. Follow the **Ghost Protocol** standards:
+  - **Borders:** Use thin characters (`+`, `-`, `|`).
+  - **Width:** Optimized for 80 characters.
+  - **Controls:** Use `[ ]` for buttons/checkboxes, `( )` for radio, and `↳` for nesting.
+
+  **Example ASCII Wireframe (Generic UI):**
+  ```
+  +------------------------------------------------------------------------------+
+  | [ Logo ]                                           [ Search... ] [ Profile ] |
+  +------------------------------------------------------------------------------+
+  | > Breadcrumb: Dashboard / Users / Admin                                      |
+  +------------------------------------------------------------------------------+
+  | | [ ] User: Jean Valjean                                                   | |
+  | | [x] User: Cosette Tholomyes (Active)                                     | |
+  | |   ↳ Role: Administrator                                                  | |
+  | | [ ] User: Marius Pontmercy                                               | |
+  +------------------------------------------------------------------------------+
+  | [ Save Changes ] [ Cancel ]                                 (v1.0.4-ghost) |
+  +------------------------------------------------------------------------------+
+  ```
+
   ## Formalization Handoff
 
   When technical clarity is achieved or the exploration reaches a point of action:

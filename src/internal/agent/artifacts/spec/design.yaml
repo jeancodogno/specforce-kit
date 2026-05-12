@@ -10,6 +10,7 @@ instruction: |
   3. **Strict API Contracts:** API Contracts MUST be exact, including HTTP methods, JSON payload structures, and expected HTTP status codes. This is critical for downstream Developer TDD.
   4. **Standardized Inventory:** The File & Component Inventory must use explicit file paths and map core responsibilities clearly.
   5. **Conditional Omission:** If the `lens` is "UI-heavy" and requires no backend changes, you MUST completely delete the `Persistence` and `API` sections. Do not leave placeholders.
+  6. **Surface Blueprint (UI-Heavy):** You MUST visualize the core UI surface (Web, TUI, etc.) using ASCII wireframes (Ghost Protocol style: thin borders, 80-char width).
 template: |
   ---
   slug: {FEATURE_SLUG}

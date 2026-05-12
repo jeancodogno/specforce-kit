@@ -65,8 +65,9 @@ content: |
   **C. Information Gathering:**
   - Identify missing business rules or technical ambiguities. You MUST use your user-interaction tool to clarify ALL technical and business ambiguities before proceeding.
 
-  **D. Artifact Generation/Modification:**
+  D. Artifact Generation/Modification:
   - Generate or rewrite the markdown content strictly adhering to the JSON `template` structure and the `instruction` rules.
+  - **Visual Verification:** If the feature is `UI-heavy`, you MUST ensure the Architect includes an ASCII wireframe (Ghost Protocol) in the Design artifact to visualize the interface layout (Web, TUI, etc.).
   - Replace all `{PLACEHOLDERS}`. Do not leave any empty templates.
   - Write the completed content to the exact `path` specified in the Status JSON using your file-writing tool.
 
