@@ -89,6 +89,7 @@ Check it`,
 			expected: []string{
 				"Task T1.1 (line 1) found before any Phase definition",
 				"Task T1.1 (line 1) does not match the parent Phase 0",
+				"No valid Phase (### Phase N: Name) found in tasks.md",
 			},
 		},
 		{

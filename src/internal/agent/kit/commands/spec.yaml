@@ -36,7 +36,7 @@ content: |
   - If the intent is to **Update** an existing spec, identify the specific artifact(s) to modify.
 
   ### 2. Artifact Processing (Batch Execution)
-  Do NOT continuously poll for status. Execute the following command ONCE at the start to retrieve the current state and map out your work:
+  Do NOT continuously poll for status. Execute the following command ONCE at the start to retrieve the current state and map out your work. You are STRICTLY FORBIDDEN from running `specforce spec status` between generating individual artifacts.
   ```bash
   specforce spec status <slug> --json
   ```
@@ -74,6 +74,7 @@ content: |
 
   ### 3. Verification & Handoff
   - **MANDATORY FINAL CHECK:** ONLY after writing all planned artifacts for this session, you MUST execute `specforce spec status <slug> --json` ONE final time in the terminal.
+  - **Validation Logic:** Note that deep validation (e.g., `tasks.md` structural checks) only executes when `"progress": 100`. If `progress < 100`, `"is_valid"` will remain `true` even if existing files have structural errors.
   - Analyze the JSON output. You MUST NOT provide a final summary or conclude the session unless `"progress": 100` AND `"is_valid": true`.
   - **If Initializing:** Output a final summary once verified.
   - **If Updating:** If the update invalidates downstream dependencies, ask the user if they want you to update them.

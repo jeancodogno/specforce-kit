@@ -111,6 +111,95 @@ func testGetStatus_BothFiles(t *testing.T, tmpDir, slug, specDir string, registr
 	}
 }
 
+func TestGetStatus_ConditionalValidation(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-conditional-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	registry := setupConditionalValidationRegistry(t)
+	slug := "conditional-spec"
+	specDir := setupConditionalValidationFiles(t, tmpDir, slug)
+
+	t.Run("Validation skipped when artifacts are missing", func(t *testing.T) {
+		status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+		if err != nil {
+			t.Fatalf("GetStatus failed: %v", err)
+		}
+
+		// Found should be 1 (tasks.md exists, requirements.md missing)
+		if status.Found != 1 {
+			t.Errorf("expected 1 found artifact, got %d", status.Found)
+		}
+
+		for _, art := range status.Artifacts {
+			if art.Name == "feature-tasks" {
+				if len(art.ValidationErrors) > 0 {
+					t.Errorf("expected no validation errors when missing artifacts, got %v", art.ValidationErrors)
+				}
+			}
+		}
+	})
+
+	t.Run("Validation performed when all artifacts are present", func(t *testing.T) {
+		_ = os.WriteFile(filepath.Join(specDir, "requirements.md"), []byte("reqs"), 0644)
+		status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+		if err != nil {
+			t.Fatalf("GetStatus failed: %v", err)
+		}
+
+		if status.Found != 2 {
+			t.Errorf("expected 2 found artifacts, got %d", status.Found)
+		}
+
+		verifyTasksValidationErrors(t, status)
+	})
+}
+
+func setupConditionalValidationRegistry(t *testing.T) *Registry {
+	mockFS := fstest.MapFS{
+		"requirements.yaml": {
+			Data: []byte("\ndescription: \"Req\"\ninstruction: \"instr\"\ntemplate: \"tpl\"\n"),
+		},
+		"tasks.yaml": {
+			Data: []byte("\ndescription: \"Tasks\"\ninstruction: \"instr\"\ntemplate: \"tpl\"\n"),
+		},
+	}
+	registry, err := NewRegistry(mockFS)
+	if err != nil {
+		t.Fatalf("failed to create registry: %v", err)
+	}
+	return registry
+}
+
+func setupConditionalValidationFiles(t *testing.T, tmpDir, slug string) string {
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	_ = os.MkdirAll(specDir, 0755)
+
+	// Create meta
+	_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature"), 0644)
+
+	// Create malformed tasks.md
+	malformedTasks := "### Wrong Header"
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(malformedTasks), 0644)
+	return specDir
+}
+
+func verifyTasksValidationErrors(t *testing.T, status SpecStatus) {
+	foundErrors := false
+	for _, art := range status.Artifacts {
+		if art.Name == "feature-tasks" {
+			if len(art.ValidationErrors) > 0 {
+				foundErrors = true
+			}
+		}
+	}
+	if !foundErrors {
+		t.Errorf("expected validation errors when all artifacts are present, but got none")
+	}
+}
+
 func setupSpecDir(t *testing.T, tmpDir, slug string) string {
 	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
 	if err := os.MkdirAll(specDir, 0755); err != nil {

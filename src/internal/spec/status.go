@@ -52,17 +52,19 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 		return SpecStatus{}, fmt.Errorf("feature directory not found: %s", specDir)
 	}
 
-	existsMap, err := scanArtifactExistence(ctx, specDir, artifacts)
+	existsMap, foundCount, err := scanArtifactExistence(ctx, specDir, artifacts)
 	if err != nil {
 		return SpecStatus{}, err
 	}
+
+	shouldValidate := (foundCount == len(artifacts))
 
 	for _, art := range artifacts {
 		if err := ctx.Err(); err != nil {
 			return status, err
 		}
 
-		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, meta.Type, art, existsMap, registry)
+		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, meta.Type, art, existsMap, registry, shouldValidate)
 		if err != nil {
 			return status, err
 		}
@@ -84,21 +86,23 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 	return status, nil
 }
 
-func scanArtifactExistence(ctx context.Context, specDir string, artifacts []Artifact) (map[string]bool, error) {
+func scanArtifactExistence(ctx context.Context, specDir string, artifacts []Artifact) (map[string]bool, int, error) {
 	existsMap := make(map[string]bool)
+	foundCount := 0
 	for _, art := range artifacts {
 		if err := ctx.Err(); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		fullPath := filepath.Join(specDir, art.Name+".md")
 		if _, err := os.Stat(fullPath); err == nil {
 			existsMap[art.Name] = true
+			foundCount++
 		}
 	}
-	return existsMap, nil
+	return existsMap, foundCount, nil
 }
 
-func processArtifactStatus(ctx context.Context, projectRoot, slug, specType string, art Artifact, existsMap map[string]bool, registry *Registry) (ArtifactStatus, error) {
+func processArtifactStatus(ctx context.Context, projectRoot, slug, specType string, art Artifact, existsMap map[string]bool, registry *Registry, validate bool) (ArtifactStatus, error) {
 	fileName := art.Name + ".md"
 	relPath := filepath.Join(".specforce", "specs", slug, fileName)
 	exists := existsMap[art.Name]
@@ -115,7 +119,7 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug, specType stri
 	}
 
 	var validationErrors []string
-	if art.Name == "tasks" && exists {
+	if art.Name == "tasks" && exists && validate {
 		var err error
 		validationErrors, err = ValidateTasks(ctx, projectRoot, slug)
 		if err != nil {

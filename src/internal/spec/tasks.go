@@ -78,6 +78,10 @@ func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, err
 	state.validateLastTask(currentTask)
 	state.checkEmptyPhase()
 
+	if state.currentPhase == 0 {
+		state.errors = append(state.errors, "No valid Phase (### Phase N: Name) found in tasks.md")
+	}
+
 	return state.errors, nil
 }
 
