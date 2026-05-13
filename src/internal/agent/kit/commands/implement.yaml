@@ -19,7 +19,8 @@ content: |
   You MUST execute the following phases in order. Do NOT query the implementation status repeatedly.
 
   ### 1. Initialization & Roadmap Mapping (DO THIS ONLY ONCE)
-  Execute the following command EXACTLY ONCE at the start of your session to get the full roadmap:
+  - **Memory Check:** Before executing any 'status' command, check your conversation history. If the constitution context is already loaded, REUSE it to save tokens.
+  - Execute the following command EXACTLY ONCE at the start of your session to get the full roadmap:
 
   `specforce implementation status <slug> --json`
 

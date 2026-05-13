@@ -49,9 +49,10 @@ content: |
 
   ## Ecosystem Contextualization
 
-  Immediately synchronize with the project's active state to provide high-signal feedback:
+  Immediately synchronize with the project's active state to provide high-signal feedback. If this context is not already available in your session history, execute:
   ```bash
   specforce spec list --json
+  specforce constitution status --json
   ```
   - Leverage existing specifications in `.specforce/specs/` to identify potential integration points or conflicts.
   - "The existing spec for X defines a Y pattern—should we extend that or diverge here?"

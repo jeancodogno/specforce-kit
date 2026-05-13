@@ -29,6 +29,10 @@ content: |
   - Analyze the user''s input to determine their intent: **Initialize** missing artifacts,
   or **Update** specific existing ones.
 
+  - **Memory Check:** Before executing the status command, check your conversation history.
+  If the constitution status is already known and no changes have been made to
+  `.specforce/docs/` since then, REUSE the context to save tokens.
+
   - Execute the following command to get the current state of the constitution:
 
   ```bash

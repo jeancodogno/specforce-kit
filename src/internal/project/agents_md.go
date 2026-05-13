@@ -62,6 +62,12 @@ hooks:
 ` + "```" + `
 If a hook fails, the state transition will be blocked.
 
+## 4. Efficiency & Token Optimization
+To minimize operational costs, you MUST:
+- **Constitution Context:** Before executing ` + "`specforce constitution status`" + `, check your conversation history. REUSE the context if no changes were made to ` + "`.specforce/docs/`" + ` since the last check.
+- **Surgical Reads:** Prefer ` + "`grep_search`" + ` to identify specific patterns or points of interest. Only read entire files when a comprehensive architectural map is required.
+- **Parallelism:** When performing independent research or validation steps, execute multiple tool calls in parallel within the same turn to reduce total turn count.
+
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
 `

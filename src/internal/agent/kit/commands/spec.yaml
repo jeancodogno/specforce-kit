@@ -25,8 +25,9 @@ content: |
 
   ### 1. Discovery & Intent Clarification
   - **Skill Discovery:** Before interacting with the user, investigate your available environment tools/skills to identify the correct tool for user interaction (e.g., `ask_user` or equivalent). You MUST use this specific tool to ask questions.
+  - **Memory Check:** Before executing any 'status' command, check your conversation history. If the constitution context is already loaded, REUSE it to save tokens.
   - Execute `specforce spec list` to see all current active specifications and avoid duplicates.
-  - Execute `specforce constitution status --json` to identify relevant project documents. Read necessary constitution artifacts to align with global project rules.
+  - Execute `specforce constitution status --json` (if context is missing) to identify relevant project documents. Read necessary constitution artifacts to align with global project rules.
   - Analyze the user's input. If the intent is to **Initialize** a new spec:
     - Use your discovered user-interaction tool to ask the user clarifying questions about their intent until a clear, unambiguous idea of the feature is reached. Consolidate questions into a single interaction.
     - Determine if the specification is a **feature** or a **bug**.
@@ -35,7 +36,7 @@ content: |
   - If the intent is to **Update** an existing spec, identify the specific artifact(s) to modify.
 
   ### 2. Artifact Processing (Batch Execution)
-  Do NOT continuously poll for status. Execute the following command ONCE to retrieve the current state and map out your work:
+  Do NOT continuously poll for status. Execute the following command ONCE at the start to retrieve the current state and map out your work:
   ```bash
   specforce spec status <slug> --json
   ```
