@@ -32,13 +32,14 @@ specforce implementation status <slug> --json
   - **Error Prevention:** Do the challenges and bugs encountered indicate a missing rule or lack of clarity in the Constitution? If so, formulate a rule to prevent the same error from repeating.
 
 ### 5. Knowledge Harvesting (Memorial Update)
-- Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, or critical decisions as a new memory fragment in the distributed memorial directory:
+- Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, or critical decisions as a new memory fragment.
+- **Action:** Record your findings using the CLI:
   ```bash
-  .specforce/memorial/
+  specforce archive memorial <slug> --type <lesson|decision|context> --title "<brief-summary>" --content "<detailed-description>"
   ```
-- **Action:** Create a NEW Markdown file in `.specforce/memorial/` with a filename in the format `YYYYMMDD-HHMM-{feature-slug}.md`.
-- **Content:** The file MUST include YAML frontmatter with `date`, `scope` (feature slug), `author` (agent ID), and `type` (Action, Lesson, or Decision).
-- This ensures cross-session memory without causing merge conflicts in multi-dev environments.
+- **Context:**
+  - **Existing Fragments:** {{MEMORIAL_FRAGMENTS}}
+- This ensures cross-session memory without causing merge conflicts and standardizes the archival metadata.
 
 ### 6. Information Gathering (Tool Discovery) & Constitution Update
 - If you identify new patterns or missing rules to prevent errors, you MUST scan your environment tools for the capability to prompt the user (e.g., the "ask user" tool).

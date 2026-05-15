@@ -19,6 +19,7 @@ const (
 	FragmentAction   FragmentType = "Action"
 	FragmentLesson   FragmentType = "Lesson"
 	FragmentDecision FragmentType = "Decision"
+	FragmentContext  FragmentType = "Context"
 )
 
 // Fragment represents a single piece of project memory.
