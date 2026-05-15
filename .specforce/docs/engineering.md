@@ -49,8 +49,11 @@
 - **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST update the project's distributed memorial directory (`.specforce/memorial/`) with lessons learned, established precedents, and critical architectural decisions discovered during the implementation.
 
 ## Agent Orchestration Protocol
-1. **Mandatory Discovery:** Agents MUST call `specforce spec list` and `specforce constitution status --json` before initializing a new specification to ensure they have the full project context.
-2. **Interrogation over Hallucination:** Agents MUST NOT guess user intent. They must use interrogation tools to ask clarifying questions until a clear feature idea is reached.
+1. **Mandatory Multi-Layered Pre-Flight:** Before initializing a new specification or performing significant design changes, agents MUST follow the three-layer discovery protocol:
+    - **A. Constitutional Anchor:** Consult relevant documents in `.specforce/docs/` to identify architectural and behavioral constraints.
+    - **B. Empirical Grounding:** Perform a targeted codebase scan (`grep_search`/`read_file`) to identify existing patterns and precedents.
+    - **C. Consultative Grill:** Engage in a proactive interview with the user, presenting recommendations based on layers A and B before asking for final design decisions.
+2. **Interrogation over Hallucination:** Agents MUST NOT guess user intent. They must use interrogation tools to ask clarifying questions until a clear, unambiguous feature idea is reached.
 3. **Primary Orchestration Only:** Agents MUST remain in their primary orchestration loop and NOT use specialized "plan" or "design" modes for requirement discovery. Note that the `spf.spec` skill IS the mandatory orchestration tool for planning; this rule only prohibits the use of internal LLM "Blackbox" planning features that bypass Specforce's transparent artifact generation.
 4. **Mandatory Skill Header Injection:** For agents using "Skills" (e.g., Kimi Code), all generated `SKILL.md` files (from skills or commands) MUST include a YAML frontmatter header with `name` and `description` to ensure native discovery.
 5. **Binary-Path Standard:** All agent-triggered CLI commands MUST use the global binary `specforce` (not `./specforce`) to ensure cross-platform consistency.

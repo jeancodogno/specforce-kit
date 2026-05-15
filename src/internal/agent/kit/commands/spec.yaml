@@ -23,16 +23,32 @@ content: |
 
   You MUST execute this pipeline sequentially until the feature is 100% planned or the requested update is complete. Do not poll for status unnecessarily.
 
-  ### 1. Discovery & Intent Clarification
-  - **Skill Discovery:** Before interacting with the user, investigate your available environment tools/skills to identify the correct tool for user interaction (e.g., `ask_user` or equivalent). You MUST use this specific tool to ask questions.
-  - **Memory Check:** Before executing any 'status' command, check your conversation history. If the constitution context is already loaded, REUSE it to save tokens.
-  - Execute `specforce spec list` to see all current active specifications and avoid duplicates.
-  - Execute `specforce constitution status --json` (if context is missing) to identify relevant project documents. Read necessary constitution artifacts to align with global project rules.
-  - Analyze the user's input. If the intent is to **Initialize** a new spec:
-    - Use your discovered user-interaction tool to ask the user clarifying questions about their intent until a clear, unambiguous idea of the feature is reached. Consolidate questions into a single interaction.
-    - Determine if the specification is a **feature** or a **bug**.
-    - Determine the `slug` for the new spec. It MUST be in `kebab-case`.
-    - Execute `specforce spec init <slug> --type <feature|bug>` to create the directory.
+  ### 1. Discovery & Intent Clarification (Multi-Layered Pre-Flight)
+  Before generating any artifacts or even asking the user for design decisions, you MUST perform the following sequence to ground the new feature in the project's reality:
+
+  **A. Layer 1: Constitutional Anchor**
+  - **Memory Check:** If the constitution context is already loaded in your conversation history, REUSE it.
+  - If missing, execute `specforce constitution status --json` and read `.specforce/docs/` files relevant to the user's prompt (e.g., `ui-ux.md` for frontend, `security.md` for auth).
+  - Store these constraints internally. You MUST flag any user request that violates a constitutional rule.
+
+  **B. Layer 2: Empirical Grounding (Codebase Scan)**
+  - Parse the user's prompt for technical keywords.
+  - Execute targeted `grep_search` and `read_file` to find existing implementations of related patterns (max 2-3 most relevant files).
+  - If no patterns are found, proceed with Constitutional defaults.
+
+  **C. Layer 3: The Consultative Grill**
+  - Use your discovered user-interaction tool (e.g., `ask_user`) to adopt a consultative interrogator persona.
+  - For every major technical or design decision, you MUST walk down the design tree and explicitly present:
+    1. What the Constitution says (citing the specific doc).
+    2. What the Codebase currently does (citing the specific file).
+    3. **Your Recommendation** based on the above.
+  - Ask the user to confirm your recommendation or choose an alternative. Do not proceed to artifact generation until core branches are resolved. Consolidate design decisions to prevent looping.
+  
+  **D. Initialization (Once Shared Understanding is Reached)**
+  - Execute `specforce spec list` to avoid duplicate slugs.
+  - Determine if the specification is a **feature** or a **bug**.
+  - Determine the `slug` for the new spec (MUST be in `kebab-case`).
+  - Execute `specforce spec init <slug> --type <feature|bug>` to create the directory.
   - If the intent is to **Update** an existing spec, identify the specific artifact(s) to modify.
 
   ### 2. Artifact Processing (Batch Execution)
