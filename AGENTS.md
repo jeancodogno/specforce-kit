@@ -59,32 +59,3 @@ To minimize operational costs, you MUST:
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -37,12 +37,13 @@ content: |
   - If no patterns are found, proceed with Constitutional defaults.
 
   **C. Layer 3: The Consultative Grill**
-  - Use your discovered user-interaction tool (e.g., `ask_user`) to adopt a consultative interrogator persona.
-  - For every major technical or design decision, you MUST walk down the design tree and explicitly present:
+  - **Skill Activation:** You MUST activate the `consultative-grill` skill to facilitate this phase.
+  - **Persona & Intent:** Adopt a consultative interrogator persona. If the user prompt contains "grill me", "stress test", or "find the flaws", you MUST activate the skill in **Adversarial Mode** immediately.
+  - **The Design Tree:** For every major technical or design decision, you MUST walk down the design tree and explicitly present:
     1. What the Constitution says (citing the specific doc).
     2. What the Codebase currently does (citing the specific file).
     3. **Your Recommendation** based on the above.
-  - Ask the user to confirm your recommendation or choose an alternative. Do not proceed to artifact generation until core branches are resolved. Consolidate design decisions to prevent looping.
+  - **Shared Understanding:** Ask the user to confirm your recommendation or choose an alternative. You are STRICTLY FORBIDDEN from proceeding to artifact generation until core branches (Security, Architecture, Domain Logic) are resolved and confirmed via this Grill. Consolidate design decisions to prevent looping.
   
   **D. Initialization (Once Shared Understanding is Reached)**
   - Execute `specforce spec list` to avoid duplicate slugs.
@@ -85,7 +86,7 @@ content: |
   D. Artifact Generation/Modification:
   - Generate or rewrite the markdown content strictly adhering to the JSON `template` structure and the `instruction` rules.
   - **Visual Verification:** If the feature is `UI-heavy`, you MUST ensure the Architect includes an ASCII wireframe (Ghost Protocol) in the Design artifact to visualize the interface layout (Web, TUI, etc.).
-  - Replace all `{PLACEHOLDERS}`. Do not leave any empty templates.
+  - **Hardened Content:** You MUST ensure every section is filled with concrete, verifiable technical or business rules. Vague language or "TBD" content is considered a failure.
   - Write the completed content to the exact `path` specified in the Status JSON using your file-writing tool.
 
   ### 3. Verification & Handoff
