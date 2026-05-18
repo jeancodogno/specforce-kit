@@ -69,6 +69,15 @@ Feature successfully archived and lifecycle closed.
 > The Specforce system is ready for the next feature.
 ```
 
+### 9. Memory Distillation (Optional but Recommended)
+- Operating as the Principal Architect, check the existing fragments in `.specforce/memorial/`.
+- If there are more than 10 fragments, identify those whose lessons or decisions have already been distilled into the Constitution or are no longer critical for active development.
+- **Action:** Consolidate these old fragments into a single cohesive summary and run the distillation command:
+  ```bash
+  specforce archive distill --slug <comma-separated-slugs> --summary "<consolidated-architectural-summary>"
+  ```
+- This keeps the active memory lean and ensures the `DISTILLED.md` file contains a high-signal historical record.
+
 ## Guardrails
 - **Zero Bloat:** Do not add feature-specific logic (e.g., "The auth module uses JWT") to the Constitution. Only extract reusable, cross-cutting rules.
 - **Let the CLI Handle Files:** Do not delete or move the specification files manually. Let the CLI command handle the file system operations.

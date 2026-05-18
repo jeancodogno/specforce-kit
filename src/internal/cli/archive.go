@@ -35,11 +35,32 @@ func (e *Executor) HandleArchive(ctx context.Context, ui core.UI, args ...string
 			author = args[5]
 		}
 		return e.HandleArchiveMemorial(ctx, ui, args[1], args[2], args[3], args[4], author)
+	case "distill":
+		if len(args) < 3 {
+			return fmt.Errorf("missing arguments for archive distill. Usage: specforce archive distill <slugs> <summary> [author]")
+		}
+		author := "agent"
+		if len(args) > 3 {
+			author = args[3]
+		}
+		slugs := strings.Split(args[1], ",")
+		return e.HandleArchiveDistill(ctx, ui, slugs, args[2], author)
 	default:
 		fmt.Printf("Unknown archive command: %s\n", subCommand)
-		fmt.Println("Available commands: instructions, memorial")
+		fmt.Println("Available commands: instructions, memorial, distill")
 		return nil
 	}
+}
+
+// HandleArchiveDistill processes the 'archive distill' command.
+func (e *Executor) HandleArchiveDistill(ctx context.Context, ui core.UI, slugs []string, summary string, author string) error {
+	memSvc := project.NewMemorialService(".")
+	if err := memSvc.Distill(ctx, slugs, summary, author); err != nil {
+		return fmt.Errorf("failed to distill memorial: %w", err)
+	}
+
+	ui.Success(fmt.Sprintf("Memorial fragments %s distilled into DISTILLED.md", strings.Join(slugs, ", ")))
+	return nil
 }
 
 // HandleArchiveMemorial processes the 'archive memorial' command.
@@ -96,6 +117,14 @@ func (e *Executor) HandleArchiveInstructions(ctx context.Context, ui core.UI) er
 		return fmt.Errorf("failed to scan constitution: %w", err)
 	}
 
+	// [REQ-3] Legacy Memorial Cleanup
+	legacyPath := filepath.Join(".specforce", "docs", "memorial.md")
+	if _, err := os.Stat(legacyPath); err == nil {
+		_ = os.Remove(legacyPath)
+		// Re-scan status to reflect the deletion
+		status, _ = constitution.GetStatus(ctx, ".", registry)
+	}
+
 	// 2. Fetch Kit Instructions & 3. Fetch Config Instructions
 	kitFS, err := e.GetKitFS(ui)
 	if err != nil {
@@ -111,7 +140,13 @@ func (e *Executor) HandleArchiveInstructions(ctx context.Context, ui core.UI) er
 	config.Context["CURRENT_DATE"] = now.Format("20060102")
 	config.Context["CURRENT_TIME"] = now.Format("1504")
 	config.Context["CURRENT_DATETIME"] = now.Format("20060102-1504")
-	config.Context["MEMORIAL_FRAGMENTS"] = e.getMemorialList()
+
+	memSvc := project.NewMemorialService(".")
+	fragments, err := memSvc.Consolidate(ctx, 10)
+	if err != nil {
+		fragments = "None"
+	}
+	config.Context["MEMORIAL_FRAGMENTS"] = fragments
 
 	mgr := agent.NewInstructionManager(kitFS, config)
 	finalInstructions, err := mgr.GetInstructions("archive")
@@ -121,20 +156,6 @@ func (e *Executor) HandleArchiveInstructions(ctx context.Context, ui core.UI) er
 
 	e.printArchiveInstructions(&status, finalInstructions)
 	return nil
-}
-
-func (e *Executor) getMemorialList() string {
-	memorialFiles := []string{}
-	entries, _ := os.ReadDir(filepath.Join(".specforce", "memorial"))
-	for _, entry := range entries {
-		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".md") {
-			memorialFiles = append(memorialFiles, entry.Name())
-		}
-	}
-	if len(memorialFiles) == 0 {
-		return "None"
-	}
-	return strings.Join(memorialFiles, ", ")
 }
 
 func (e *Executor) printArchiveInstructions(status *constitution.ConstitutionStatus, instructions string) {

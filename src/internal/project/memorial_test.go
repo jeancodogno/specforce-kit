@@ -126,3 +126,46 @@ func TestMemorialService_Migration(t *testing.T) {
 		t.Error("Legacy file not renamed to .deprecated")
 	}
 }
+
+func TestMemorialService_Distill(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "memorial-test-distill")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	svc := NewMemorialService(tmpDir)
+	ctx := context.Background()
+	_ = svc.Initialize(ctx)
+
+	f1 := Fragment{Scope: "Auth", Title: "JWT Fix", Content: "Fixed JWT leak."}
+	f2 := Fragment{Scope: "API", Title: "Rate Limit", Content: "Added rate limiting."}
+	_ = svc.Record(ctx, f1)
+	_ = svc.Record(ctx, f2)
+
+	slugs := []string{"auth", "api"}
+	summary := "Security updates implemented."
+	err = svc.Distill(ctx, slugs, summary, "agent")
+	if err != nil {
+		t.Fatalf("Distill failed: %v", err)
+	}
+
+	// Verify DISTILLED.md
+	distilledPath := filepath.Join(tmpDir, ".specforce", "memorial", "DISTILLED.md")
+	data, err := os.ReadFile(distilledPath)
+	if err != nil {
+		t.Fatalf("DISTILLED.md not found: %v", err)
+	}
+	if !strings.Contains(string(data), summary) {
+		t.Errorf("DISTILLED.md missing summary: %s", string(data))
+	}
+
+	// Verify individual files are gone
+	entries, _ := os.ReadDir(filepath.Join(tmpDir, ".specforce", "memorial"))
+	for _, entry := range entries {
+		if entry.Name() == "ROUTING.md" || entry.Name() == "DISTILLED.md" {
+			continue
+		}
+		t.Errorf("Fragment file should have been deleted: %s", entry.Name())
+	}
+}

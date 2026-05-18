@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/agent"
@@ -101,6 +102,12 @@ func (e *Executor) handleNewInitFlow(ctx context.Context, ui core.UI, kitFS fs.F
 
 	if err := e.ProjectService.InitializeProject(ctx, ui, config); err != nil {
 		return err
+	}
+
+	// [REQ-3] Legacy Memorial Cleanup
+	legacyPath := filepath.Join(".specforce", "docs", "memorial.md")
+	if _, err := os.Stat(legacyPath); err == nil {
+		_ = os.Remove(legacyPath)
 	}
 
 	// Auto-initialize config.yaml if it doesn't exist

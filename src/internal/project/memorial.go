@@ -40,6 +40,9 @@ type MemorialService interface {
 	// Consolidate aggregates the Rules of Engagement and the latest fragments.
 	Consolidate(ctx context.Context, limit int) (string, error)
 
+	// Distill consolidates specific fragments into a single DISTILLED.md file.
+	Distill(ctx context.Context, slugs []string, summary string, author string) error
+
 	// Initialize sets up the memorial directory and initial ROUTING.md.
 	Initialize(ctx context.Context) error
 }
@@ -213,4 +216,60 @@ func (s *memorialService) Consolidate(ctx context.Context, limit int) (string, e
 	}
 
 	return builder.String(), nil
+}
+
+func (s *memorialService) Distill(ctx context.Context, slugs []string, summary string, author string) error {
+	memorialDir, err := core.SecurePath(s.projectRoot, filepath.Join(".specforce", "memorial"))
+	if err != nil {
+		return err
+	}
+
+	distilledPath := filepath.Join(memorialDir, "DISTILLED.md")
+
+	var builder strings.Builder
+	if _, err := os.Stat(distilledPath); os.IsNotExist(err) {
+		builder.WriteString("# Consolidated Memorial (Distilled)\n\n")
+	}
+
+	now := time.Now()
+	fmt.Fprintf(&builder, "## [%s] Distillation: %s\n", now.Format("2006-01-02"), strings.Join(slugs, ", "))
+	fmt.Fprintf(&builder, "**Author:** %s\n", author)
+	fmt.Fprintf(&builder, "**Summary:** %s\n\n", summary)
+	builder.WriteString("---\n\n")
+
+	// #nosec G304, G306 - permissions are restricted to owner; path is internal to .specforce and trusted
+	f, err := os.OpenFile(distilledPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return fmt.Errorf("failed to open DISTILLED.md: %w", err)
+	}
+
+	if _, err := f.WriteString(builder.String()); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("failed to write to DISTILLED.md: %w", err)
+	}
+
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("failed to close DISTILLED.md: %w", err)
+	}
+
+	// Delete individual fragments
+	entries, err := os.ReadDir(memorialDir)
+	if err != nil {
+		return nil // Non-critical if we can't delete right now
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+			continue
+		}
+
+		for _, slug := range slugs {
+			// Filename format: YYYYMMDD-HHMM-slug.md
+			if strings.Contains(entry.Name(), slug) {
+				_ = os.Remove(filepath.Join(memorialDir, entry.Name()))
+			}
+		}
+	}
+
+	return nil
 }
