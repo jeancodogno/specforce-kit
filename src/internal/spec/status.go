@@ -16,6 +16,7 @@ type ArtifactStatus struct {
 	Blocked          bool     `json:"blocked"`
 	Dependency       string   `json:"dependency"`
 	ValidationErrors []string `json:"validation_errors,omitempty"`
+	ValidationGuide  string   `json:"validation_guide,omitempty"`
 }
 
 // SpecStatus represents the overall completion state of a specific feature spec.
@@ -119,11 +120,16 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug, specType stri
 	}
 
 	var validationErrors []string
+	var validationGuide string
 	if art.Name == "tasks" && exists && validate {
 		var err error
 		validationErrors, err = ValidateTasks(ctx, projectRoot, slug)
 		if err != nil {
 			return ArtifactStatus{}, fmt.Errorf("failed to validate tasks.md: %w", err)
+		}
+
+		if len(validationErrors) > 0 {
+			validationGuide = "### Phase 1: Example Phase\n- [ ] T1.1: Example Task\n**Target:** `path/to/file.go`\n**Context:** [US-1]\n**Action Steps:**\n- Step 1\n**Verification (TDD):**\n- run test"
 		}
 	}
 
@@ -135,5 +141,6 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug, specType stri
 		Blocked:          blocked,
 		Dependency:       art.Dependency,
 		ValidationErrors: validationErrors,
+		ValidationGuide:  validationGuide,
 	}, nil
 }
