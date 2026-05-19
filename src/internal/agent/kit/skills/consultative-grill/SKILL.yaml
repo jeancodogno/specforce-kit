@@ -34,6 +34,7 @@ content: |
   - Demand proof: "Where in the current codebase do we do this? If nowhere, why are we introducing this pattern now?"
 
   ## Interview Rules
+  - **Mandatory Tool Usage:** When asking questions, you MUST use your environment's native interaction tool (`ask_user`, `ask`, etc.) to ensure the user is prompted for input.
   - **Single-Threaded Precision:** Ask one question at a time. Each question must include a **Proactive Recommendation** and a **Counter-Argument** (to prevent confirmation bias).
   - **Decision Persistence:** Every confirmed decision must be immediately reflected in the corresponding artifact (Requirements, Design, or Constitution). No "shadow decisions" in the chat only.
   - **Hardened Definitions:** You are STRICTLY PROHIBITED from using placeholders, TBDs, or vague qualifiers. Every sentence in a spec must be a verifiable technical or business invariant.

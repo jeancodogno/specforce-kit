@@ -25,6 +25,8 @@ content: '# Opportunity Framing
 
   3. Rank the best options and recommend the next action.
 
+  4. **Mandatory Tool Usage:** When asking questions, you MUST use your environment''s native interaction tool (`ask_user`, `ask`, etc.) to ensure the user is prompted for input.
+
 
   ## Checklist
 

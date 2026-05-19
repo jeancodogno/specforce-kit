@@ -29,3 +29,6 @@ content: |
   - **Zero Ambiguity:** Use exact terminology, namespaces, and file paths defined in the Spec. If a critical name is missing, you MUST HALT and flag the ambiguity as a blocker.
   - **Sequential Execution Only:** All tasks MUST be planned to be executed sequentially, one by one. Do not group, batch, or attempt to parallelize tasks.
   - **Atomic Execution:** You must operate as a stateless content generator. Do NOT initiate high-level planning modes, design doc sessions, or external platform-native thought processes. Your mission is to produce the implementation roadmap directly into the provided context using only the tools assigned to you.
+
+  ## 5. Interactive Consultation Protocol
+  If you encounter ambiguity, require user iteration, or need to make a critical decision, you MUST actively prompt the user using the interactive question tool native to your specific AI environment (e.g., `ask_user`, `ask`, `prompt`). Do not halt execution, make blind assumptions, or output generic chat questions. Use your environment's tool to explicitly request the required input.
