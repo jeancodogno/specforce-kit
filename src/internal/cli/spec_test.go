@@ -1,56 +1,89 @@
 package cli
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/tui"
 )
 
 func TestHandleSpecList(t *testing.T) {
-	// Setup temp project root
-	tmpDir := filepath.Join("testdata", "cli_spec")
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".specforce", "specs", "test-spec"), 0755); err != nil {
-		t.Fatal(err)
-	}
 	cwd, _ := os.Getwd()
-	_ = os.Chdir(tmpDir)
 	defer func() { _ = os.Chdir(cwd) }()
-	defer func() { _ = os.RemoveAll(filepath.Join(cwd, "testdata")) }()
 
-	e := NewExecutor("1.0.0")
-	ui := tui.NewUI()
+	t.Run("Populated List", func(t *testing.T) {
+		tmpDir := filepath.Join(cwd, "testdata", "cli_spec_populated")
+		if err := os.MkdirAll(filepath.Join(tmpDir, ".specforce", "specs", "test-spec"), 0755); err != nil {
+			t.Fatal(err)
+		}
+		_ = os.Chdir(tmpDir)
 
-	t.Run("TUI Mode", func(t *testing.T) {
+		e := NewExecutor("1.0.0")
+		ui := tui.NewUI()
+
 		err := e.HandleSpecList(context.Background(), ui, false)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
-	})
 
-	t.Run("JSON Mode", func(t *testing.T) {
-		err := e.HandleSpecList(context.Background(), ui, true)
+		err = e.HandleSpecList(context.Background(), ui, true)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
 	})
+
+	t.Run("Empty List JSON", func(t *testing.T) {
+		tmpDir := filepath.Join(cwd, "testdata", "cli_spec_empty")
+		if err := os.MkdirAll(filepath.Join(tmpDir, ".specforce", "specs"), 0755); err != nil {
+			t.Fatal(err)
+		}
+		_ = os.Chdir(tmpDir)
+
+		e := NewExecutor("1.0.0")
+		ui := tui.NewUI()
+
+		// Capture stdout
+		old := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		err := e.HandleSpecList(context.Background(), ui, true)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
+		_ = w.Close()
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+		os.Stdout = old
+
+		output := strings.TrimSpace(buf.String())
+		if output != "[]" {
+			t.Errorf("expected empty JSON array [], got %q", output)
+		}
+	})
+
+	_ = os.RemoveAll(filepath.Join(cwd, "testdata"))
 }
 
 func TestHandleSpecInit(t *testing.T) {
+	cwd, _ := os.Getwd()
+	defer func() { _ = os.Chdir(cwd) }()
+
 	// Setup temp project root
-	tmpDir := filepath.Join("testdata", "cli_init")
+	tmpDir := filepath.Join(cwd, "testdata", "cli_init")
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".specforce", "specs", "active-spec"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".specforce", "archive", "archived-spec"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	cwd, _ := os.Getwd()
 	_ = os.Chdir(tmpDir)
-	defer func() { _ = os.Chdir(cwd) }()
-	defer func() { _ = os.RemoveAll(filepath.Join(cwd, "testdata")) }()
 
 	e := NewExecutor("1.0.0")
 	ui := tui.NewUI()
@@ -63,9 +96,6 @@ func TestHandleSpecInit(t *testing.T) {
 	})
 
 	t.Run("Collision Active", func(t *testing.T) {
-		// PrepareSlug will transform "active-spec" to something like "20260504-1323-active-spec"
-		// which won't collide with the manually created ".specforce/specs/active-spec" directory.
-		// To test collision, we must pass the ALREADY timestamped slug.
 		err := e.HandleSpecInit(context.Background(), ui, "active-spec", false, "")
 		if err != nil {
 			t.Errorf("expected success due to auto-timestamping, got %v", err)
@@ -85,4 +115,6 @@ func TestHandleSpecInit(t *testing.T) {
 			t.Errorf("expected success, got %v", err)
 		}
 	})
+
+	_ = os.RemoveAll(filepath.Join(cwd, "testdata"))
 }

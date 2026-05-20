@@ -47,6 +47,7 @@
 
 - **Instruction-Driven Agent Pattern:** Agent command definitions (`.yaml`) SHOULD NOT contain complex, hardcoded logic or multi-step instructions. Instead, they MUST trigger a dedicated Specforce CLI command (e.g., `specforce archive instructions`) to retrieve a dynamic instruction set. This allows the framework to inject global context (Constitution), core kit rules, and project-specific overrides from `config.yaml` without updating the agent's definition.
 - **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST update the project's distributed memorial directory (`.specforce/memorial/`) with lessons learned, established precedents, and critical architectural decisions discovered during the implementation.
+- **JSON Collection Standards:** To ensure machine-readable APIs consistently return an empty array `[]` instead of `null` for empty collections, Go slices intended for JSON marshaling MUST be explicitly initialized with an empty literal (e.g., `s := []T{}`) rather than just declared (e.g., `var s []T`).
 
 ## Agent Orchestration Protocol
 1. **Mandatory Multi-Layered Pre-Flight:** Before initializing a new specification or performing significant design changes, agents MUST follow the three-layer discovery protocol:

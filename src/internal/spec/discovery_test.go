@@ -7,14 +7,14 @@ import (
 	"testing"
 )
 
-func TestDiscovery(t *testing.T) {
+func TestSpecExists(t *testing.T) {
 	// Setup temp project root
-	if err := os.MkdirAll(filepath.Join("testdata", "discovery"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join("testdata", "discovery-exists"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	defer func() { _ = os.RemoveAll("testdata") }()
 
-	projectRoot := filepath.Join("testdata", "discovery")
+	projectRoot := filepath.Join("testdata", "discovery-exists")
 	specsDir := filepath.Join(projectRoot, ".specforce", "specs")
 	archiveDir := filepath.Join(projectRoot, ".specforce", "archive")
 
@@ -47,8 +47,39 @@ func TestDiscovery(t *testing.T) {
 			t.Errorf("expected none to not exist, got %v, %s", exists, status)
 		}
 	})
+}
 
-	t.Run("ListActiveSpecs", func(t *testing.T) {
+func TestListActiveSpecs(t *testing.T) {
+	defer func() { _ = os.RemoveAll("testdata") }()
+
+	t.Run("ListActiveSpecs empty", func(t *testing.T) {
+		emptyProjectRoot := filepath.Join("testdata", "discovery-empty")
+		if err := os.MkdirAll(filepath.Join(emptyProjectRoot, ".specforce", "specs"), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(emptyProjectRoot, ".specforce", "specs", ".gitkeep"), []byte{}, 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		specs, err := ListActiveSpecs(context.Background(), emptyProjectRoot)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if specs == nil {
+			t.Error("expected non-nil slice for empty specs list")
+		}
+		if len(specs) != 0 {
+			t.Errorf("expected 0 specs, got %d", len(specs))
+		}
+	})
+
+	t.Run("ListActiveSpecs populated", func(t *testing.T) {
+		projectRoot := filepath.Join("testdata", "discovery-populated")
+		specsDir := filepath.Join(projectRoot, ".specforce", "specs")
+		if err := os.MkdirAll(filepath.Join(specsDir, "active-spec"), 0755); err != nil {
+			t.Fatal(err)
+		}
+
 		specs, err := ListActiveSpecs(context.Background(), projectRoot)
 		if err != nil {
 			t.Fatal(err)
