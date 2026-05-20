@@ -43,6 +43,15 @@ func TestNewRegistry(t *testing.T) {
 	if arch.Path != ".specforce/docs/architecture.md" {
 		t.Errorf("Expected .specforce/docs/architecture.md, got %s", arch.Path)
 	}
+
+	// Verify Memorial artifact (custom path)
+	mem, ok := registry.Get("memorial")
+	if !ok {
+		t.Fatal("Memorial artifact not found")
+	}
+	if mem.Path != ".specforce/memorial/ROUTING.md" {
+		t.Errorf("Expected .specforce/memorial/ROUTING.md, got %s", mem.Path)
+	}
 }
 
 func TestNewRegistry_IndexSpecialCase(t *testing.T) {
@@ -93,5 +102,27 @@ func TestNewRegistry_LeadingUnderscoreSpecialCase(t *testing.T) {
 	}
 	if idx.Path != ".specforce/docs/_index.md" {
 		t.Errorf("Expected path .specforce/docs/_index.md, got %s", idx.Path)
+	}
+}
+
+func TestNewRegistry_PathOverride(t *testing.T) {
+	mockFS := fstest.MapFS{
+		"custom.yaml": &fstest.MapFile{
+			Data: []byte("description: Custom Description\ninstruction: Custom Instruction\ntemplate: Custom Template\npath: .specforce/custom/PATH.md"),
+		},
+	}
+
+	reg, err := NewRegistry(mockFS)
+	if err != nil {
+		t.Fatalf("Failed to create registry with mock FS: %v", err)
+	}
+
+	custom, ok := reg.Get("custom")
+	if !ok {
+		t.Fatal("Custom artifact not found")
+	}
+
+	if custom.Path != ".specforce/custom/PATH.md" {
+		t.Errorf("Expected path .specforce/custom/PATH.md, got %s", custom.Path)
 	}
 }

@@ -176,3 +176,47 @@ tools:
 		}
 	}
 }
+
+func TestService_InitializeProject_WithRegistryTemplate(t *testing.T) {
+	// Prepare artifacts FS with a memorial template
+	artifactsFS := fstest.MapFS{
+		"constitution/memorial.yaml": &fstest.MapFile{
+			Data: []byte(`
+description: "Distributed memorial"
+instruction: "Maintain the memorial"
+template: "CUSTOM_MEMORIAL_TEMPLATE"
+`),
+		},
+	}
+
+	kitFS := fstest.MapFS{
+		"kit.yaml": &fstest.MapFile{Data: []byte(`tools: {}`)},
+	}
+
+	tmpDir := t.TempDir()
+	svc := project.NewService(kitFS, artifactsFS, tmpDir)
+	ui := &mockUI{}
+
+	config := project.InitConfig{
+		ProjectRoot:    tmpDir,
+		SelectedAgents: []string{},
+	}
+
+	err := svc.InitializeProject(context.Background(), ui, config)
+	if err != nil {
+		t.Fatalf("InitializeProject failed: %v", err)
+	}
+
+	// Verify that the memorial was initialized with the custom template
+	// The MemorialService.Initialize creates .specforce/memorial/ROUTING.md with the template if provided
+	routingPath := filepath.Join(tmpDir, ".specforce", "memorial", "ROUTING.md")
+	content, err := os.ReadFile(routingPath)
+	if err != nil {
+		t.Fatalf("Failed to read ROUTING.md: %v", err)
+	}
+
+	if string(content) != "CUSTOM_MEMORIAL_TEMPLATE" {
+		t.Errorf("Expected ROUTING.md to contain 'CUSTOM_MEMORIAL_TEMPLATE', got %q", string(content))
+	}
+}
+

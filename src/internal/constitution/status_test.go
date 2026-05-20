@@ -87,7 +87,11 @@ func runAllFilesPresentTest(t *testing.T, tmpDir string, registry *Registry) {
 			continue
 		}
 		coreCount++
-		if err := os.WriteFile(filepath.Join(tmpDir, art.Path), []byte("test"), 0644); err != nil {
+		filePath := filepath.Join(tmpDir, art.Path)
+		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			t.Fatalf("failed to create dir for %s: %v", art.Name, err)
+		}
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatalf("failed to write test file %s: %v", art.Name, err)
 		}
 	}
@@ -129,7 +133,11 @@ func runPartiallyPresentTest(t *testing.T, registry *Registry) {
 
 	// Create only the first 2 core artifacts
 	for i := 0; i < 2; i++ {
-		if err := os.WriteFile(filepath.Join(partialTmpDir, coreArtifacts[i].Path), []byte("test"), 0644); err != nil {
+		filePath := filepath.Join(partialTmpDir, coreArtifacts[i].Path)
+		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			t.Fatalf("failed to create dir for partial test: %v", err)
+		}
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatalf("failed to write partial test file: %v", err)
 		}
 	}

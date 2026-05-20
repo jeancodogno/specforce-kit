@@ -19,14 +19,34 @@ func TestMemorialService_Initialize(t *testing.T) {
 	svc := NewMemorialService(tmpDir)
 	ctx := context.Background()
 
-	err = svc.Initialize(ctx)
+	// 1. Default template
+	err = svc.Initialize(ctx, "")
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
 
 	routingPath := filepath.Join(tmpDir, ".specforce", "memorial", "ROUTING.md")
-	if _, err := os.Stat(routingPath); os.IsNotExist(err) {
-		t.Error("ROUTING.md not created")
+	data, err := os.ReadFile(routingPath)
+	if err != nil {
+		t.Fatalf("ROUTING.md not created or readable: %v", err)
+	}
+	if !strings.Contains(string(data), "FOR AI AGENTS") {
+		t.Error("ROUTING.md missing default content")
+	}
+
+	// 2. Custom template
+	_ = os.Remove(routingPath)
+	customTemplate := "# Custom Rules\nRule 1: Be cool."
+	err = svc.Initialize(ctx, customTemplate)
+	if err != nil {
+		t.Fatalf("Initialize with custom template failed: %v", err)
+	}
+	data, err = os.ReadFile(routingPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != customTemplate {
+		t.Errorf("ROUTING.md content mismatch: expected %q, got %q", customTemplate, string(data))
 	}
 }
 
@@ -40,7 +60,7 @@ func TestMemorialService_RecordAndConsolidate(t *testing.T) {
 	svc := NewMemorialService(tmpDir)
 	ctx := context.Background()
 
-	_ = svc.Initialize(ctx)
+	_ = svc.Initialize(ctx, "")
 
 	f1 := Fragment{
 		Date:    time.Date(2026, 5, 8, 10, 0, 0, 0, time.UTC),
@@ -106,7 +126,7 @@ func TestMemorialService_Migration(t *testing.T) {
 	svc := NewMemorialService(tmpDir)
 	ctx := context.Background()
 
-	err = svc.Initialize(ctx)
+	err = svc.Initialize(ctx, "")
 	if err != nil {
 		t.Fatalf("Initialize with migration failed: %v", err)
 	}
@@ -136,7 +156,7 @@ func TestMemorialService_Distill(t *testing.T) {
 
 	svc := NewMemorialService(tmpDir)
 	ctx := context.Background()
-	_ = svc.Initialize(ctx)
+	_ = svc.Initialize(ctx, "")
 
 	f1 := Fragment{Scope: "Auth", Title: "JWT Fix", Content: "Fixed JWT leak."}
 	f2 := Fragment{Scope: "API", Title: "Rate Limit", Content: "Added rate limiting."}

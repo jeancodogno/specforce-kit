@@ -44,7 +44,7 @@ type MemorialService interface {
 	Distill(ctx context.Context, slugs []string, summary string, author string) error
 
 	// Initialize sets up the memorial directory and initial ROUTING.md.
-	Initialize(ctx context.Context) error
+	Initialize(ctx context.Context, template string) error
 }
 
 type memorialService struct {
@@ -58,7 +58,7 @@ func NewMemorialService(projectRoot string) MemorialService {
 	}
 }
 
-func (s *memorialService) Initialize(ctx context.Context) error {
+func (s *memorialService) Initialize(ctx context.Context, template string) error {
 	memorialDir, err := core.SecurePath(s.projectRoot, filepath.Join(".specforce", "memorial"))
 	if err != nil {
 		return err
@@ -76,7 +76,9 @@ func (s *memorialService) Initialize(ctx context.Context) error {
 
 	routingPath := filepath.Join(memorialDir, "ROUTING.md")
 	if _, err := os.Stat(routingPath); os.IsNotExist(err) {
-		routingContent := `# Project Memorial (Distributed)
+		routingContent := template
+		if routingContent == "" {
+			routingContent = `# Project Memorial (Distributed)
 
 > **FOR AI AGENTS: RULES OF ENGAGEMENT**
 > This is your cross-session memory. You MUST obey these rules:
@@ -85,6 +87,7 @@ func (s *memorialService) Initialize(ctx context.Context) error {
 > 3. **STRICT LIMITS:** The CLI will provide a consolidated view of the most relevant fragments.
 > 4. **DISTILLATION:** If a lesson or decision becomes a permanent rule, it MUST be moved to the official Constitution files.
 `
+		}
 		if err := os.WriteFile(routingPath, []byte(routingContent), 0600); err != nil {
 			return fmt.Errorf("failed to create ROUTING.md: %w", err)
 		}

@@ -16,7 +16,7 @@ type Artifact struct {
 	Description string `json:"description" yaml:"description"`
 	Instruction string `json:"instruction" yaml:"instruction"`
 	Template    string `json:"template" yaml:"template"`
-	Path        string `json:"path" yaml:"-"`
+	Path        string `json:"path" yaml:"path,omitempty"`
 }
 
 // Registry manages the collection of constitution artifacts.
@@ -92,12 +92,15 @@ func loadArtifact(artifactsFS fs.FS, path, fileName string) (Artifact, error) {
 	art.Name = art.Slug
 
 	// Path is the expected project-relative path (with extension)
-	mdFileName := art.Slug + ".md"
-	if art.Slug == "index" {
-		mdFileName = "_index.md"
-	}
+	// If it was already loaded from YAML (override), we keep it.
+	if art.Path == "" {
+		mdFileName := art.Slug + ".md"
+		if art.Slug == "index" {
+			mdFileName = "_index.md"
+		}
 
-	art.Path = filepath.Join(".specforce", "docs", mdFileName)
+		art.Path = filepath.Join(".specforce", "docs", mdFileName)
+	}
 
 	return art, nil
 }

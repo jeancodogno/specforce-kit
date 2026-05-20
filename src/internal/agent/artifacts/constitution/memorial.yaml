@@ -1,4 +1,5 @@
 description: "Routing and Rules of Engagement for the Distributed Memorial."
+path: ".specforce/memorial/ROUTING.md"
 instruction: |
   Generate the Memorial Routing document strictly using the provided template. This file acts as the primary entry point for AI agents to understand how project memory is structured.
   
