@@ -51,6 +51,11 @@ func (e *Executor) HandleInit(ctx context.Context, ui core.UI, agents ...string)
 		return err
 	}
 
+	// Auto-initialize config.yaml if it doesn't exist
+	if err := core.EnsureConfigExists("."); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize config.yaml: %v\n", err)
+	}
+
 	// Check if already initialized for update flow
 	if project.IsInitialized(".") {
 		return e.handleUpdateFlow(ctx, ui, kitFS, selected)
@@ -108,11 +113,6 @@ func (e *Executor) handleNewInitFlow(ctx context.Context, ui core.UI, kitFS fs.F
 	legacyPath := filepath.Join(".specforce", "docs", "memorial.md")
 	if _, err := os.Stat(legacyPath); err == nil {
 		_ = os.Remove(legacyPath)
-	}
-
-	// Auto-initialize config.yaml if it doesn't exist
-	if err := core.EnsureConfigExists("."); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize config.yaml: %v\n", err)
 	}
 
 	if tui.IsTTY() {

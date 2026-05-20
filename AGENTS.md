@@ -57,6 +57,10 @@ To minimize operational costs, you MUST:
 - **Surgical Reads:** Prefer `grep_search` to identify specific patterns or points of interest. Only read entire files when a comprehensive architectural map is required.
 - **Parallelism:** When performing independent research or validation steps, execute multiple tool calls in parallel within the same turn to reduce total turn count.
 
+## 5. Interactive Consultation Protocol
+If you encounter ambiguity, require user iteration, or need to make a critical decision, you MUST actively prompt the user using the interactive question tool native to your specific AI environment (e.g., `ask_user`, `ask`, `prompt`). Do not halt execution, make blind assumptions, or output generic chat questions. Use your environment's tool to explicitly request the required input.
+
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
 
