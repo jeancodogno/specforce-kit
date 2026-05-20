@@ -37,7 +37,8 @@ func (s *Service) GetArtifact(ctx context.Context, name string) (*Artifact, erro
 	if s.configProvider != nil {
 		conf, err := s.configProvider.GetConfig(ctx)
 		if err == nil && conf != nil {
-			if rules, ok := conf.Instructions[name]; ok && len(rules) > 0 {
+			rules := s.resolveInstructions(conf, name)
+			if len(rules) > 0 {
 				custom := "\n\n## Project Specific Instructions\n- " + strings.Join(rules, "\n- ")
 				art.Instruction += custom
 			}
@@ -154,4 +155,52 @@ func (s *Service) checkTaskPosition(report *ImplementationReport, taskID string)
 		}
 	}
 	return false, false
+}
+
+func (s *Service) inferBaseType(name string) string {
+	baseTypes := []string{"requirements", "design", "tasks", "implementation", "archive"}
+	bestMatch := ""
+	bestIndex := -1
+
+	for _, bt := range baseTypes {
+		idx := strings.LastIndex(name, bt)
+		if idx > bestIndex {
+			bestIndex = idx
+			bestMatch = bt
+		}
+	}
+
+	return bestMatch
+}
+
+func (s *Service) resolveInstructions(conf *core.ProjectConfig, name string) []string {
+	var combined []string
+	seen := make(map[string]bool)
+
+	// 1. Get Generic Instructions
+	baseType := s.inferBaseType(name)
+	if baseType != "" {
+		if generic, ok := conf.Instructions[baseType]; ok {
+			for _, rule := range generic {
+				if !seen[rule] {
+					combined = append(combined, rule)
+					seen[rule] = true
+				}
+			}
+		}
+	}
+
+	// 2. Get Specific Instructions (if name is different from baseType)
+	if name != baseType {
+		if specific, ok := conf.Instructions[name]; ok {
+			for _, rule := range specific {
+				if !seen[rule] {
+					combined = append(combined, rule)
+					seen[rule] = true
+				}
+			}
+		}
+	}
+
+	return combined
 }

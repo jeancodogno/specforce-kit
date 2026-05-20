@@ -87,7 +87,8 @@ func loadArtifact(artifactsFS fs.FS, path, fileName string) (Artifact, error) {
 	return art, nil
 }
 
-// Get returns an artifact by its name. It supports prefixed lookups (e.g., "bug-requirements").
+// Get returns an artifact by its name. It supports prefixed lookups (e.g., "bug-requirements")
+// and right-to-left inference for base types (e.g., "tasks-for-design" -> "design").
 func (r *Registry) Get(name string) (Artifact, bool) {
 	// 1. Try exact match (could be base name or already a full prefixed name in the registry)
 	if art, ok := r.artifacts[name]; ok {
@@ -100,6 +101,23 @@ func (r *Registry) Get(name string) (Artifact, bool) {
 		if strings.HasPrefix(name, prefix) {
 			baseName := strings.TrimPrefix(name, prefix)
 			return r.GetForType(t, baseName)
+		}
+	}
+
+	// 3. Right-to-left inference for base types
+	baseTypes := []string{"requirements", "design", "tasks", "implementation", "archive"}
+	bestMatch := ""
+	bestIndex := -1
+	for _, bt := range baseTypes {
+		idx := strings.LastIndex(name, bt)
+		if idx > bestIndex {
+			bestIndex = idx
+			bestMatch = bt
+		}
+	}
+	if bestMatch != "" {
+		if art, ok := r.artifacts[bestMatch]; ok {
+			return art, true
 		}
 	}
 

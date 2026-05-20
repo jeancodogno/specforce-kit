@@ -24,30 +24,28 @@ type ProjectConfig struct {
 
 // DefaultConfigContent is the default content for the .specforce/config.yaml file.
 const DefaultConfigContent = `instructions:
-  # Example: Project-wide instructions for all requirements artifacts
+  # Instructions can be generic (base type) or specific (prefixed name).
+  # Generic instructions are applied to all matching artifacts.
+  
+  # Example: Generic instructions for all requirements
   # requirements:
   #   - "Always use BDD GIVEN/WHEN/THEN syntax"
-  #   - "Ensure accessibility is mentioned for UI components"
+  
+  # Example: Specific instructions for bug requirements only
+  # bug-requirements:
+  #   - "Always include Root Cause Analysis (RCA)"
 
-  # Example: Project-wide instructions for all design artifacts
   # design:
   #   - "Use Mermaid.js for architecture diagrams"
-  #   - "Include a detailed component inventory"
 
-  # Example: Project-wide instructions for all tasks artifacts
   # tasks:
   #   - "Each task must have a clear verification step"
-  #   - "Group tasks by implementation phases"
 
-  # Example: Project-wide instructions for the implementation phase
   # implementation:
   #   - "Always run 'go fmt' before finishing a task"
-  #   - "Use explicit type casts instead of interfaces when possible"
 
-  # Example: Project-wide instructions for the archive phase
   # archive:
   #   - "Always update the project memorial with lessons learned"
-  #   - "Ensure all temporary artifacts are cleaned up"
 
 # Global context variables for instruction injection
 # context:

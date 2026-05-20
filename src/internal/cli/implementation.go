@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 	"github.com/jeancodogno/specforce-kit/src/internal/project"
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
@@ -81,6 +82,14 @@ func (e *Executor) HandleImplementationStatus(ctx context.Context, ui core.UI, s
 			os.Exit(1)
 		}
 		return fmt.Errorf("failed to get implementation status for %s: %w", slug, err)
+	}
+
+	// Dynamic instruction variable injection
+	kitFS, _ := e.GetKitFS(ui)
+	config := core.LoadConfig(".")
+	mgr := agent.NewInstructionManager(kitFS, config)
+	for i, inst := range report.Instructions {
+		report.Instructions[i] = mgr.InjectVariables(inst)
 	}
 
 	if jsonMode {

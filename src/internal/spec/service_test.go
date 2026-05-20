@@ -81,6 +81,104 @@ template: Requirements Template Content
 	})
 }
 
+func TestGetArtifact_Layered(t *testing.T) {
+	artifactsFS := fstest.MapFS{
+		"requirements.yaml": &fstest.MapFile{Data: []byte(`
+description: Requirements Template
+instruction: Base Requirements Instruction
+template: Requirements Template Content
+`)},
+		"design.yaml": &fstest.MapFile{Data: []byte(`
+description: Design Template
+instruction: Base Design Instruction
+template: Design Template Content
+`)},
+	}
+	reg, _ := NewRegistry(artifactsFS)
+
+	t.Run("generic and specific combination", func(t *testing.T) {
+		config := &core.ProjectConfig{
+			Instructions: map[string][]string{
+				"requirements":         {"Generic 1"},
+				"feature-requirements": {"Specific 1"},
+			},
+		}
+		svc := NewService(reg, &mockConfigProvider{config: config})
+		art, err := svc.GetArtifact(context.Background(), "feature-requirements")
+		if err != nil {
+			t.Fatalf("GetArtifact failed: %v", err)
+		}
+		if !strings.Contains(art.Instruction, "Generic 1") {
+			t.Errorf("generic instructions missing")
+		}
+		if !strings.Contains(art.Instruction, "Specific 1") {
+			t.Errorf("specific instructions missing")
+		}
+		// Order check: Generic should come before Specific
+		genericIdx := strings.Index(art.Instruction, "Generic 1")
+		specificIdx := strings.Index(art.Instruction, "Specific 1")
+		if genericIdx > specificIdx {
+			t.Errorf("expected generic instructions before specific")
+		}
+	})
+
+	t.Run("generic only mapping (prefix resolution)", func(t *testing.T) {
+		config := &core.ProjectConfig{
+			Instructions: map[string][]string{
+				"requirements": {"Generic Only"},
+			},
+		}
+		svc := NewService(reg, &mockConfigProvider{config: config})
+		art, err := svc.GetArtifact(context.Background(), "bug-requirements")
+		if err != nil {
+			t.Fatalf("GetArtifact failed: %v", err)
+		}
+		if !strings.Contains(art.Instruction, "Generic Only") {
+			t.Errorf("generic instructions not applied to prefixed name")
+		}
+	})
+
+	testInferenceAndDeduplication(t, reg)
+}
+
+func testInferenceAndDeduplication(t *testing.T, reg *Registry) {
+	t.Run("right-to-left inference", func(t *testing.T) {
+		config := &core.ProjectConfig{
+			Instructions: map[string][]string{
+				"design": {"Design Rules"},
+			},
+		}
+		svc := NewService(reg, &mockConfigProvider{config: config})
+		// tasks-for-design should resolve to 'design' as it is the right-most keyword
+		art, err := svc.GetArtifact(context.Background(), "tasks-for-design")
+		if err != nil {
+			t.Fatalf("GetArtifact failed: %v", err)
+		}
+		if !strings.Contains(art.Instruction, "Design Rules") {
+			t.Errorf("failed to infer base type 'design' from 'tasks-for-design'")
+		}
+	})
+
+	t.Run("deduplication", func(t *testing.T) {
+		config := &core.ProjectConfig{
+			Instructions: map[string][]string{
+				"requirements":         {"Rule A", "Rule B"},
+				"feature-requirements": {"Rule B", "Rule C"},
+			},
+		}
+		svc := NewService(reg, &mockConfigProvider{config: config})
+		art, err := svc.GetArtifact(context.Background(), "feature-requirements")
+		if err != nil {
+			t.Fatalf("GetArtifact failed: %v", err)
+		}
+		// Count occurrences of Rule B
+		count := strings.Count(art.Instruction, "Rule B")
+		if count != 1 {
+			t.Errorf("expected 'Rule B' to be deduplicated, got count %d", count)
+		}
+	})
+}
+
 func TestGetImplementationStatus(t *testing.T) {
 	tmpDir := t.TempDir()
 	slug := "test-slug"

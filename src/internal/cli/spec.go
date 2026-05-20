@@ -327,11 +327,6 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 	art.Instruction = mgr.InjectVariables(art.Instruction)
 	art.Template = mgr.InjectVariables(art.Template)
 
-	// Merge with category-specific instructions from config
-	if custom, ok := config.Instructions[art.Name]; ok {
-		art.Instruction += "\n\n" + strings.Join(custom, "\n")
-	}
-
 	if jsonMode {
 		data, err := json.MarshalIndent(art, "", "  ")
 		if err != nil {
