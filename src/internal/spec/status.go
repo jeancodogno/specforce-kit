@@ -32,6 +32,8 @@ type SpecStatus struct {
 
 // GetStatus checks the filesystem for the required artifacts from the registry and returns a progress summary.
 func GetStatus(ctx context.Context, projectRoot string, slug string, registry *Registry) (SpecStatus, error) {
+	slug = ResolveSlug(projectRoot, slug)
+
 	// Load Metadata to determine spec type
 	meta, err := LoadMetadata(projectRoot, slug)
 	if err != nil {
@@ -50,7 +52,10 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
 	if _, err := os.Stat(specDir); os.IsNotExist(err) {
-		return SpecStatus{}, fmt.Errorf("feature directory not found: %s", specDir)
+		specDir = filepath.Join(projectRoot, ".specforce", "archive", slug)
+		if _, err := os.Stat(specDir); os.IsNotExist(err) {
+			return SpecStatus{}, fmt.Errorf("feature directory not found: %s", slug)
+		}
 	}
 
 	existsMap, foundCount, err := scanArtifactExistence(ctx, specDir, artifacts)

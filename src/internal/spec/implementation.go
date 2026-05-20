@@ -71,9 +71,11 @@ func FindProjectRoot() (string, error) {
 	return "", fmt.Errorf(".specforce directory not found")
 }
 
-// CheckTriadArtifacts verifies if requirements.md, design.md, and tasks.md exist.
+// CheckTriadArtifacts verifies the existence of requirements.md, design.md and tasks.md.
 func CheckTriadArtifacts(projectRoot, slug string) (bool, []string) {
+	slug = ResolveSlug(projectRoot, slug)
 	required := []string{"requirements.md", "design.md", "tasks.md"}
+
 	missing := []string{}
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
@@ -89,6 +91,7 @@ func CheckTriadArtifacts(projectRoot, slug string) (bool, []string) {
 
 // GetContextFiles returns absolute paths for all files in the spec directory and global docs.
 func GetContextFiles(projectRoot, slug string) ([]string, error) {
+	slug = ResolveSlug(projectRoot, slug)
 	files := []string{}
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
@@ -126,6 +129,8 @@ func ParseTasks(ctx context.Context, projectRoot, slug string) (*ImplementationR
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
+
+	slug = ResolveSlug(projectRoot, slug)
 
 	tasksPath, err := core.SecurePath(projectRoot, filepath.Join(".specforce", "specs", slug, "tasks.md"))
 	if err != nil {

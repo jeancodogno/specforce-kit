@@ -50,6 +50,8 @@ func (s *Service) GetArtifact(ctx context.Context, name string) (*Artifact, erro
 
 // GetImplementationStatus retrieves the status and details for implementing a specific feature.
 func (s *Service) GetImplementationStatus(ctx context.Context, projectRoot, slug string) (*ImplementationReport, error) {
+	slug = ResolveSlug(projectRoot, slug)
+
 	// 1. Check artifacts
 	ok, missing := CheckTriadArtifacts(projectRoot, slug)
 
@@ -90,6 +92,8 @@ func (s *Service) GetStatus(ctx context.Context, projectRoot string, slug string
 
 // UpdateTaskStatus handles task status updates with event hooks.
 func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug, taskID, status string) error {
+	slug = ResolveSlug(projectRoot, slug)
+
 	// 1. Only run hooks if status is "finished"
 	if strings.ToLower(status) != "finished" {
 		return updateTaskStatusFile(projectRoot, slug, taskID, status)

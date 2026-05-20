@@ -13,6 +13,8 @@ func ArchiveSpec(ctx context.Context, basePath, slug string) error {
 		return err
 	}
 
+	slug = ResolveSlug(basePath, slug)
+
 	specsDir := filepath.Join(basePath, ".specforce", "specs", slug)
 	archiveDir := filepath.Join(basePath, ".specforce", "archive", slug)
 

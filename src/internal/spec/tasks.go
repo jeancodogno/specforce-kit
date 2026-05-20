@@ -35,6 +35,8 @@ type taskBlock struct {
 
 // ValidateTasks performs an exhaustive structural and content validation of tasks.md.
 func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, error) {
+	slug = ResolveSlug(projectRoot, slug)
+
 	tasksPath, err := core.SecurePath(projectRoot, filepath.Join(".specforce", "specs", slug, "tasks.md"))
 	if err != nil {
 		return nil, fmt.Errorf("security: %w", err)

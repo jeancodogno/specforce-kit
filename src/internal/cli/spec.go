@@ -404,6 +404,8 @@ func (e *Executor) HandleSpecArchive(ctx context.Context, ui core.UI, slug strin
 		return err
 	}
 
+	slug = spec.ResolveSlug(projectRoot, slug)
+
 	// [REQ-4] Check task completion
 	tasksPath := filepath.Join(projectRoot, ".specforce", "specs", slug, "tasks.md")
 	if _, err := os.Stat(tasksPath); err == nil {
