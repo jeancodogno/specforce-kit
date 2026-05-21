@@ -122,4 +122,11 @@ var (
 	SelectionMarkerStyle = lipgloss.NewStyle().
 				Foreground(brandCyan).
 				Bold(true)
+
+	ActiveStatusStyle = lipgloss.NewStyle().
+				Foreground(brandCyan).
+				Bold(true)
+
+	ReadyStatusStyle = lipgloss.NewStyle().
+				Foreground(brandIce)
 )

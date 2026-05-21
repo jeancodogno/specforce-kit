@@ -25,6 +25,9 @@ func (m *mockUI) Error(msg string)   {}
 func (m *mockUI) SubTask(msg string) {
 	m.subtasks = append(m.subtasks, msg)
 }
+func (m *mockUI) LogSubTask(msg string) {
+	m.subtasks = append(m.subtasks, msg)
+}
 func (m *mockUI) StartSpinner(msg string) {}
 func (m *mockUI) StopSpinner()            {}
 func (m *mockUI) Confirm(msg string) bool  { return true }

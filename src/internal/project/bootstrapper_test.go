@@ -17,6 +17,7 @@ func (m *mockUI) Success(msg string)      {}
 func (m *mockUI) Warn(msg string)         { m.warnCalled = true }
 func (m *mockUI) Error(msg string)        {}
 func (m *mockUI) SubTask(msg string)      {}
+func (m *mockUI) LogSubTask(msg string)   {}
 func (m *mockUI) StartSpinner(msg string) {}
 func (m *mockUI) StopSpinner()             {}
 func (m *mockUI) Confirm(msg string) bool  { return true }

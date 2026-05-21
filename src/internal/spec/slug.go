@@ -54,63 +54,52 @@ func ResolveSlug(projectRoot string, slug string) string {
 	parentPath := strings.Join(segments[:len(segments)-1], "/")
 	finalSegment := segments[len(segments)-1]
 
+	// 1. Search in specs
 	specsDir := filepath.Join(projectRoot, ".specforce", "specs", parentPath)
-
-	// 1. Exact match
-	if _, err := os.Stat(filepath.Join(specsDir, finalSegment)); err == nil {
-		return slug
+	if resolved := searchInDir(specsDir, parentPath, finalSegment); resolved != "" {
+		return resolved
 	}
 
-	// 2. Fuzzy match in specsDir
-	entries, err := os.ReadDir(specsDir)
-	if err == nil {
-		// Sort entries in reverse order to prioritize newest timestamps
-		sort.Slice(entries, func(i, j int) bool {
-			return entries[i].Name() > entries[j].Name()
-		})
-
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				continue
-			}
-			name := entry.Name()
-			if timestampRegex.MatchString(name) {
-				prefix := timestampRegex.FindString(name)
-				if name == prefix+finalSegment {
-					return filepath.Join(parentPath, name)
-				}
-			}
-		}
-	}
-
-	// 3. Repeat for archive if not found in specs
+	// 2. Search in archive
 	archiveDir := filepath.Join(projectRoot, ".specforce", "archive", parentPath)
-	if _, err := os.Stat(filepath.Join(archiveDir, finalSegment)); err == nil {
-		return slug
-	}
-
-	entries, err = os.ReadDir(archiveDir)
-	if err == nil {
-		// Sort entries in reverse order to prioritize newest timestamps
-		sort.Slice(entries, func(i, j int) bool {
-			return entries[i].Name() > entries[j].Name()
-		})
-
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				continue
-			}
-			name := entry.Name()
-			if timestampRegex.MatchString(name) {
-				prefix := timestampRegex.FindString(name)
-				if name == prefix+finalSegment {
-					return filepath.Join(parentPath, name)
-				}
-			}
-		}
+	if resolved := searchInDir(archiveDir, parentPath, finalSegment); resolved != "" {
+		return resolved
 	}
 
 	return slug
+}
+
+func searchInDir(baseDir string, parentPath string, segment string) string {
+	// 1. Exact match
+	if _, err := os.Stat(filepath.Join(baseDir, segment)); err == nil {
+		return filepath.Join(parentPath, segment)
+	}
+
+	// 2. Fuzzy match
+	entries, err := os.ReadDir(baseDir)
+	if err != nil {
+		return ""
+	}
+
+	// Sort entries in reverse order to prioritize newest timestamps
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name() > entries[j].Name()
+	})
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if timestampRegex.MatchString(name) {
+			prefix := timestampRegex.FindString(name)
+			if name == prefix+segment {
+				return filepath.Join(parentPath, name)
+			}
+		}
+	}
+
+	return ""
 }
 
 // GetSpecDir returns the absolute or relative path to the specification directory,

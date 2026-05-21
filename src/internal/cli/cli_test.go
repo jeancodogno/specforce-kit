@@ -24,6 +24,7 @@ func (m *mockUI) Warn(msg string)       { m.warns = append(m.warns, msg) }
 func (m *mockUI) Error(msg string)      { m.errors = append(m.errors, msg) }
 func (m *mockUI) Success(msg string)    { m.successes = append(m.successes, msg) }
 func (m *mockUI) SubTask(msg string)    { m.logs = append(m.logs, msg) }
+func (m *mockUI) LogSubTask(msg string) { m.logs = append(m.logs, msg) }
 func (m *mockUI) StartSpinner(_ string) {}
 func (m *mockUI) StopSpinner()          {}
 func (m *mockUI) Confirm(_ string) bool { return m.confirmResponse }

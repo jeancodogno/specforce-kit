@@ -22,6 +22,7 @@ func (m *archiveMockUI) Warn(msg string)         { m.warns = append(m.warns, msg
 func (m *archiveMockUI) Error(msg string)        { m.errors = append(m.errors, msg) }
 func (m *archiveMockUI) Success(msg string)      { m.successes = append(m.successes, msg) }
 func (m *archiveMockUI) SubTask(msg string)      { m.logs = append(m.logs, msg) }
+func (m *archiveMockUI) LogSubTask(msg string)   { m.logs = append(m.logs, msg) }
 func (m *archiveMockUI) StartSpinner(_ string)   {}
 func (m *archiveMockUI) StopSpinner()             {}
 func (m *archiveMockUI) Confirm(_ string) bool    { return m.confirmResponse }

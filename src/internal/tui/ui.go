@@ -33,6 +33,10 @@ func (u *terminalUI) SubTask(message string) {
 	LogSubTask(message)
 }
 
+func (u *terminalUI) LogSubTask(message string) {
+	LogSubTask(message)
+}
+
 func (u *terminalUI) StartSpinner(message string) {
 	if u.spinner == nil {
 		s := NewNeonSpinner(message)

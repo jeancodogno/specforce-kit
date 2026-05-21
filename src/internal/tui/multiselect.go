@@ -2,8 +2,10 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 )
 
@@ -135,16 +137,39 @@ func (m model) View() string {
 func (m model) viewConfirmation() string {
 	var agents []string
 	for i := range m.toRemove {
-		agents = append(agents, m.choices[i].Name)
+		agents = append(agents, DimmedStyle.Render(m.choices[i].Name))
 	}
-	s := WarningStyle.Render("⚠️ WARNING: You have unselected existing agents.\n")
-	s += BodyStyle.Render(fmt.Sprintf("The following agent directories will be decommissioned: %v\n\n", agents))
-	s += BodyStyle.Render("Are you sure you want to proceed? (y/n)")
-	return s
+
+	// High-fidelity Warning Header
+	title := ErrorStyle.Bold(true).Render(" ⚠️   DECOMMISSION WARNING ")
+	warningText := BodyStyle.Render("You have unselected agents that are already initialized.")
+	listText := BodyStyle.Render("The following directories will be ") + ErrorStyle.Render("DELETED") + BodyStyle.Render(":")
+	agentList := strings.Join(agents, ", ")
+	prompt := BodyStyle.Render("Are you sure you want to proceed? (y/n)")
+
+	content := lipgloss.JoinVertical(lipgloss.Left,
+		warningText,
+		"",
+		listText,
+		"↳ "+agentList,
+		"",
+		prompt,
+	)
+
+	// Ensure the title is treated as a separate header to avoid Lipgloss alignment issues with multi-line padding
+	frameContent := title + "\n\n" + content
+
+	frame := lipgloss.NewStyle().
+		Border(CleanBorder).
+		BorderForeground(errorRed).
+		Padding(1, 2).
+		Render(frameContent)
+
+	return "\n" + frame
 }
 
 func (m model) viewSelection() string {
-	s := HeaderStyle.Render("Select AI agents to initialize in this project:") + "\n\n"
+	var rows []string
 
 	for i, choice := range m.choices {
 		cursor := " "
@@ -153,20 +178,37 @@ func (m model) viewSelection() string {
 		}
 
 		checked := UnselectedBulletStyle.Render(EmptyBulletGlyph)
+		status := ReadyStatusStyle.Render("[ READY  ]")
 		if _, ok := m.selected[i]; ok {
 			checked = SelectedBulletStyle.Render(BulletGlyph)
+			status = ActiveStatusStyle.Render("[ ACTIVE ]")
 		}
 
-		existsInfo := ""
-		if choice.Exists {
-			existsInfo = DimmedStyle.Render(" (already exists)")
+		label := BodyStyle.Render(choice.Name)
+		if choice.Exists && m.cursor != i {
+			label = DimmedStyle.Render(choice.Name)
 		}
 
-		s += fmt.Sprintf("%s %s %s%s\n", cursor, checked, BodyStyle.Render(choice.Name), existsInfo)
+		// Use dots for alignment to create a "surgical" look
+		dotCount := 35 - len(choice.Name)
+		if dotCount < 1 {
+			dotCount = 1
+		}
+		dots := DimmedStyle.Render(strings.Repeat(".", dotCount))
+
+		rows = append(rows, fmt.Sprintf("%s %s %s %s %s", cursor, checked, label, dots, status))
 	}
 
-	s += m.viewFooter()
-	return s
+	body := strings.Join(rows, "\n")
+	
+	// Wrap in CleanBorder frame
+	frame := lipgloss.NewStyle().
+		Border(CleanBorder).
+		BorderForeground(mutedGrey).
+		Padding(1, 2).
+		Render(HeaderStyle.Render(" SELECT AI AGENTS ") + "\n\n" + body)
+
+	return "\n" + frame + m.viewFooter()
 }
 
 func (m model) viewFooter() string {
@@ -177,17 +219,17 @@ func (m model) viewFooter() string {
 	return footer
 }
 
-// SelectAgents launches the TUI and returns the selected agent IDs.
-func SelectAgents(available []agent.AgentMetadata, existing []string) ([]string, error) {
+// SelectAgents launches the TUI and returns the selected agent IDs and removed agent IDs.
+func SelectAgents(available []agent.AgentMetadata, existing []string) ([]string, []string, error) {
 	p := tea.NewProgram(initialModel(available, existing))
 	m, err := p.Run()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	finalModel := m.(model)
 	if finalModel.aborted {
-		return nil, fmt.Errorf("aborted")
+		return nil, nil, fmt.Errorf("aborted")
 	}
 
 	var selected []string
@@ -195,5 +237,10 @@ func SelectAgents(available []agent.AgentMetadata, existing []string) ([]string,
 		selected = append(selected, finalModel.choices[i].ID)
 	}
 
-	return selected, nil
+	var removed []string
+	for i := range finalModel.toRemove {
+		removed = append(removed, finalModel.choices[i].ID)
+	}
+
+	return selected, removed, nil
 }
