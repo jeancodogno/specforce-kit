@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -24,22 +25,24 @@ const (
 
 // StateItem represents a single navigatable entry in the Specforce Console.
 type StateItem struct {
-	Slug          string        `json:"slug"`
-	Name          string        `json:"name"`
-	Path          string        `json:"path"`
-	Category      StateCategory `json:"category"`
-	Status        string        `json:"status"` // PENDING | IN-PROGRESS | FINISHED
-	Progress      int           `json:"progress"`
-	Description   string        `json:"description"`
-	ArtifactCount int           `json:"artifact_count"`
-	ArtifactTotal int           `json:"artifact_total"`
-	TaskCount     int           `json:"task_count"`
-	TaskTotal     int           `json:"task_total"`
-	AnyTaskWorking bool          `json:"any_task_working"`
-	CurrentTaskID string        `json:"current_task_id"`
-	CurrentTask   string        `json:"current_task"`
-	ArchivedDate  string        `json:"archived_date"`
-	Worktree      string        `json:"worktree"`
+	Slug              string        `json:"slug"`
+	Name              string        `json:"name"`
+	Path              string        `json:"path"`
+	Category          StateCategory `json:"category"`
+	Status            string        `json:"status"` // PENDING | IN-PROGRESS | FINISHED
+	Progress          int           `json:"progress"`
+	Description       string        `json:"description"`
+	ArtifactCount     int           `json:"artifact_count"`
+	ArtifactTotal     int           `json:"artifact_total"`
+	TaskCount         int           `json:"task_count"`
+	TaskTotal         int           `json:"task_total"`
+	AnyTaskWorking    bool          `json:"any_task_working"`
+	CurrentTaskID     string        `json:"current_task_id"`
+	CurrentTask       string        `json:"current_task"`
+	ArchivedDate      string        `json:"archived_date"`
+	Worktree          string        `json:"worktree"`
+	TotalTime         time.Duration `json:"total_time"`
+	ActiveTaskElapsed time.Duration `json:"active_task_elapsed"`
 }
 
 // StateTree represents the full hierarchical state of a Specforce project.
@@ -183,6 +186,7 @@ func scanSingleActiveSpec(ctx context.Context, projectRoot, slug string, registr
 		if report, err := ParseTasks(ctx, projectRoot, slug); err == nil {
 			item.Status = strings.ToUpper(report.Status)
 			item.TaskTotal = len(report.Tasks())
+			item.TotalTime = report.TotalTime
 			foundFinished := 0
 			for _, t := range report.Tasks() {
 				state := strings.ToUpper(t.State)
@@ -191,6 +195,7 @@ func scanSingleActiveSpec(ctx context.Context, projectRoot, slug string, registr
 				} else {
 					if state == "IN-PROGRESS" {
 						item.AnyTaskWorking = true
+						item.ActiveTaskElapsed = t.TotalTime
 					}
 					if item.CurrentTaskID == "" {
 						item.CurrentTaskID = t.ID

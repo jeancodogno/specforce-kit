@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestMetadataPersistence(t *testing.T) {
@@ -48,5 +49,49 @@ func TestMetadataPersistence(t *testing.T) {
 	}
 	if loaded.Name != "Test Spec" {
 		t.Errorf("expected name 'Test Spec', got %q", loaded.Name)
+	}
+}
+
+func TestMetadataSessionManagement(t *testing.T) {
+	meta := &Metadata{
+		Slug: "test",
+		Name: "Test",
+	}
+
+	taskID := "T1.1"
+
+	// 1. Start session
+	meta.StartSession(taskID)
+	if len(meta.TimeLogs[taskID].Sessions) != 1 {
+		t.Fatalf("expected 1 session, got %d", len(meta.TimeLogs[taskID].Sessions))
+	}
+	if meta.TimeLogs[taskID].Sessions[0].CompletedAt != nil {
+		t.Error("expected session to be open")
+	}
+
+	// 2. End session
+	time.Sleep(10 * time.Millisecond)
+	meta.EndSession(taskID)
+	if meta.TimeLogs[taskID].Sessions[0].CompletedAt == nil {
+		t.Fatal("expected session to be closed")
+	}
+
+	duration := meta.GetTaskDuration(taskID)
+	if duration < 10*time.Millisecond {
+		t.Errorf("expected duration >= 10ms, got %v", duration)
+	}
+
+	// 3. Resume session
+	meta.StartSession(taskID)
+	if len(meta.TimeLogs[taskID].Sessions) != 2 {
+		t.Fatalf("expected 2 sessions, got %d", len(meta.TimeLogs[taskID].Sessions))
+	}
+	
+	time.Sleep(10 * time.Millisecond)
+	meta.EndSession(taskID)
+	
+	totalDuration := meta.GetTaskDuration(taskID)
+	if totalDuration < 20*time.Millisecond {
+		t.Errorf("expected total duration >= 20ms, got %v", totalDuration)
 	}
 }

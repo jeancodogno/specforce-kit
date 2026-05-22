@@ -55,6 +55,12 @@ var (
 
 	ErrorStyle = lipgloss.NewStyle().
 			Foreground(errorRed)
+
+	ClockStyle = lipgloss.NewStyle().
+			Foreground(brandMint)
+
+	OvertimeStyle = lipgloss.NewStyle().
+			Foreground(warningYellow)
 )
 
 // Badge Styles

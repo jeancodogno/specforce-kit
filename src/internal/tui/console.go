@@ -197,46 +197,72 @@ func (m *ConsoleModel) renderItem(item spec.StateItem) string {
 	// High-density info based on category
 	switch item.Category {
 	case spec.CategoryConstitution:
-		icon := MutedStyle.Render("○")
-		if item.Progress == 100 {
-			icon = FinishedStyle.Render("◉")
-		}
-		name := style.Render(item.Name)
-		metadata := MutedStyle.Render(fmt.Sprintf("Active (%s)", item.Path))
-		fmt.Fprintf(&s, "%s%s %-15s : %s\n", marker, icon, name, metadata)
+		m.renderConstitutionItem(&s, item, marker, style)
 	case spec.CategoryActiveSpecs:
-		icon := MutedStyle.Render("○")
-		if item.Progress == 100 {
-			icon = FinishedStyle.Render("◉")
-		}
-		artifactStatus := MutedStyle.Render(fmt.Sprintf("(%d/%d artifacts)", item.ArtifactCount, item.ArtifactTotal))
-		fmt.Fprintf(&s, "%s%s %s%s - %s %s\n", marker, icon, style.Render(item.Slug), wtLabel, RenderProgressBar(item.Progress, 20), artifactStatus)
+		m.renderActiveSpecItem(&s, item, marker, style, wtLabel)
 	case spec.CategoryImplementations:
-		icon := MutedStyle.Render("○")
-		if item.Progress == 100 {
-			icon = FinishedStyle.Render("◉")
-		} else if item.AnyTaskWorking {
-			icon = InProgressStyle.Render("◉")
-		}
-		taskStatus := MutedStyle.Render(fmt.Sprintf("(%d/%d tasks)", item.TaskCount, item.TaskTotal))
-		fmt.Fprintf(&s, "%s%s %s%s - %s %s\n", marker, icon, style.Render(item.Slug), wtLabel, RenderProgressBar(item.Progress, 20), taskStatus)
-		// Contextual Task Detail
-		var detail string
-		if item.Progress == 100 {
-			detail = "All tasks complete"
-		} else if item.AnyTaskWorking {
-			detail = fmt.Sprintf("Working on: %s %s", item.CurrentTaskID, item.CurrentTask)
-		} else {
-			detail = fmt.Sprintf("Next task: %s %s", item.CurrentTaskID, item.CurrentTask)
-		}
-		fmt.Fprintf(&s, "  %s %s\n", marker, MutedStyle.Render("↳ "+detail))
+		m.renderImplementationItem(&s, item, marker, style, wtLabel)
 	case spec.CategoryArchived:
-		icon := MutedStyle.Render("○")
-		metadata := MutedStyle.Render(fmt.Sprintf("(Archived on: %s)", item.ArchivedDate))
-		fmt.Fprintf(&s, "%s%s %-20s%s %s\n", marker, icon, style.Render(item.Slug), wtLabel, metadata)
+		m.renderArchivedItem(&s, item, marker, style, wtLabel)
 	}
 
 	return s.String()
+}
+
+func (m *ConsoleModel) renderConstitutionItem(s *strings.Builder, item spec.StateItem, marker string, style lipgloss.Style) {
+	icon := MutedStyle.Render("○")
+	if item.Progress == 100 {
+		icon = FinishedStyle.Render("◉")
+	}
+	name := style.Render(item.Name)
+	metadata := MutedStyle.Render(fmt.Sprintf("Active (%s)", item.Path))
+	fmt.Fprintf(s, "%s%s %-15s : %s\n", marker, icon, name, metadata)
+}
+
+func (m *ConsoleModel) renderActiveSpecItem(s *strings.Builder, item spec.StateItem, marker string, style lipgloss.Style, wtLabel string) {
+	icon := MutedStyle.Render("○")
+	if item.Progress == 100 {
+		icon = FinishedStyle.Render("◉")
+	}
+	artifactStatus := MutedStyle.Render(fmt.Sprintf("(%d/%d artifacts)", item.ArtifactCount, item.ArtifactTotal))
+	fmt.Fprintf(s, "%s%s %s%s - %s %s\n", marker, icon, style.Render(item.Slug), wtLabel, RenderProgressBar(item.Progress, 20), artifactStatus)
+}
+
+func (m *ConsoleModel) renderImplementationItem(s *strings.Builder, item spec.StateItem, marker string, style lipgloss.Style, wtLabel string) {
+	icon := MutedStyle.Render("○")
+	if item.Progress == 100 {
+		icon = FinishedStyle.Render("◉")
+	} else if item.AnyTaskWorking {
+		icon = InProgressStyle.Render("◉")
+	}
+	taskStatus := MutedStyle.Render(fmt.Sprintf("(%d/%d tasks)", item.TaskCount, item.TaskTotal))
+
+	timeInfo := ""
+	if item.TotalTime > 0 {
+		timeInfo = MutedStyle.Render(fmt.Sprintf(" [⏱️ %s]", formatDuration(item.TotalTime)))
+	}
+
+	fmt.Fprintf(s, "%s%s %s%s - %s %s%s\n", marker, icon, style.Render(item.Slug), wtLabel, RenderProgressBar(item.Progress, 20), taskStatus, timeInfo)
+	// Contextual Task Detail
+	var detail string
+	if item.Progress == 100 {
+		detail = "All tasks complete"
+	} else if item.AnyTaskWorking {
+		elapsed := ""
+		if item.ActiveTaskElapsed > 0 {
+			elapsed = fmt.Sprintf(" (%s elapsed)", formatDuration(item.ActiveTaskElapsed))
+		}
+		detail = fmt.Sprintf("Working on: %s %s%s", item.CurrentTaskID, item.CurrentTask, elapsed)
+	} else {
+		detail = fmt.Sprintf("Next task: %s %s", item.CurrentTaskID, item.CurrentTask)
+	}
+	fmt.Fprintf(s, "  %s %s\n", marker, MutedStyle.Render("↳ "+detail))
+}
+
+func (m *ConsoleModel) renderArchivedItem(s *strings.Builder, item spec.StateItem, marker string, style lipgloss.Style, wtLabel string) {
+	icon := MutedStyle.Render("○")
+	metadata := MutedStyle.Render(fmt.Sprintf("(Archived on: %s)", item.ArchivedDate))
+	fmt.Fprintf(s, "%s%s %-20s%s %s\n", marker, icon, style.Render(item.Slug), wtLabel, metadata)
 }
 
 func (m *ConsoleModel) renderEmptyStateContent() string {

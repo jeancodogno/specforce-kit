@@ -27,6 +27,9 @@
 - **In-Progress:** `◉` (Filled Circle) in **Warning/Orange** (`#FFFFAF`).
 - **Pending / Inactive:** `○` (Empty Circle) in **Secondary Gray** (`#808080`).
 - **Description / Context:** `↳` (Right Arrow) in **Secondary Gray** (`#808080`) for indented details.
+- **Timer Precision (Conditional):** To maximize high-fidelity feedback without overwhelming the interface, TUI timers MUST follow the **1Hz rule**:
+    - **Short Durations (< 60m):** Show seconds (`MMm SSs`) and update every 1 second.
+    - **Long Durations (>= 60m):** Hide seconds (`HHh MMm`) to maintain high density and focus on high-signal data.
 
 ### Surface & Border
 - **Canvas:** `#000000` | Terminal background.

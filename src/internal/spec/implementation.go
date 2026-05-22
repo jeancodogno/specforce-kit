@@ -8,18 +8,21 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
 
 type ImplementationTask struct {
-	ID           string   `json:"id"`
-	Title        string   `json:"title"`
-	State        string   `json:"state"`
-	Target       string   `json:"target"`
-	Context      string   `json:"context"`
-	ActionSteps  []string `json:"action_steps"`
-	Verification string   `json:"verification"`
+	ID           string        `json:"id"`
+	Title        string        `json:"title"`
+	State        string        `json:"state"`
+	Target       string        `json:"target"`
+	Context      string        `json:"context"`
+	ActionSteps  []string      `json:"action_steps"`
+	Verification string        `json:"verification"`
+	TotalTime    time.Duration `json:"total_time"`
+	IsWorking    bool          `json:"is_working"`
 }
 
 type Phase struct {
@@ -37,6 +40,7 @@ type ImplementationReport struct {
 	Phases                []Phase              `json:"phases"`
 	ExecutionStrategy     string               `json:"execution_strategy"`
 	PreemptiveMitigations string               `json:"preemptive_mitigations"`
+	TotalTime             time.Duration        `json:"total_time"`
 }
 
 // Tasks returns a flat list of tasks across all phases for backward compatibility.
@@ -147,13 +151,20 @@ func ParseTasks(ctx context.Context, projectRoot, slug string) (*ImplementationR
 		Phases: []Phase{},
 	}
 
+	meta, _ := LoadMetadata(projectRoot, slug)
+
 	extractStrategyAndMitigations(content, report)
 
-	if err := extractTasksFromContent(ctx, content, report); err != nil {
+	if err := extractTasksFromContent(ctx, content, report, meta); err != nil {
 		return nil, err
 	}
 
 	report.Status = calculateReportStatus(report.Tasks())
+
+	// Calculate total report time
+	for _, t := range report.Tasks() {
+		report.TotalTime += t.TotalTime
+	}
 
 	return report, nil
 }
@@ -172,7 +183,7 @@ func extractStrategyAndMitigations(content []byte, report *ImplementationReport)
 	}
 }
 
-func extractTasksFromContent(ctx context.Context, content []byte, report *ImplementationReport) error {
+func extractTasksFromContent(ctx context.Context, content []byte, report *ImplementationReport, meta *Metadata) error {
 	phaseHeaderRegex := regexp.MustCompile(`(?m)^### Phase (\d+): (.*)$`)
 	taskHeaderRegex := regexp.MustCompile(`(?m)^(#{3,4}|- \[[ xX/]?\]) (T[\d.]+): (.*)$`)
 
@@ -185,7 +196,7 @@ func extractTasksFromContent(ctx context.Context, content []byte, report *Implem
 			return err
 		}
 
-		task := parseTaskBlock(content, tm, taskMatches, phaseMatches)
+		task := parseTaskBlock(content, tm, taskMatches, phaseMatches, meta)
 		if seenTasks[task.ID] {
 			continue
 		}
@@ -199,7 +210,7 @@ func extractTasksFromContent(ctx context.Context, content []byte, report *Implem
 	return nil
 }
 
-func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int) ImplementationTask {
+func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int, meta *Metadata) ImplementationTask {
 	prefix := string(content[tm[2]:tm[3]])
 	task := ImplementationTask{
 		ID:    string(content[tm[4]:tm[5]]),
@@ -213,6 +224,13 @@ func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int)
 	isChecklist := strings.HasPrefix(prefix, "- [")
 	if task.State == "" && isChecklist {
 		task.State = mapCheckboxToState(prefix)
+	}
+
+	if meta != nil {
+		task.TotalTime = meta.GetTaskDuration(task.ID)
+		if strings.ToUpper(task.State) == "IN-PROGRESS" {
+			task.IsWorking = true
+		}
 	}
 
 	task.Target = extractField(taskBlock, `\*\*Target:\*\* \x60?([^\x60\n]*)\x60?`)

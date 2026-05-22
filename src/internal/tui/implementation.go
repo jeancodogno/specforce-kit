@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
 )
@@ -85,6 +86,22 @@ func renderAtomicTasks(report *spec.ImplementationReport) {
 		}
 	}
 	fmt.Println()
+
+	if report.TotalTime > 0 {
+		fmt.Printf("                                          TOTAL: %s\n", HeaderStyle.Render(formatDuration(report.TotalTime)))
+	}
+}
+
+func formatDuration(d time.Duration) string {
+	d = d.Round(time.Second)
+	if d < time.Hour {
+		m := d / time.Minute
+		s := (d % time.Minute) / time.Second
+		return fmt.Sprintf("%02dm %02ds", m, s)
+	}
+	h := d / time.Hour
+	m := (d % time.Hour) / time.Minute
+	return fmt.Sprintf("%02dh %02dm", h, m)
 }
 
 func renderPhase(phase spec.Phase, totalPhases int) {
@@ -117,16 +134,29 @@ func renderPhase(phase spec.Phase, totalPhases int) {
 func renderTask(task spec.ImplementationTask) {
 	stateIcon := "○"
 	stateStyle := BodyStyle
+	workingBadge := ""
+
 	switch strings.ToUpper(task.State) {
 	case "FINISHED":
 		stateIcon = "◉"
 		stateStyle = SuccessStyle
 	case "IN-PROGRESS":
 		stateStyle = WarningStyle
+		workingBadge = ClockStyle.Render(" ⏲ ")
 	case "FAILED":
 		stateStyle = ErrorStyle
 	}
-	fmt.Printf("    %s %s: %s\n", stateStyle.Render(stateIcon), HeaderStyle.Render(task.ID), BodyStyle.Render(task.Title))
+
+	timeLabel := ""
+	if task.TotalTime > 0 {
+		timeStyle := BodyStyle
+		if task.TotalTime > 4*time.Hour {
+			timeStyle = OvertimeStyle
+		}
+		timeLabel = fmt.Sprintf(" (%s)", timeStyle.Render(formatDuration(task.TotalTime)))
+	}
+
+	fmt.Printf("    %s %s: %s%s%s\n", stateStyle.Render(stateIcon), HeaderStyle.Render(task.ID), BodyStyle.Render(task.Title), timeLabel, workingBadge)
 	if task.Target != "" {
 		fmt.Printf("        %s %s\n", SubtitleStyle.Render("Target:"), BodyStyle.Render(task.Target))
 	}

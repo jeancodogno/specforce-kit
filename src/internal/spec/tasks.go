@@ -218,7 +218,23 @@ func updateTaskStatusFile(projectRoot, slug, taskID, newStatus string) error {
 	}
 
 	// #nosec G306, G703 - Path is secured by SecurePath
-	return os.WriteFile(tasksPath, []byte(newContent), 0600)
+	if err := os.WriteFile(tasksPath, []byte(newContent), 0600); err != nil {
+		return fmt.Errorf("failed to write tasks.md: %w", err)
+	}
+
+	// 3. Update time logs in spec.yaml
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err == nil {
+		switch strings.ToLower(newStatus) {
+		case "in-progress":
+			meta.StartSession(taskID)
+		case "finished", "todo", "pending":
+			meta.EndSession(taskID)
+		}
+		_ = SaveMetadata(projectRoot, slug, meta)
+	}
+
+	return nil
 }
 
 func findTaskBlock(content, taskID string) (int, int, error) {

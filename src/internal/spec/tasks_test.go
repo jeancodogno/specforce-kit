@@ -195,3 +195,47 @@ func TestUpdateTaskStatusFile_WithChecklists(t *testing.T) {
 		t.Errorf("Unexpected content after checklist update:\n%s", string(updatedContent))
 	}
 }
+
+func TestUpdateTaskStatusFile_TimeTracking(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "specforce-time-tracking-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	projectRoot := tempDir
+	slug := "time-tracked-spec"
+	content := `
+## 2. Tasks
+- [ ] T1.1: Tracked Task
+**Target:** src/main.go
+`
+	setupTasksTest(t, projectRoot, slug, content)
+
+	// 1. Update to in-progress
+	if err := updateTaskStatusFile(projectRoot, slug, "T1.1", "in-progress"); err != nil {
+		t.Fatalf("updateTaskStatusFile failed: %v", err)
+	}
+
+	// Check spec.yaml
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err != nil {
+		t.Fatalf("failed to load metadata: %v", err)
+	}
+	if len(meta.TimeLogs["T1.1"].Sessions) != 1 {
+		t.Errorf("expected 1 session, got %d", len(meta.TimeLogs["T1.1"].Sessions))
+	}
+	if meta.TimeLogs["T1.1"].Sessions[0].CompletedAt != nil {
+		t.Error("expected session to be open")
+	}
+
+	// 2. Update to finished
+	if err := updateTaskStatusFile(projectRoot, slug, "T1.1", "finished"); err != nil {
+		t.Fatalf("updateTaskStatusFile failed: %v", err)
+	}
+
+	meta, _ = LoadMetadata(projectRoot, slug)
+	if meta.TimeLogs["T1.1"].Sessions[0].CompletedAt == nil {
+		t.Error("expected session to be closed")
+	}
+}
