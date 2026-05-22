@@ -12,7 +12,7 @@ import (
 	"github.com/jeancodogno/specforce-kit/src/internal/upgrade"
 )
 
-var version = "1.0.0"
+var version = "1.0.0-alpha.1"
 
 func main() {
 	// 1. Check for internal upgrade check flag (must be first to be silent and fast)

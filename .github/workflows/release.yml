@@ -43,16 +43,25 @@ jobs:
 
       - name: Publish Native Packages
         run: |
+          TAG_ARG=""
+          if [[ "${{ github.ref_name }}" == *"alpha"* ]]; then
+            TAG_ARG="--tag alpha"
+          fi
           for dir in npm/*; do
-            echo "Publishing $dir..."
+            echo "Publishing $dir with $TAG_ARG..."
             cd $dir
-            npm publish --access public || echo "Warning: Failed to publish $dir"
+            npm publish --access public $TAG_ARG || echo "Warning: Failed to publish $dir"
             cd ../..
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish Main Package
-        run: npm publish --access public
+        run: |
+          TAG_ARG=""
+          if [[ "${{ github.ref_name }}" == *"alpha"* ]]; then
+            TAG_ARG="--tag alpha"
+          fi
+          npm publish --access public $TAG_ARG
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
