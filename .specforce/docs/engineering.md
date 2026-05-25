@@ -93,6 +93,7 @@
 - **Idempotency Guards:** Operations that mutate persistent state (e.g., `BootstrapProject`) MUST guard against re-execution by checking existing state and returning the appropriate domain sentinel error if the operation would be redundant.
 
 ## Specification & Task Organization
+- **Self-Containment Mandate:** All specification artifacts (Requirements, Design, Tasks) MUST be actionable by an AI agent with zero access to the previous conversation history. Every business rule, technical constraint, and symbol-level code anchor MUST be explicitly documented within the spec triad.
 - **Requirement Prefix Standardization:** To maintain consistency with industry-standard User Story terminology:
     - **Features:** Functional requirements MUST use the `[US-x]` prefix.
     - **Bugfixes:** Requirements focusing on fixes MUST use the `[FIX-x]` prefix.
@@ -100,4 +101,5 @@
 - **Hierarchical Task Structure:** Implementation roadmaps (`tasks.md`) MUST use a hierarchical structure to group atomic tasks. 
     - **Phases (H3):** Use `### Phase {N}: {Title}` for logical groupings.
     - **Tasks (H4):** Use `#### T{Phase}.{Task}: {Title}` for individual implementation steps.
+- **Action Step Density:** Every individual implementation task MUST contain at least two concrete, technically directive action steps. Tasks with insufficient density are considered "vague" and MUST be rejected by the validation engine.
 - **DTO Pattern for Flat Access:** Domain models that implement nested structures (like `ImplementationReport` with `Phases`) MUST provide a `Tasks()` helper method that returns a flattened slice of all tasks. This ensures backward compatibility for scanners and progress calculators that expect a sequential list.

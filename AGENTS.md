@@ -25,7 +25,18 @@ You are STRICTLY FORBIDDEN from using mutation tools (`replace`, `write_file`) t
 - **Total Consistency:** If a change is required at any point (even mid-implementation), you MUST update ALL related artifacts. You are strictly forbidden from updating only tasks.md while leaving requirements.md or design.md inconsistent.
 - **Atomic Execution:** Follow the exact sequence of the tasks.md roadmap. Mark tasks as [DONE] or [FINISHED] sequentially and ONLY after successful verification.
 
-## 2. Project Constitution
+## 2. CLI Execution & Environment
+**CRITICAL:** The `specforce` CLI is globally available in your environment path. You MUST execute it directly as a standard command (e.g., `specforce spec list --json`). 
+- DO NOT use `npx specforce`.
+- DO NOT use relative or absolute paths like `./bin/specforce`.
+- If a command fails, DO NOT hallucinate alternative execution paths.
+
+## 3. Environment Recovery
+If the `specforce` binary is not found in the environment:
+1. Run: `npm i -g @jeancodogno/specforce-kit@1.0.0-alpha.1`
+2. Ensure your global npm bin directory is in your PATH.
+
+## 4. Project Constitution
 Before proposing architectural changes or adding new patterns, you MUST review the relevant Constitution documents located in .specforce/docs/:
 - principles.md: Core values, philosophy, and cultural/technical axioms.
 - architecture.md: System boundaries, dependency direction, and persistence topology.
@@ -35,7 +46,7 @@ Before proposing architectural changes or adding new patterns, you MUST review t
 - governance.md: Project lifecycle rules, ownership, and AI boundaries.
 - memorial/: Distributed cross-session memory and lessons learned.
 
-## 3. Custom Hooks Configuration
+## 5. Custom Hooks Configuration
 Specforce allows developers to gate state transitions (e.g., finishing a task) using custom hooks. You can configure these in the project root's config.yaml:
 
 ```yaml
@@ -51,17 +62,18 @@ hooks:
 ```
 If a hook fails, the state transition will be blocked.
 
-## 4. Efficiency & Token Optimization
+## 6. Efficiency & Token Optimization
 To minimize operational costs, you MUST:
 - **Constitution Context:** Before executing `specforce constitution status`, check your conversation history. REUSE the context if no changes were made to `.specforce/docs/` since the last check.
 - **Surgical Reads:** Prefer `grep_search` to identify specific patterns or points of interest. Only read entire files when a comprehensive architectural map is required.
 - **Parallelism:** When performing independent research or validation steps, execute multiple tool calls in parallel within the same turn to reduce total turn count.
 
-## 5. Interactive Consultation Protocol
+## 7. Interactive Consultation Protocol
 If you encounter ambiguity, require user iteration, or need to make a critical decision, you MUST actively prompt the user using the interactive question tool native to your specific AI environment (e.g., `ask_user`, `ask`, `prompt`). Do not halt execution, make blind assumptions, or output generic chat questions. Use your environment's tool to explicitly request the required input.
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
 
 
 

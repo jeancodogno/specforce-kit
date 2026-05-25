@@ -1,0 +1,28 @@
+slug: 20260524-2126-spec-hardening-and-self-containment
+name: 20260524-2126-spec-hardening-and-self-containment
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-05-25T00:48:55.65342421Z
+              completed_at: 2026-05-25T00:49:38.924926215Z
+    T1.2:
+        sessions:
+            - started_at: 2026-05-25T00:49:47.996071098Z
+              completed_at: 2026-05-25T00:50:14.503523664Z
+    T1.3:
+        sessions:
+            - started_at: 2026-05-25T00:50:23.447967156Z
+              completed_at: 2026-05-25T00:50:51.743077483Z
+    T2.1:
+        sessions:
+            - started_at: 2026-05-25T00:51:00.973566298Z
+              completed_at: 2026-05-25T00:53:27.954489325Z
+    T2.2:
+        sessions:
+            - started_at: 2026-05-25T00:51:52.311750761Z
+              completed_at: 2026-05-25T00:53:38.544168684Z
+    T3.1:
+        sessions:
+            - started_at: 2026-05-25T00:53:47.876619536Z
+              completed_at: 2026-05-25T00:57:18.854582885Z

@@ -94,3 +94,4 @@ content: |
   - **Terminal Truth:** Your file writes mean nothing if the terminal verification fails.
   - **Scope Containment:** Edit ONLY the file specified in the task `target` during implementation.
   - **No Interactive Prompts:** Ensure terminal commands use non-interactive flags (e.g., `-y`, `--quiet`).
+  - **CLI Execution:** The `specforce` CLI is globally available. Execute it directly (e.g., `specforce spec list`). DO NOT use `npx` or relative paths.

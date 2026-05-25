@@ -1,15 +1,16 @@
 description: "Functional requirements, business rules, and strict BDD acceptance criteria."
 instruction: |
-  Generate a high-fidelity business specification focusing entirely on the "What" and "Why", never the "How". Adhere strictly to the following execution rules:
+  Generate a high-fidelity business specification focusing entirely on the "What" and "Why", never the "How". Adhere strictly to the following execution rules for SELF-CONTAINMENT:
 
-  1. **Zero Code Mandate:** DO NOT write technical implementation details, JSON payloads, or database schemas. Stick to pure business domain and user value.
-  2. **BDD Rigor:** Acceptance Criteria MUST follow the strict GIVEN/WHEN/THEN syntax. For every requirement, you MUST define at least one "Edge Case" or failure state.
-  3. **Scope Containment:** Pay heavy attention to the "Out of Scope" section. Explicitly list features or edge cases that downstream agents MUST NOT build.
-  4. **Conditional Omission:** If the `lens` is "Backend-heavy" or "Integration", you MUST completely delete the `## 5. Global UI/UX Contract` section. Do not leave placeholders or write "Not applicable".
-  5. **Localized Context Mandate:** Every functional requirement `[US-x]` block MUST include localized `UI/UX Specifics` and `Technical Constraints (NFR)` sub-sections.
-  6. **Flexible NFR Tags:** Technical Constraints MUST use a flexible `**[Category]:** [Value]` format. You MUST explicitly include a **[Performance]** tag for every requirement.
-  7. **Global Baselines:** You MUST include `## 5. Global UI/UX Contract` and `## 6. Global Non-Functional Requirements (NFRs)` sections to establish feature-wide standards.
-  8. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and the correct `lens`.
+  1. **Zero Context Leak Mandate:** The specification MUST be actionable by an AI agent with zero access to the previous conversation history. Every business rule and technical constraint MUST be explicitly stated.
+  2. **Zero Code Mandate:** DO NOT write technical implementation details, JSON payloads, or database schemas. Stick to pure business domain and user value.
+  3. **BDD Rigor & Density:** Acceptance Criteria MUST follow the strict GIVEN/WHEN/THEN syntax. For every requirement, you MUST define at least one "Edge Case" or failure state that describes system behavior under stress or malformed input.
+  4. **Scope Containment:** Pay heavy attention to the "Out of Scope" section. Explicitly list features or edge cases that downstream agents MUST NOT build.
+  5. **Conditional Omission:** If the `lens` is "Backend-heavy" or "Integration", you MUST completely delete the `## 5. Global UI/UX Contract` section. Do not leave placeholders or write "Not applicable".
+  6. **Localized Context Mandate:** Every functional requirement `[US-x]` block MUST include localized `UI/UX Specifics` and `Technical Constraints (NFR)` sub-sections. Vague descriptions like "optimized" or "secure" are forbidden; use concrete values (e.g., "latency < 50ms", "0600 permissions").
+  7. **Flexible NFR Tags:** Technical Constraints MUST use a flexible `**[Category]:** [Value]` format. You MUST explicitly include a **[Performance]** tag for every requirement.
+  8. **Global Baselines:** You MUST include `## 5. Global UI/UX Contract` (if applicable) and `## 6. Global Non-Functional Requirements (NFRs)` sections to establish feature-wide standards.
+  9. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and the correct `lens`.
 template: |
   ---
   slug: {FEATURE_SLUG}

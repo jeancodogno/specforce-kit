@@ -24,3 +24,6 @@ content: |
   2. Read and follow EVERY instruction returned by the command above strictly.
 
   3. Once you have completed all steps defined in the instructions (including verification of implementation, constitution analysis, and archival execution), output the final summary in the format requested by the instructions.
+
+  ## Guardrails
+  - **CLI Execution:** The `specforce` CLI is globally available. Execute it directly (e.g., `specforce spec list`). DO NOT use `npx` or relative paths.

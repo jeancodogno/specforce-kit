@@ -120,3 +120,4 @@ content: |
   - **Zero Hallucination:** If the user gives a vague answer, ask for clarification again using the correct tool.
   - **Stay in Lane:** Respect template boundaries. Do not write code in requirements; do not write user stories in tasks.
   - **No Hallucinated Paths:** Write files EXACTLY to the paths provided by the CLI JSON.
+  - **CLI Execution:** The `specforce` CLI is globally available. Execute it directly (e.g., `specforce spec list`). DO NOT use `npx` or relative paths.

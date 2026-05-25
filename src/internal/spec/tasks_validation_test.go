@@ -55,6 +55,7 @@ func getValidateTasksTestCases() []validateTasksTestCase {
 	tests = append(tests, getHappyPathCases()...)
 	tests = append(tests, getHierarchyErrorCases()...)
 	tests = append(tests, getFieldAndPhaseErrorCases()...)
+	tests = append(tests, getDensityErrorCases()...)
 	return tests
 }
 
@@ -68,9 +69,29 @@ func getHappyPathCases() []validateTasksTestCase {
 **Context:** US-1
 **Action Steps:**
 - Run init
+- Verify output
 **Verification (TDD):**
 Check files`,
 			expected: nil,
+		},
+	}
+}
+
+func getDensityErrorCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Low Action Density",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Low Density Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Only one step
+**Verification (TDD):**
+Verify`,
+			expected: []string{
+				"Task T1.1 (line 2) has insufficient action density (found 1, expected at least 2)",
+			},
 		},
 	}
 }
@@ -84,6 +105,7 @@ func getHierarchyErrorCases() []validateTasksTestCase {
 **Context:** US-1
 **Action Steps:**
 - Do something
+- Step 2
 **Verification (TDD):**
 Check it`,
 			expected: []string{
@@ -108,6 +130,7 @@ Check it`,
 **Context:** US-1
 **Action Steps:**
 - Do something
+- Step 2
 **Verification (TDD):**
 Check it`,
 			expected: []string{"Task T2.1 (line 2) does not match the parent Phase 1"},
@@ -120,6 +143,7 @@ Check it`,
 **Context:** US-1
 **Action Steps:**
 - Do something
+- Step 2
 **Verification (TDD):**
 Check it
 - [ ] T1.3: Gapped Task
@@ -127,9 +151,10 @@ Check it
 **Context:** US-1
 **Action Steps:**
 - Do something
+- Step 2
 **Verification (TDD):**
 Check it`,
-			expected: []string{"Task sequence gap at line 9: expected T1.2, found T1.3"},
+			expected: []string{"Task sequence gap at line 10: expected T1.2, found T1.3"},
 		},
 	}
 }
@@ -156,6 +181,7 @@ func getFieldAndPhaseErrorCases() []validateTasksTestCase {
 **Context:** US-1
 **Action Steps:**
 - Step
+- Step 2
 **Verification (TDD):**
 Verify`,
 			expected: []string{"Phase 1 (line 1) has no tasks"},

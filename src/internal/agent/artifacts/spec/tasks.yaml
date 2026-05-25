@@ -1,17 +1,20 @@
 description: "Atomic, sequential implementation roadmap and TDD verification steps using natural Markdown checklist format."
 dependency: design
 instruction: |
-  DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden.
+  DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden. The roadmap MUST be actionable by an AI agent with zero access to the previous conversation history.
 
-  Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements.
+  Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements. Adhere strictly to the following execution rules for SELF-CONTAINMENT:
 
-  1. DO NOT write actual implementation code. You write the INTENT and the ACTION.
-  2. Tasks MUST be strictly sequential. Do not use parallel execution flags.
-  3. **Phases**: Group tasks into logical phases using `### Phase {N}: [Phase Name]` headers.
-  4. **Task Format**: Use standard Markdown checklist items for tasks: `- [ ] T{Phase}.{Task}: Title`.
+  1. **Directive Logic:** Action steps MUST be technical directives (e.g., "Add if guard", "Implement interface X"). Passive descriptions (e.g., "Check logic") are forbidden.
+  2. **Action Density Mandate:** Every task MUST have at least 3 concrete action steps that describe the technical implementation within the target file.
+  3. **TDD-First Verification:** Every task MUST include a specific terminal command or test scenario that objectively proves the task is finished.
+  4. **Strict Sequentiality:** Tasks MUST be strictly sequential. Do not use parallel execution flags.
+  5. **Traceability:** Every task MUST explicitly link to a requirement using the `**Context:** [US-x]` field.
+  6. **Phases**: Group tasks into logical phases using `### Phase {N}: [Phase Name]` headers.
+  7. **Task Format**: Use standard Markdown checklist items for tasks: `- [ ] T{Phase}.{Task}: Title`.
      - The checkbox state indicates progress (`- [ ]` for pending).
      - You may also include a `**State:** [PENDING]` tag if more formal tracking is required.
-  5. Target Flexibility: If a task is a global operation, set the Target to the CLI command (e.g., `CLI (npm run lint)`) or `Global Scope`.
+  8. **Target Precision:** Set the `**Target:**` to the exact file path or CLI command.
 template: |
   ---
   slug: {FEATURE_SLUG}

@@ -23,14 +23,15 @@ type taskValidationState struct {
 
 // taskBlock tracks mandatory fields within a task block.
 type taskBlock struct {
-	id              string
-	line            int
-	hasTarget       bool
-	hasContext      bool
-	hasActionHeader bool
-	hasActionItems  bool
-	hasVerify       bool
-	inActionSteps   bool
+	id               string
+	line             int
+	hasTarget        bool
+	hasContext       bool
+	hasActionHeader  bool
+	hasActionItems   bool
+	actionItemsCount int
+	hasVerify        bool
+	inActionSteps    bool
 }
 
 // ValidateTasks performs an exhaustive structural and content validation of tasks.md.
@@ -137,6 +138,7 @@ func updateTaskBlockState(task *taskBlock, trimmed string) {
 		task.inActionSteps = true
 	} else if task.inActionSteps && strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "- [") {
 		task.hasActionItems = true
+		task.actionItemsCount++
 	} else if strings.HasPrefix(trimmed, "**Verification (TDD):**") {
 		task.hasVerify = true
 		task.inActionSteps = false
@@ -157,6 +159,8 @@ func (s *taskValidationState) validateLastTask(task *taskBlock) {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Action Steps:** header", task.id, task.line))
 	} else if !task.hasActionItems {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory items under **Action Steps:**", task.id, task.line))
+	} else if task.actionItemsCount < 2 {
+		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) has insufficient action density (found %d, expected at least 2)", task.id, task.line, task.actionItemsCount))
 	}
 	if !task.hasVerify {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Verification (TDD):** section", task.id, task.line))

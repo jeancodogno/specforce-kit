@@ -120,3 +120,4 @@ content: |
   - **Preserve Integrity:** Zero mutations.
   - **Avoid Assumption:** Always read the code before concluding.
   - **Fluid Dialogue:** Maintain a high-bandwidth technical conversation over rigid workflows.
+  - **CLI Execution:** The `specforce` CLI is globally available. Execute it directly (e.g., `specforce spec list`). DO NOT use `npx` or relative paths.

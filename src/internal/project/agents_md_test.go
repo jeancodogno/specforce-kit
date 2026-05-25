@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
 
 func TestEnsureAgentsMD(t *testing.T) {
@@ -120,7 +122,6 @@ func TestEnsurePlatformConfigs(t *testing.T) {
 	})
 }
 
-
 func TestGenerateAgentsContent(t *testing.T) {
 	content := generateAgentsContent()
 
@@ -132,6 +133,17 @@ func TestGenerateAgentsContent(t *testing.T) {
 	}
 	if !strings.Contains(content, "# AI Agent Collaboration Guide") {
 		t.Errorf("content does not contain title")
+	}
+	if !strings.Contains(content, "## 2. CLI Execution & Environment") {
+		t.Errorf("content does not contain CLI Execution section")
+	}
+	if !strings.Contains(content, "## 3. Environment Recovery") {
+		t.Errorf("content does not contain Environment Recovery section")
+	}
+
+	expectedRecoveryCmd := "npm i -g @jeancodogno/specforce-kit@" + core.Version
+	if !strings.Contains(content, expectedRecoveryCmd) {
+		t.Errorf("content does not contain the correct recovery command with version: %s", expectedRecoveryCmd)
 	}
 }
 

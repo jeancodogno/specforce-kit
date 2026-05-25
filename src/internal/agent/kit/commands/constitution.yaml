@@ -135,3 +135,5 @@ content: |
 
   - **Environment Agnostic:** Rely on the dynamic JSON payloads from the CLI. Do not
   assume the existence of specific artifact names beforehand.
+
+  - **CLI Execution:** The `specforce` CLI is globally available. Execute it directly (e.g., `specforce spec list`). DO NOT use `npx` or relative paths.
