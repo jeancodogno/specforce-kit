@@ -161,3 +161,50 @@ func TestRegistry_TypeAwareness(t *testing.T) {
 		t.Errorf("expected 'Design Desc', got %q", art.Description)
 	}
 }
+
+func TestTopologicalSort(t *testing.T) {
+	t.Run("Linear dependency A->B->C", func(t *testing.T) {
+		fs := fstest.MapFS{
+			"c.yaml": {
+				Data: []byte("description: C\ninstruction: C\ntemplate: C\ndependency: b\n"),
+			},
+			"b.yaml": {
+				Data: []byte("description: B\ninstruction: B\ntemplate: B\ndependency: a\n"),
+			},
+			"a.yaml": {
+				Data: []byte("description: A\ninstruction: A\ntemplate: A\n"),
+			},
+		}
+
+		registry, err := NewRegistry(fs)
+		if err != nil {
+			t.Fatalf("NewRegistry failed: %v", err)
+		}
+
+		list := registry.List()
+		if len(list) != 3 {
+			t.Fatalf("expected 3 artifacts, got %d", len(list))
+		}
+
+		// Topological order for C depends on B, B depends on A should be A, B, C
+		if list[0].Name != "a" || list[1].Name != "b" || list[2].Name != "c" {
+			t.Errorf("expected order [a, b, c], got [%s, %s, %s]", list[0].Name, list[1].Name, list[2].Name)
+		}
+	})
+
+	t.Run("Circular dependency A->A", func(t *testing.T) {
+		fs := fstest.MapFS{
+			"a.yaml": {
+				Data: []byte("description: A\ninstruction: A\ntemplate: A\ndependency: a\n"),
+			},
+		}
+
+		_, err := NewRegistry(fs)
+		if err == nil {
+			t.Fatal("expected error for circular dependency A->A, got nil")
+		}
+		if !strings.Contains(err.Error(), "circular dependency detected") {
+			t.Errorf("expected circular dependency error, got: %v", err)
+		}
+	})
+}

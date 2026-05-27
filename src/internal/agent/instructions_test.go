@@ -24,7 +24,7 @@ func TestInstructionManager_InjectVariables(t *testing.T) {
 	}
 }
 
-func TestInstructionManager_GetInstructions(t *testing.T) {
+func TestInstructionMerging(t *testing.T) {
 	mockFS := fstest.MapFS{
 		"instructions/test.md": {Data: []byte("Base {{var}}")},
 	}
@@ -43,7 +43,7 @@ func TestInstructionManager_GetInstructions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := "Base Value\n\nCustom"
+	expected := "## Project Specific Instructions\n- Custom\n\nBase Value"
 	if got != expected {
 		t.Errorf("expected %q, got %q", expected, got)
 	}

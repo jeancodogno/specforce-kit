@@ -19,6 +19,38 @@ func (m *mockConfigProvider) GetConfig(ctx context.Context) (*core.ProjectConfig
 	return m.config, nil
 }
 
+func TestGetArtifactInstructions(t *testing.T) {
+	artifactsFS := fstest.MapFS{
+		"requirements.yaml": &fstest.MapFile{Data: []byte(`
+description: Requirements Template
+instruction: Base Requirements Instruction
+template: Requirements Template Content
+`)},
+	}
+	reg, _ := NewRegistry(artifactsFS)
+
+	config := &core.ProjectConfig{
+		Instructions: map[string][]string{
+			"requirements": {"Project Rule 1"},
+		},
+	}
+	svc := NewService(reg, &mockConfigProvider{config: config})
+
+	art, err := svc.GetArtifact(context.Background(), "requirements")
+	if err != nil {
+		t.Fatalf("GetArtifact failed: %v", err)
+	}
+
+	expectedPrefix := "## Project Specific Instructions\n- Project Rule 1\n\n"
+	if !strings.HasPrefix(art.Instruction, expectedPrefix) {
+		t.Errorf("expected instruction to start with project rules, got:\n%s", art.Instruction)
+	}
+
+	if !strings.Contains(art.Instruction, "Base Requirements Instruction") {
+		t.Errorf("base instructions missing")
+	}
+}
+
 func TestGetArtifact(t *testing.T) {
 	artifactsFS := fstest.MapFS{
 		"requirements.yaml": &fstest.MapFile{Data: []byte(`

@@ -39,8 +39,8 @@ func (s *Service) GetArtifact(ctx context.Context, name string) (*Artifact, erro
 		if err == nil && conf != nil {
 			rules := s.resolveInstructions(conf, name)
 			if len(rules) > 0 {
-				custom := "\n\n## Project Specific Instructions\n- " + strings.Join(rules, "\n- ")
-				art.Instruction += custom
+				custom := "## Project Specific Instructions\n- " + strings.Join(rules, "\n- ") + "\n\n"
+				art.Instruction = custom + art.Instruction
 			}
 		}
 	}

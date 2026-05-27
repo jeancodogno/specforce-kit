@@ -33,13 +33,11 @@ func (m *InstructionManager) GetInstructions(category string) (string, error) {
 		content = string(data)
 	}
 
-	// 2. Merge with config instructions (if any)
+	// 2. Merge with config instructions (if any) at the TOP
 	if m.config != nil && m.config.Instructions != nil {
 		if custom, ok := m.config.Instructions[category]; ok {
-			if content != "" {
-				content += "\n\n"
-			}
-			content += strings.Join(custom, "\n")
+			header := "## Project Specific Instructions\n- " + strings.Join(custom, "\n- ") + "\n\n"
+			content = header + content
 		}
 	}
 

@@ -58,36 +58,53 @@ content: |
   specforce spec status <slug> --json
   ```
   - Analyze the JSON output to identify all artifacts where `"exists": false` (if Initializing) or the specific targets (if Updating). 
-  - **Type-Aware Retrieval:** You MUST use the exact `name` field from the JSON artifacts array (e.g., `bug-requirements`) when fetching artifact details.
+  - **Topological Order:** You MUST process artifacts in the order they appear in the JSON status (which is deterministically sorted by dependency).
   - Process these required artifacts sequentially in your internal memory using the following steps for EACH artifact:
 
-  **CRITICAL BATCH INSTRUCTION:**
-    If the `status` command reveals multiple missing artifacts, you MUST process and generate ALL of them in a single, continuous execution block. 
-    - DO NOT stop after generating the first artifact. 
-    - DO NOT ask for user permission to continue to the next artifact.
-    - You must iterate through your internal list and write every missing file before proceeding to Step 3.
-    
-  **A. Load Context:**
-  - Execute the command to get the instructions and schema for the current targeted artifact using its prefixed name:
-  ```bash
-  specforce spec artifact <prefixed-artifact-name> --json
-  ```
+  **A. Load Context & Synthesis:**
+  - Execute: `specforce spec artifact <prefixed-artifact-name> --json`
   - **Dependency Loading:** If the artifact has a `"dependency"`, you MUST read the completed dependency file before proceeding.
-  - **Update Context:** If **Updating**, you MUST read the current contents of the existing artifact file first.
+  - **Context Synthesis:** You MUST synthesize the "Shared Context" by consolidating:
+    1. Decisions reached during the Consultative Grill.
+    2. Relevant codebase insights from Layer 2.
+    3. Key technical details from the upstream dependency artifact.
 
-  **B. Dynamic Agent Discovery:**
-  - For each artifact to be generated or updated, you MUST perform an agent discovery to find the ideal subagent to perform the task.
-  - Evaluate the available tools to find the best agent and skill for the specific artifact's domain (e.g., "Product Analyst" for requirements, "Solutions Architect" for design), and activate it. Note that different artifacts may require different subagents.
-  - **Context Isolation:** When delegating to a subagent, you MUST explicitly prepend their prompt with a directive stating that they are in a **Documentation-Only, No-Planning-Mode** context and must provide the output directly without entering specialized platform modes.
+  **B. Dynamic Agent Discovery & Skill Mandate:**
+  - Identify the ideal subagent and skill for the artifact:
+    - `requirements`: `product-analyst` with `pragmatic-product-owner` (Primary) and `spec-clarification-interview` (Supporting).
+    - `design`: `technical-solution-architect` with `technical-solution-architect` (Primary) and `premium-frontend-design` (Supporting, if UI).
+    - `tasks`: `technical-developer` with `task-atomic-decomposition` (Primary) and `tdd` (Supporting).
+    - `constitution`: `spf.constitution` (Primary) and `consultative-grill` (Supporting).
+  - **The Mission Brief Envelope:** When delegating, you MUST construct a prompt using the following structured header (text-only):
+
+  ```markdown
+  # MISSION BRIEF: {artifact_name}
+  Description: {description}
+
+  ## 1. MANDATED SKILLS (USE THESE SKILLS)
+  - {primary_skill_name}: {skill_purpose}
+  - {supporting_skill_name} (if applicable)
+
+  ## 2. PROJECT RULES (MAXIMUM PRIORITY)
+  {Project Specific Instructions from the artifact JSON formatted as bullet points}
+
+  ## 3. SHARED CONTEXT (FEATURE SPECIFICS)
+  - DESIGN DECISIONS: {summary_of_grill_decisions}
+  - CODEBASE INSIGHTS: {relevant_files_and_symbols}
+  - DEPENDENCY DATA: {full_content_of_upstream_artifact}
+
+  ---
+  ## 4. BASE INSTRUCTIONS
+  {instruction from the artifact JSON}
+  ```
 
   **C. Information Gathering:**
   - Identify missing business rules or technical ambiguities. You MUST use your user-interaction tool to clarify ALL technical and business ambiguities before proceeding.
 
-  D. Artifact Generation/Modification:
-  - Generate or rewrite the markdown content strictly adhering to the JSON `template` structure and the `instruction` rules.
-  - **Visual Verification:** If the feature is `UI-heavy`, you MUST ensure the Architect includes an ASCII wireframe (Ghost Protocol) in the Design artifact to visualize the interface layout (Web, TUI, etc.).
-  - **Hardened Content:** You MUST ensure every section is filled with concrete, verifiable technical or business rules. Vague language or "TBD" content is considered a failure.
-  - Write the completed content to the exact `path` specified in the Status JSON using your file-writing tool.
+  **D. Artifact Generation/Modification:**
+  - Delegate the task to the subagent using the Mission Brief envelope.
+  - **Visual Verification:** If the feature is `UI-heavy`, ensure the Architect includes an ASCII wireframe in the Design artifact.
+  - Write the completed content to the exact `path` specified in the Status JSON.
 
   ### 3. Verification & Handoff
   - **MANDATORY FINAL CHECK:** ONLY after writing all planned artifacts for this session, you MUST execute `specforce spec status <slug> --json` ONE final time in the terminal.
