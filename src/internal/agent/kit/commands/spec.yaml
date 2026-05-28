@@ -108,6 +108,10 @@ content: |
 
   ### 3. Verification & Handoff
   - **MANDATORY FINAL CHECK:** ONLY after writing all planned artifacts for this session, you MUST execute `specforce spec status <slug> --json` ONE final time in the terminal.
+  - **The Coherence Gate:** Before concluding, you MUST perform a cross-artifact audit to ensure structural and logical alignment:
+    1. **Requirement Coverage:** Verify that every Functional Requirement `[US-X]` in `requirements.md` has at least one corresponding task in `tasks.md`.
+    2. **Logical Flow:** Ensure that technical decisions made in `design.md` are reflected in the `tasks.md` action steps.
+    3. **Drift Detection:** If a gap is found, you MUST output a specific `[COHERENCE_ERROR]` marker detailing the missing link (e.g., "[COHERENCE_ERROR]: Requirement [US-3] has no implementation tasks").
   - **Validation Logic:** Note that deep validation (e.g., `tasks.md` structural checks) only executes when `"progress": 100`. If `progress < 100`, `"is_valid"` will remain `true` even if existing files have structural errors.
   - Analyze the JSON output. You MUST NOT provide a final summary or conclude the session unless `"progress": 100` AND `"is_valid": true`.
   - **If Initializing:** Output a final summary once verified.

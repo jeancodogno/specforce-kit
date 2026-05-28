@@ -42,10 +42,34 @@ content: |
   **C. Dynamic Agent & Skill Discovery:**
   - Analyze the task's `title`, `target`, and `action_steps`.
   - You MUST perform an agent discovery step to find the ideal subagent or skill available in your tools to perform the task.
-  - **CRITICAL:** Once the best tool or subagent is identified, you must activate it or delegate the task execution to it. Be aware that different tasks will likely require different subagents.
+  - **Specialized Personas:** If the task involves code modification, you MUST prioritize the `specforce-developer` persona. If it involves holistic validation, prioritize `specforce-qa`.
+  - **The Mission Brief Envelope:** When delegating, you MUST construct a prompt using the following structured header (text-only):
+
+  ```markdown
+  # MISSION BRIEF: {task_id} - {title}
+  Description: {action_steps_summary}
+
+  ## 1. MANDATED SKILLS (USE THESE SKILLS)
+  - {primary_skill_name}: {skill_purpose}
+  - {supporting_skill_name} (if applicable)
+
+  ## 2. PROJECT RULES (MAXIMUM PRIORITY)
+  {Project Specific Instructions from the artifact JSON formatted as bullet points}
+
+  ## 3. SHARED CONTEXT (FEATURE SPECIFICS)
+  - DESIGN DECISIONS: {relevant_design_sections}
+  - CODEBASE INSIGHTS: {target_file_current_state_summary}
+  - DEPENDENCY DATA: {requirement_bdd_scenarios}
+
+  ---
+  ## 4. BASE INSTRUCTIONS
+  {action_steps}
+  ```
+
+  - **CRITICAL:** Once the best tool or subagent is identified, you must activate it or delegate the task execution to it using the MISSION BRIEF envelope. Explicitly log the delegation: `[DELEGATION] -> {persona_name}`. Be aware that different tasks will likely require different subagents.
 
   ### 3. Task Execution & Verification
-  Operating as the specific expert, execute the `action_steps`:
+  Operating as the specific expert defined in the MISSION BRIEF, execute the `action_steps`:
 
   **A. Implementation:**
   - Write the implementation code in the `target` file to satisfy the `action_steps`.
@@ -73,7 +97,7 @@ content: |
   ### 5. Final QA Validation (Holistic Review)
   Once ALL mapped tasks are finished, perform a global QA check.
 
-  **A. Adopt QA Persona:** Switch to "Lead QA Engineer".
+  **A. Adopt QA Persona:** Switch to `specforce-qa` persona.
   **B. Review Acceptance Criteria:** Scan `requirements.md` focusing on BDD Scenarios and Business Invariants.
   **C. Global Verification:** Execute the project's global test suite (e.g., `go test ./...`) via the terminal to ensure no regressions exist.
   **D. Final Report:** - If validation passes, output EXACTLY the following format:

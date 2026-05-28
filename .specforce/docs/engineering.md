@@ -27,10 +27,34 @@
 - **Service Layer Pattern:** Domain services MUST be initialized with their dependencies (filesystems, registries, etc.) and expose UI-agnostic methods. They MUST depend on the `core.UI` interface for reporting progress and logging, ensuring they remain decoupled from specific frontend implementations.
 - **Instruction Injection Pattern:** Services responsible for generating or displaying agent-facing content (e.g., Spec artifacts, Implementation reports) MUST merge global instructions from `core.ProjectConfig` into their output.
     - **Prominence-First Mandate:** Instructions merged from project configuration MUST be prepended (placed at the top) of the base instructions. This ensures project-specific constraints receive maximum attention and weight from LLMs.
-- **Mission Brief Delegation Pattern:** When delegating complex sub-tasks to subagents, the orchestrator MUST construct a structured "Mission Brief" envelope. This envelope MUST include:
-    - **Mandated Skills:** Explicitly telling the subagent which specialized skills to activate.
-    - **Project Rules:** Prepended instructions from the project configuration.
-    - **Synthesized Context:** A high-density summary of previous design decisions, relevant symbols, and upstream dependency data.
+- **Mission Brief Delegation Pattern:** When delegating complex sub-tasks to subagents, the orchestrator MUST construct a structured "Mission Brief" Markdown envelope. This ensures that global project constraints are never lost during agent handoffs. The envelope MUST follow this exact structure:
+    ```markdown
+    # MISSION BRIEF: {Task_Title}
+    Description: {Task_Description}
+
+    ## 1. MANDATED SKILLS (USE THESE SKILLS)
+    - {Skill_Name}: {Purpose}
+
+    ## 2. PROJECT RULES (MAXIMUM PRIORITY)
+    - {Prepended rules from ProjectConfig/AGENTS.md}
+
+    ## 3. SHARED CONTEXT (FEATURE SPECIFICS)
+    - DESIGN DECISIONS: {Context_Summary}
+    - CODEBASE INSIGHTS: {Symbol_Anchors}
+    - DEPENDENCY DATA: {Upstream_Artifact_Content}
+
+    ---
+    ## 4. BASE INSTRUCTIONS
+    {Atomic_Instruction_Set}
+    ```
+- **Coherence Gate Verification Pattern:** Before concluding a planning session, the orchestrator MUST perform a cross-artifact audit to ensure structural and logical alignment:
+    - **Requirement Coverage:** Every Functional Requirement `[US-X]` in `requirements.md` MUST have at least one corresponding task in `tasks.md`.
+    - **Logical Flow:** Technical decisions made in `design.md` MUST be reflected in the `tasks.md` action steps.
+    - **Drift Detection:** If a gap is found, the orchestrator MUST output a specific `[COHERENCE_ERROR]` marker and block the session conclusion.
+- **Specialized Agent Persona Pattern:** For implementation and verification, orchestrators SHOULD delegate to specialized personas rather than generic experts:
+    - **Implementation:** `specforce-developer` (TDD-focused).
+    - **Verification:** `specforce-qa` (Adversarial/BDD-focused).
+    - **Traceability:** Delegation transitions MUST be logged as `[DELEGATION] -> {persona_name}`.
 - **Hook-Based Verification Gating:** Critical state transitions (e.g., marking a task as `FINISHED`) MUST be gated by project-defined external hooks. If a hook fails (non-zero exit code), the transition MUST be blocked, the original state MUST NOT be modified, and the CLI command MUST exit with a non-zero status code to support shell command chaining.
 - **Interactive Confirmation Gating:** Irreversible or high-impact operations (e.g., overwriting existing tool instructions or deleting specs) MUST be gated by an explicit `Confirm` prompt via the `core.UI` interface. The system MUST NOT proceed without affirmative user consent (Sim/Yes).
 - **DTO Pattern (Data Transfer Objects):** Services SHOULD use explicit structs (DTOs) for complex input configurations or output reports. This maintains a stable contract between the CLI/TUI layer and the domain logic.
