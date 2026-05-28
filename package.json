@@ -1,6 +1,6 @@
 {
   "name": "@jeancodogno/specforce-kit",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "SpecForce Kit CLI - Distributed via Native Binaries",
   "repository": {
     "type": "git",
@@ -22,11 +22,11 @@
     "LICENSE"
   ],
   "optionalDependencies": {
-    "@jeancodogno/specforce-kit-linux-x64": "1.0.0-alpha.1",
-    "@jeancodogno/specforce-kit-linux-arm64": "1.0.0-alpha.1",
-    "@jeancodogno/specforce-kit-darwin-x64": "1.0.0-alpha.1",
-    "@jeancodogno/specforce-kit-darwin-arm64": "1.0.0-alpha.1",
-    "@jeancodogno/specforce-kit-win32-x64": "1.0.0-alpha.1"
+    "@jeancodogno/specforce-kit-linux-x64": "1.0.0-alpha.2",
+    "@jeancodogno/specforce-kit-linux-arm64": "1.0.0-alpha.2",
+    "@jeancodogno/specforce-kit-darwin-x64": "1.0.0-alpha.2",
+    "@jeancodogno/specforce-kit-darwin-arm64": "1.0.0-alpha.2",
+    "@jeancodogno/specforce-kit-win32-x64": "1.0.0-alpha.2"
   },
   "author": "Jean Codogno <jeancarlo.eng.comp@gmail.com>",
   "license": "MIT"
