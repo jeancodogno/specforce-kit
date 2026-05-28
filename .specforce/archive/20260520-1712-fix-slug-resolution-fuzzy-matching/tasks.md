@@ -24,7 +24,7 @@ lens: Backend-heavy
 - Ensure sub-path support (e.g., `team-a/slug`).
 - Implement "Prioritize Newest" logic by sorting matches.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v src/internal/spec/slug.go src/internal/spec/slug_test.go` (After T2.1)
 
 ### Phase 2: Service Integration
@@ -39,7 +39,7 @@ lens: Backend-heavy
 - Update `UpdateTaskStatus` in `src/internal/spec/service.go`.
 - Update `ArchiveSpec` in `src/internal/spec/archive.go`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Existing tests should pass and newly added resolution tests should pass.
 
 ### Phase 3: Verification & Hardening
@@ -53,5 +53,5 @@ Existing tests should pass and newly added resolution tests should pass.
 - Verify "Prioritize Newest" behavior.
 - Verify Archive resolution.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v ./src/internal/spec/...`

@@ -22,7 +22,7 @@ lens: Bugfix
 - Mock an empty `.specforce/specs` directory.
 - Assert that `ListActiveSpecs` returns a non-nil slice and `len(specs) == 0`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/...` (Should fail or return nil slice depending on current state).
 
 ### Phase 2: Implementation
@@ -35,7 +35,7 @@ lens: Bugfix
 - Locate `ListActiveSpecs` function.
 - Replace `var specs []SpecInfo` with `specs := []SpecInfo{}`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/...` (Should pass with non-nil empty slice).
 
 ### Phase 3: CLI Integration Verification
@@ -47,7 +47,7 @@ lens: Bugfix
 **Action Steps:**
 - Update `TestHandleSpecList` to verify JSON output is `[]` when no specs are found.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/cli/spec_test.go`
 
 - [x] T3.2: [VERIFY] Manual CLI verification
@@ -58,5 +58,5 @@ lens: Bugfix
 - Ensure current environment has no active specs.
 - Run `go run src/cmd/specforce/main.go spec list --json`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Verify output is exactly `[]`.

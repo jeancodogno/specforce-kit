@@ -22,7 +22,7 @@ lens: UI-heavy
 - Insert the Language Switcher Block (EN, PT, ES) using colored badges.
 - Ensure all links are HTTPS or correct relative paths.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file to confirm all 11 badges (8 metrics + 3 language switchers) are present and correctly formatted.
 - Verify that `README.pt.md` and `README.es.md` links are valid.
 
@@ -34,7 +34,7 @@ lens: UI-heavy
 - Replace existing text-based language navigation with the standardized Language Switcher badges.
 - Add the standardized Metrics Block.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file to confirm visual parity with `README.md` (translated content but same badge structure).
 
 - [x] T1.3: [DOCS] Update `README.es.md` with Shields.io badges
@@ -45,7 +45,7 @@ lens: UI-heavy
 - Replace existing text-based language navigation with the standardized Language Switcher badges.
 - Add the standardized Metrics Block.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file to confirm visual parity with `README.md`.
 
 ### Phase 2: English Documentation Navigation
@@ -58,7 +58,7 @@ lens: UI-heavy
 - Prepend `[ [English](filename.md) | [Português](../pt/filename.md) | [Español](../es/filename.md) ]` to all 6 files.
 - Files: `artifacts.md`, `cli.md`, `configuration.md`, `getting-started.md`, `git-worktrees.md`, `supported-tools.md`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Confirm the header is at the very top of each file.
 - Verify relative paths point correctly to `../pt/` and `../es/`.
 
@@ -71,7 +71,7 @@ lens: UI-heavy
 **Action Steps:**
 - Prepend `[ [English](../en/filename.md) | [Português](filename.md) | [Español](../es/filename.md) ]` to all 6 files.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Confirm the header is at the very top of each file.
 
 ### Phase 4: Spanish Documentation Navigation
@@ -83,7 +83,7 @@ lens: UI-heavy
 **Action Steps:**
 - Prepend `[ [English](../en/filename.md) | [Português](../pt/filename.md) | [Español](filename.md) ]` to all 6 files.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Confirm the header is at the very top of each file.
 
 ## 3. Pre-emptive Mitigations

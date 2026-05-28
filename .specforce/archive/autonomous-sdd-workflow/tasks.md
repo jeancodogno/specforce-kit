@@ -21,7 +21,7 @@ lens: Integration
 - Update the `kit.yaml` mappings for supported agents to ensure `commands/*.yaml` are mapped to both their native command path and the agent's skills directory.
 - If `kit.yaml` cannot express multiple destinations for a single source, update the Go `translator.go` or `installer.go` logic to duplicate the output.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/agent/...` and ensure `commands` exist in both target folders during kit installation tests.
 
 ### Phase 2: Command Configuration Refinement
@@ -34,7 +34,7 @@ Run `go test ./src/internal/agent/...` and ensure `commands` exist in both targe
 **Action Steps:**
 - Modify the `description` field of the `spec` command to clearly state its role as an orchestrator and define the exact scenarios when the LLM should invoke it autonomously.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/spec.yaml | grep "description"` should reflect the new intent-driven description.
 
 #### T2.2: [CONFIG] Update implement.yaml description
@@ -45,7 +45,7 @@ Run `go test ./src/internal/agent/...` and ensure `commands` exist in both targe
 **Action Steps:**
 - Modify the `description` field of the `implement` command to clearly state its role as the TDD execution engine and when it should be triggered.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/implement.yaml | grep "description"` should reflect the new intent-driven description.
 
 ### Phase 3: Agent Instruction Updates
@@ -60,5 +60,5 @@ Run `go test ./src/internal/agent/...` and ensure `commands` exist in both targe
 - Explicitly instruct the agent to operate exclusively through the Specforce workflow commands (`spf.spec`, `spf.implement`, `spf.constitution`).
 - Add the "Proactive Mandate" instructing the agent not to wait for explicit slash commands but to invoke them when the intent matches the phase.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat AGENTS.md | grep "Proactive Mandate"` should exist.

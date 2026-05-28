@@ -22,7 +22,7 @@ lens: Backend-heavy
 - Implement `Consolidate` to aggregate `ROUTING.md` and the most recent N fragments into a single string.
 - Ensure 0600 permissions for files and 0750 for the directory.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/project/...` - Create unit tests for fragment creation and consolidation ordering.
 
 ### Phase 2: Workflow & CLI Integration
@@ -35,7 +35,7 @@ lens: Backend-heavy
 - Update `BootstrapProject` to create the `.specforce/memorial/` directory.
 - Update `src/internal/project/agents_md.go` to change the `memorial.md` reference to the new distributed structure.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/project/bootstrapper_test.go` and manual `specforce init` verification.
 
 - [x] T2.2: [CODE] Integrate Memorial Service into CLI HandleInit
@@ -45,7 +45,7 @@ lens: Backend-heavy
 **Action Steps:**
 - Update `HandleInit` to call `MemorialService.Initialize()` during project setup.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual verification by initializing a new project and checking directory structure.
 
 ### Phase 3: Artifacts & Migration
@@ -58,7 +58,7 @@ Manual verification by initializing a new project and checking directory structu
 - Update the template to explain the new distributed structure to agents.
 - Add `ROUTING.md` boilerplate to the template.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `specforce init` and verify the content of `.specforce/memorial/ROUTING.md`.
 
 - [x] T3.2: [CODE] Update Archival Skill instructions
@@ -68,7 +68,7 @@ Run `specforce init` and verify the content of `.specforce/memorial/ROUTING.md`.
 **Action Steps:**
 - Modify the "Knowledge Harvesting" section to instruct agents to use the new fragment recording logic.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual verification by running an archival process and checking if a fragment is created.
 
 - [x] T3.3: [SCAFFOLD] Implement Legacy Migration Logic
@@ -78,7 +78,7 @@ Manual verification by running an archival process and checking if a fragment is
 **Action Steps:**
 - Add logic to check for legacy `memorial.md` and move it to `.specforce/memorial/legacy.md` if it exists.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/project/memorial_test.go` with a test case for migration from a monolithic file.
 
 ### Phase 4: Documentation Updates
@@ -90,7 +90,7 @@ Manual verification by running an archival process and checking if a fragment is
 **Action Steps:**
 - Replace references to `.specforce/docs/memorial.md` with `.specforce/memorial/` in `.specforce/docs/engineering.md` and `.specforce/docs/governance.md`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual inspection of the updated Markdown files.
 
 - [x] T4.2: [DOCS] Update Multi-language Artifacts and Getting Started guides
@@ -101,5 +101,5 @@ Manual inspection of the updated Markdown files.
 - Update `docs/{en,pt,es}/artifacts.md` to describe the new directory-based memorial.
 - Update `docs/{en,pt,es}/getting-started.md` to reflect the new archival/memory harvesting process.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual inspection of the updated Markdown files across all languages.

@@ -59,7 +59,7 @@ func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, err
         - `**Target:**` field.
         - `**Context:**` field.
         - `**Action Steps:**` section with at least one list item.
-        - `**Verification (TDD):**` section with content.
+        - `**Acceptance Check:**` section with content.
     - **Empty Phases:** Phases with no associated tasks.
 - `src/internal/cli/spec.go` -> Update `renderSpecStatusTUI` to detect `ValidationErrors` and display them clearly.
 

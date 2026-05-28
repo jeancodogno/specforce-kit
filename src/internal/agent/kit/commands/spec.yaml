@@ -71,9 +71,9 @@ content: |
 
   **B. Dynamic Agent Discovery & Skill Mandate:**
   - Identify the ideal subagent and skill for the artifact:
-    - `requirements`: `product-analyst` with `pragmatic-product-owner` (Primary) and `spec-clarification-interview` (Supporting).
-    - `design`: `technical-solution-architect` with `technical-solution-architect` (Primary) and `premium-frontend-design` (Supporting, if UI).
-    - `tasks`: `technical-developer` with `task-atomic-decomposition` (Primary) and `tdd` (Supporting).
+    - `requirements`: `specforce-product-analyst` with `pragmatic-product-owner` (Primary) and `spec-clarification-interview` (Supporting).
+    - `design`: `specforce-architect` with `technical-solution-architect` (Primary) and `premium-frontend-design` (Supporting, if UI).
+    - `tasks`: `specforce-planner` with `task-atomic-decomposition` (Primary) and `tdd` (Supporting).
     - `constitution`: `spf.constitution` (Primary) and `consultative-grill` (Supporting).
   - **The Mission Brief Envelope:** When delegating, you MUST construct a prompt using the following structured header (text-only):
 

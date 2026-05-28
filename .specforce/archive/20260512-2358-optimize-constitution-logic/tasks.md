@@ -22,7 +22,7 @@ lens: Balanced full-stack
 - Prepend the instructions to explicitly run `specforce spec list --json` and `specforce constitution status --json` if the context is not already available in the session history.
 - Ensure the instruction emphasizes "synchronizing with the project's active state".
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manually inspect the file to ensure the new instructions are correctly formatted within the YAML block.
 
 - [x] T1.2: [CODE] Add Start & End Verification to Planning (Spec)
@@ -33,7 +33,7 @@ Manually inspect the file to ensure the new instructions are correctly formatted
 - Update Step 1 "Discovery & Intent Clarification".
 - Add the instruction: "Execute `specforce spec status <slug> --json` ONCE at the start to map out your work and ONCE at the end to verify. DO NOT poll status between individual artifact generations."
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manually inspect the file to ensure the Start & End pattern is present in the `spf.spec` pipeline.
 
 - [x] T1.3: [CODE] Add Start & End Verification to Implementation
@@ -44,7 +44,7 @@ Manually inspect the file to ensure the Start & End pattern is present in the `s
 - Update Phase 1 "Initialization & Roadmap Mapping".
 - Ensure the instruction explicitly states: "Execute status ONCE at the start and ONCE at the end. DO NOT run the status command again during this session."
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manually inspect the file.
 
 - [x] T1.4: [CODE] Add Memory-Aware Clause to Governance (Constitution)
@@ -55,7 +55,7 @@ Manually inspect the file.
 - Update Step 1 "Scope & Status Discovery".
 - Add instruction: "Check your history for existing constitution status. REUSE it if available to save tokens."
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manually inspect the file.
 
 ### Phase 2: AGENTS.md Template Update
@@ -72,7 +72,7 @@ Manually inspect the file.
 - Include rules for "Parallelism".
 - **CRITICAL:** Ensure NO Spec or Implementation status rules are added here.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/project/agents_md_test.go` to ensure no regressions in merging logic.
 
 ### Phase 3: Integration Verification
@@ -88,5 +88,5 @@ Run `go test ./src/internal/project/agents_md_test.go` to ensure no regressions 
 - Verify that the generated `AGENTS.md` contains the new efficiency section.
 - Verify that the generated `.gemini/rules/spf-discovery.toml` (or equivalent adapted artifact) contains the new instructions.
 
-**Verification (TDD):**
+**Acceptance Check:**
 The presence of the new instructions in the generated files confirms successful propagation of the Kit changes.

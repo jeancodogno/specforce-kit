@@ -23,7 +23,7 @@ lens: Backend-heavy
 - Add mandatory `**[Performance]**` tag requirement to instructions.
 - Add logic to instructions for conditional removal of UI/UX sections for non-UI lenses.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `specforce spec artifact feature-requirements --json` and verify the new instructions are present.
 
 - [x] T1.2: [CODE] Harden Design Template
@@ -35,7 +35,7 @@ lens: Backend-heavy
 - Mandate Mermaid diagrams for architecture/data flow.
 - Enforce explicit file paths in the `File & Component Inventory`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `specforce spec artifact feature-design --json` and verify the new instructions are present.
 
 - [x] T1.3: [CODE] Harden Tasks Template
@@ -47,7 +47,7 @@ lens: Backend-heavy
 - Enforce mandatory `**Context:**` linking to requirements.
 - Mandate concrete technical directives instead of passive descriptions.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `specforce spec artifact feature-tasks --json` and verify the new instructions are present.
 
 ### Phase 2: Logic Hardening
@@ -60,7 +60,7 @@ lens: Backend-heavy
 - Add a test case that provides a `tasks.md` with a task containing only 1 action step.
 - Assert that `ValidateTasks` returns an error regarding action density.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go test ./src/internal/spec/...` and verify the test fails (RED).
 
 - [x] T2.2: [CODE] Implement task density and sequence validation
@@ -73,7 +73,7 @@ lens: Backend-heavy
 - Update `validateLastTask` to return an error if `actionItemsCount < 2`.
 - Add sequence validation for Phase IDs and Task IDs.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go test ./src/internal/spec/...` and verify the density test passes (GREEN).
 
 ### Phase 3: Final Verification
@@ -86,5 +86,5 @@ lens: Backend-heavy
 - Initialize a dummy spec and generate all artifacts using the new templates.
 - Run `specforce spec status <dummy-slug>` and verify it passes structural and density validation.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - `specforce spec status` returns `is_valid: true` and `progress: 100` for a high-fidelity spec.

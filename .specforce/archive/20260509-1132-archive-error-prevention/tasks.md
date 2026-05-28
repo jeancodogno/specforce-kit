@@ -21,7 +21,7 @@ lens: Backend-heavy
 - Add instructions to explicitly scan `tasks.md` in addition to `requirements.md` and `design.md`.
 - Add a new bullet point to analyze challenges, roadblocks, and bugs encountered during implementation (e.g., tasks that took multiple attempts).
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the markdown file manually or via `cat` to ensure the "Specification Retrospective" section explicitly mentions `tasks.md` and bug analysis.
 
 - [x] T1.2: [DOCS] Update Constitution Impact Analysis
@@ -33,7 +33,7 @@ lens: Backend-heavy
 - Add instructions to evaluate if the challenges and bugs encountered indicate a missing rule or lack of clarity in the Constitution.
 - Instruct the agent to formulate a rule to prevent the same error from repeating.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the markdown file to ensure the "Constitution Impact Analysis" section includes checking for missing rules based on encountered bugs.
 
 - [x] T1.3: [DOCS] Update Information Gathering Prompt and Formatting
@@ -45,7 +45,7 @@ lens: Backend-heavy
 - Modify the suggested `Ask the user:` prompt to explicitly mention the encountered challenge and ask if the project's Constitution should be updated to prevent it from repeating.
 - Renumber subsequent sections (Archival Execution to `7.`, Verification & Handoff to `8.`).
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the entire markdown file has sequential, correct numbering.
 - Verify the prompt string clearly asks about updating the constitution based on challenges/bugs.
 

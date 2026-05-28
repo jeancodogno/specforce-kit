@@ -22,7 +22,7 @@ lens: Backend-heavy
 - Call `executor.HandleInit`.
 - Assert that `config.yaml` exists after the call.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test -v src/internal/cli/cli_test.go src/internal/cli/cli.go ...` and verify the new test fails.
 
 ### Phase 2: Implementation (Green)
@@ -36,7 +36,7 @@ Run `go test -v src/internal/cli/cli_test.go src/internal/cli/cli.go ...` and ve
 - Ensure `core.EnsureConfigExists(".")` is called before entering either `handleUpdateFlow` or `handleNewInitFlow`.
 - Remove the redundant call from `handleNewInitFlow`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run the newly created test case and verify it passes.
 
 ### Phase 3: Validation & Cleanup
@@ -48,5 +48,5 @@ Run the newly created test case and verify it passes.
 **Action Steps:**
 - Run all tests in `src/internal/cli/` and `src/internal/core/` to ensure no regressions.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/cli/... ./src/internal/core/...`

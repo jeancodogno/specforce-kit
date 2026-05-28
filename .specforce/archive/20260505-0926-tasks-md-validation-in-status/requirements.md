@@ -22,7 +22,7 @@ The `spec status` command currently checks for the existence of the `tasks.md` f
 **Scenarios:**
 1. **[Happy Path]** GIVEN a `tasks.md` file with Phase headers (###), Task headers (####), and all mandatory fields (Target, Context, Action Steps, Verification) WHEN I run `specforce spec status` THEN the command succeeds.
 2. **[Edge Case]** GIVEN a `tasks.md` file where a Task header (`####`) appears before any Phase header (`###`) WHEN I run `specforce spec status` THEN the command reports a validation error: "Task found before any Phase definition".
-3. **[Edge Case]** GIVEN a task block missing the mandatory `**Verification (TDD):**` section WHEN I run `specforce spec status` THEN the command reports a validation error: "Task {ID} is missing mandatory Verification (TDD) section".
+3. **[Edge Case]** GIVEN a task block missing the mandatory `**Acceptance Check:**` section WHEN I run `specforce spec status` THEN the command reports a validation error: "Task {ID} is missing mandatory Verification (TDD) section".
 4. **[Edge Case]** GIVEN a task block where the `**Target:**` is empty or not formatted correctly WHEN I run `specforce spec status` THEN the command reports a validation error for that task.
 
 ### [REQ-2] Task ID Naming and Sequentiality

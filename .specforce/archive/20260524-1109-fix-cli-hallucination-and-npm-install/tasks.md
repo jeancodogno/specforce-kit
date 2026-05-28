@@ -19,7 +19,7 @@ lens: Integration
 **Action Steps:**
 - Add `const Version = "1.0.0-alpha.1"` to the package.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Create/Run a temporary test: `go test -v src/internal/core/constants_test.go` (if it exists) or verify with `grep`.
 
 ### Phase 2: AGENTS.md Hardening
@@ -32,7 +32,7 @@ lens: Integration
 - Update `agentsMDTemplate` to include "2. CLI Execution & Environment" and "3. Environment Recovery" sections.
 - Ensure the recovery command uses the centralized `Version` constant (via `fmt.Sprintf` or similar if needed, or string concatenation).
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go test -v src/internal/project/agents_md_test.go`.
 
 ### Phase 3: Command Kit Guardrails
@@ -44,7 +44,7 @@ lens: Integration
 **Action Steps:**
 - Add a `Guardrails` section with the CLI execution warning.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file: `grep "Guardrails" src/internal/agent/kit/commands/discovery.yaml`.
 
 - [x] T3.2: [DATA] Add Guardrails to Spec Command
@@ -54,7 +54,7 @@ lens: Integration
 **Action Steps:**
 - Add a `Guardrails` section.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file: `grep "Guardrails" src/internal/agent/kit/commands/spec.yaml`.
 
 - [x] T3.3: [DATA] Add Guardrails to Implement Command
@@ -64,7 +64,7 @@ lens: Integration
 **Action Steps:**
 - Add a `Guardrails` section.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file: `grep "Guardrails" src/internal/agent/kit/commands/implement.yaml`.
 
 - [x] T3.4: [DATA] Add Guardrails to Constitution Command
@@ -74,7 +74,7 @@ lens: Integration
 **Action Steps:**
 - Add a `Guardrails` section.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file: `grep "Guardrails" src/internal/agent/kit/commands/constitution.yaml`.
 
 - [x] T3.5: [DATA] Add Guardrails to Archive Command
@@ -84,7 +84,7 @@ lens: Integration
 **Action Steps:**
 - Add a `Guardrails` section.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect file: `grep "Guardrails" src/internal/agent/kit/commands/archive.yaml`.
 
 ### Phase 4: Final Verification
@@ -97,5 +97,5 @@ lens: Integration
 - Run `specforce refresh` (if available) or `specforce init` in a temp directory.
 - Verify the generated `AGENTS.md` matches the new template.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - `cat AGENTS.md | grep "Environment Recovery"`

@@ -20,7 +20,7 @@ The implementation follows a single-phase approach to update the orchestration i
 - Update the section `### 3. Verification & Handoff` to make the `status --json` command a mandatory terminal step.
 - Clarify that the summary MUST only be output if verification is successful.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/spec.yaml | grep "execute specforce spec status <slug> --json ONE final time"`
 
 - [x] T1.2: [CONFIG] Harden spec.yaml Guardrails
@@ -30,5 +30,5 @@ The implementation follows a single-phase approach to update the orchestration i
 **Action Steps:**
 - Add a new guardrail entry enforcing the final verification check for all sessions.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/spec.yaml | grep "MANDATORY FINAL CHECK"`

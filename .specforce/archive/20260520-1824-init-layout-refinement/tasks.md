@@ -21,7 +21,7 @@ lens: UI-heavy
 - Define `ActiveStatusStyle` (Cyan) and `ReadyStatusStyle` (Silver/Ice) in `theme.go` for the agent selection badges.
 - Update `PrintCompletionBox` in `components.go` to use `CleanBorder` and align the text padding to match the "Ghost Handoff" layout.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/tui/...` to ensure no existing TUI component tests are broken by style changes. Create a new test case for `PrintCompletionBox` if missing, verifying border application.
 
 - [x] T1.2: [CODE] Implement 'The Arsenal' Multiselect Layout
@@ -33,7 +33,7 @@ Run `go test ./src/internal/tui/...` to ensure no existing TUI component tests a
 - Update the item rendering to include a status badge (e.g., `[ ACTIVE ]` in Cyan when selected, `[ READY  ]` in Silver/Ice when unselected).
 - Align the output so the cursor, bullet, agent name, and status badge form a clean, readable column structure.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/tui/...`. If a test for `multiselect.go` UI output exists, update the expected string output to match the new bounded layout.
 
 ### Phase 2: Surgical Infrastructure Pulse
@@ -46,7 +46,7 @@ Run `go test ./src/internal/tui/...`. If a test for `multiselect.go` UI output e
 - Modify `BootstrapProject` to accept `core.UI` and utilize `ui.LogSubTask` for each directory created in the `dirs` array, instead of a single `StartSpinner`.
 - Format the `LogSubTask` string to match the Pulse aesthetic (e.g., `↳ .specforce/docs ................................. OK`).
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/project/...`. Verify that the mock UI in the tests captures the expected sequence of `LogSubTask` calls for each directory.
 
 - [x] T2.2: [CODE] Refine Initialization Service Output
@@ -57,7 +57,7 @@ Run `go test ./src/internal/project/...`. Verify that the mock UI in the tests c
 - Update `InitializeProject` to output a generic `ui.LogSubTask(" › DEPLOYING INFRASTRUCTURE...")` before calling `BootstrapProject`.
 - Remove redundant `ui.StartSpinner` or `ui.SubTask` calls inside `InitializeProject` that might clash with the new granular Pulse feedback from `BootstrapProject` and `agent.AdaptArtifacts`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/project/...` to ensure the overall initialization flow remains unbroken and the UI interactions are sequenced correctly.
 
 ### Phase 3: CLI Orchestration & Handoff Integration
@@ -72,7 +72,7 @@ Run `go test ./src/internal/project/...` to ensure the overall initialization fl
   "Specforce structure is live.\n\nNEXT: Run '/spf:discovery' to start the SDD cycle."
 - Verify the title of the completion box remains "MISSION ACCOMPLISHED".
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/cli/...`. Update any CLI integration tests that assert against the specific output string of a successful initialization to match the new Handoff text.
 
 ## 3. Pre-emptive Mitigations

@@ -21,7 +21,7 @@ lens: Balanced full-stack
 - Add explicit trigger keywords to `spf.spec` (plan, formalize, new feature).
 - Add a "Direct Edit Prohibition" rule: Agents MUST NOT use `replace` or `write_file` if no approved spec exists.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat AGENTS.md | grep "Proactive Mandate"` should show the new rules.
 
 - [x] T1.2: [DOCS] Clarify Orchestration Policy in engineering.md
@@ -31,7 +31,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Update "Agent Orchestration Protocol" to explicitly permit `spf.spec` while forbidding "Blackbox" LLM planning.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat .specforce/docs/engineering.md | grep "Primary Orchestration Only"` should show the distinction.
 
 ### Phase 2: Persist changes in Go template
@@ -43,7 +43,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Update `agentsMDTemplate` constant with the same changes made to `AGENTS.md` in T1.1.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "Proactive Mandate" src/internal/project/agents_md.go` should show the updated string.
 
 ### Phase 3: Update Source Kit Metadata
@@ -55,7 +55,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Update `description` to include "brainstorm", "research", "diagnose", "bug investigation", "root cause analysis", and "vague intent".
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/discovery.yaml | grep "bug investigation"` should show the update.
 
 - [x] T3.2: [DOCS] Refine Spec Metadata in Kit
@@ -65,6 +65,6 @@ lens: Balanced full-stack
 **Action Steps:**
 - Update `description` to include "plan", "initialize", "update specs", and "formalize".
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/spec.yaml | grep "formalize"` should show the update.
 

@@ -22,7 +22,7 @@ lens: Backend-heavy
 - Include a sample `tasks.md` with mixed `####` and `- [ ]` tasks.
 - Verify that `ParseTasks` returns the correct count and states for both formats.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -run TestParseTasks ./src/internal/spec/...`
 
 #### T1.2: [CODE] Refactor ParseTasks regex in implementation.go
@@ -34,7 +34,7 @@ lens: Backend-heavy
 - Update `taskHeaderRegex` in `extractTasksFromContent` to support both `####` and `- [ ]` prefixes.
 - Update `parseTaskBlock` to correctly map the checkbox character (`x`, `/`, ` `) to the `State` field if the `**State:**` tag is missing.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -run TestParseTasks ./src/internal/spec/...`
 
 #### T1.3: [TEST] Add checklist test cases to tasks_test.go
@@ -46,7 +46,7 @@ lens: Backend-heavy
 - Add `TestUpdateTaskStatusFile_WithChecklists` in `tasks_test.go`.
 - Assert that updating a task with a checklist correctly mutates the `[ ]` to `[x]`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -run TestUpdateTaskStatusFile ./src/internal/spec/...`
 
 #### T1.4: [CODE] Implement hybrid logic in tasks.go
@@ -57,7 +57,7 @@ lens: Backend-heavy
 **Action Steps:**
 - Update `findTaskBlock` and `updateTaskStatusFile` to support the natural format.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -run TestUpdateTaskStatusFile ./src/internal/spec/...`
 
 ### Phase 2: Template & Skill Alignment
@@ -71,7 +71,7 @@ lens: Backend-heavy
 - Set `- [ ]` as the default in the template.
 - Simplify instructions to remove strict `####` constraints.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `specforce spec artifact tasks` (Visual check).
 
 #### T2.2: [SCAFFOLD] Update task-atomic-decomposition skill
@@ -82,5 +82,5 @@ lens: Backend-heavy
 **Action Steps:**
 - Clean up any Specforce-specific formatting rules.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat .gemini/skills/task-atomic-decomposition/SKILL.md`

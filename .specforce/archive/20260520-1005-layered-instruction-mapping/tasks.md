@@ -20,7 +20,7 @@ The implementation follows a strict TDD (Red-Green-Refactor) cycle. We first upd
 **Action Steps:**
 - Locate the `DefaultConfigContent` constant.
 - Update the `instructions:` block comments to document that keys can be generic base types (requirements, design, tasks) or specific prefixed names (e.g., feature-requirements).
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go build ./...` to ensure no syntax errors.
 
 - [x] T1.2: Create Failing Unit Tests for Layered Mapping
@@ -32,7 +32,7 @@ The implementation follows a strict TDD (Red-Green-Refactor) cycle. We first upd
     - `bugfix-requirements` resolves to `requirements` instructions if specific ones are missing.
     - `tasks-for-design` resolves to `design` instructions (Right-to-Left inference).
     - Duplicate instructions are deduplicated.
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go test -v ./src/internal/spec/...` and verify the new tests FAIL (Red Stage).
 
 ### Phase 2: Green Stage (Implementation)
@@ -42,7 +42,7 @@ The implementation follows a strict TDD (Red-Green-Refactor) cycle. We first upd
 **Context:** [US-2]
 **Action Steps:**
 - Implement `inferBaseType(name string) string` using right-to-left keyword matching.
-**Verification (TDD):**
+**Acceptance Check:**
 - Run tests; ensure the inference-related test cases pass.
 
 - [x] T2.2: Implement Layered Instruction Resolution
@@ -50,7 +50,7 @@ The implementation follows a strict TDD (Red-Green-Refactor) cycle. We first upd
 **Context:** [US-1]
 **Action Steps:**
 - Implement `resolveInstructions(conf *core.ProjectConfig, name string) []string` to merge base and specific rules with deduplication.
-**Verification (TDD):**
+**Acceptance Check:**
 - Run tests; ensure the resolution logic passes.
 
 - [x] T2.3: Refactor GetArtifact to use Layered Logic
@@ -58,7 +58,7 @@ The implementation follows a strict TDD (Red-Green-Refactor) cycle. We first upd
 **Context:** [US-1]
 **Action Steps:**
 - Update `GetArtifact` to use `resolveInstructions`.
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go test -v ./src/internal/spec/...` and verify all tests pass (Green Stage).
 
 ### Phase 3: Refactor & Final Verification
@@ -69,7 +69,7 @@ The implementation follows a strict TDD (Red-Green-Refactor) cycle. We first upd
 **Action Steps:**
 - Improve naming and structure of the new private methods.
 - Ensure no regression in existing spec status logic.
-**Verification (TDD):**
+**Acceptance Check:**
 - Run all tests and ensure they remain GREEN.
 
 - [x] T3.2: Final E2E Verification
@@ -78,5 +78,5 @@ The implementation follows a strict TDD (Red-Green-Refactor) cycle. We first upd
 **Action Steps:**
 - Run `specforce spec artifact <slug> --json` with a test `config.yaml` containing layered rules.
 - Verify the output JSON contains both layers correctly.
-**Verification (TDD):**
+**Acceptance Check:**
 - Manually inspect JSON output.

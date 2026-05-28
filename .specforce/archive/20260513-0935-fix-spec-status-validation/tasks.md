@@ -20,7 +20,7 @@ lens: Backend-heavy
 - Modify `ValidateTasks` to check `state.currentPhase == 0` after the loop.
 - Append error "No valid Phase (### Phase N: Name) found in tasks.md" if zero phases were found.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test -v src/internal/spec/tasks_validation_repro_test.go` (created during discovery) and verify it passes.
 
 ### Phase 2: Conditional Deep Validation
@@ -36,7 +36,7 @@ Run `go test -v src/internal/spec/tasks_validation_repro_test.go` (created durin
 - Pass `shouldValidate` to `processArtifactStatus`.
 - In `processArtifactStatus`, only call `ValidateTasks` if `validate` is true.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Add a test case in `src/internal/spec/status_test.go` where `found < total` and `tasks.md` is malformed, verifying `ValidationErrors` is empty.
 
 ### Phase 3: Orchestrator Hardening
@@ -49,7 +49,7 @@ Add a test case in `src/internal/spec/status_test.go` where `found < total` and 
 - Update `### 2. Artifact Processing (Batch Execution)` to explicitly forbid status polling between artifacts.
 - Strengthen the `### 3. Verification & Handoff` section to explain that validation errors only appear when progress is 100%.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Inspect the file content and ensure the instructions are clear and unambiguous.
 
 ### Phase 4: Final Verification
@@ -62,7 +62,7 @@ Inspect the file content and ensure the instructions are clear and unambiguous.
 - Run `specforce spec status teste --json` (with a broken tasks.md).
 - Verify that it reports errors correctly if it's the only artifact or if the spec is complete.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual CLI execution.
 
 ## 3. Pre-emptive Mitigations

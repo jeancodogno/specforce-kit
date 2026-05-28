@@ -20,7 +20,7 @@ lens: Migration
 **Action Steps:**
 - Create directories: `docs/en`, `docs/pt`, `docs/es`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `ls -d docs/en docs/pt docs/es`
 
 #### T1.2: [MIGRATE] Move English Documentation
@@ -31,7 +31,7 @@ lens: Migration
 **Action Steps:**
 - Move all `.md` files currently in `docs/` to `docs/en/`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `ls docs/en` (should show artifacts.md, cli.md, etc.) and `ls docs/*.md` (should be empty).
 
 #### T1.3: [DOCS] Update English Root Links
@@ -43,7 +43,7 @@ lens: Migration
 - Update all links pointing to `docs/*.md` to `docs/en/*.md`.
 - Add language selector at the top: `🌎 **Idiomas / Languages:** [English](README.md) | [Português](README.pt.md) | [Español](README.es.md)`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual link check in README.md.
 
 #### T1.4: [DOCS] Update English Contributing Links
@@ -54,7 +54,7 @@ Manual link check in README.md.
 **Action Steps:**
 - Update any links pointing to `docs/*.md` to `docs/en/*.md`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual link check in CONTRIBUTING.md.
 
 ### Phase 2: Root Localization (PT/ES)
@@ -68,7 +68,7 @@ Manual link check in CONTRIBUTING.md.
 - Translate `README.md` to Portuguese.
 - Ensure all links point to `docs/pt/*.md`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual review of `README.pt.md`.
 
 #### T2.2: [DOCS] Localize README (Español)
@@ -80,7 +80,7 @@ Manual review of `README.pt.md`.
 - Translate `README.md` to Spanish.
 - Ensure all links point to `docs/es/*.md`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual review of `README.es.md`.
 
 #### T2.3: [DOCS] Localize CONTRIBUTING (PT & ES)
@@ -92,7 +92,7 @@ Manual review of `README.es.md`.
 - Translate `CONTRIBUTING.md` to Portuguese and Spanish.
 - Ensure links point to corresponding language folders.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual review.
 
 ### Phase 3: Folder Documentation Localization (PT/ES)
@@ -106,7 +106,7 @@ Manual review.
 - Translate all files in `docs/en/` to `docs/pt/`.
 - Ensure all internal links within `docs/pt/` stay within the `pt/` folder.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual link verification across all files in `docs/pt/`.
 
 #### T3.2: [DOCS] Localize docs/es/
@@ -118,7 +118,7 @@ Manual link verification across all files in `docs/pt/`.
 - Translate all files in `docs/en/` to `docs/es/`.
 - Ensure all internal links within `docs/es/` stay within the `es/` folder.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual link verification across all files in `docs/es/`.
 
 ## 3. Pre-emptive Mitigations

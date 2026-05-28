@@ -20,7 +20,7 @@ lens: Balanced full-stack
 - Modify the `instruction` section in `src/internal/agent/artifacts/spec/requirements.yaml` to mandate that every `[REQ-x]` block MUST include localized `UI/UX Specifics` and `Technical Constraints (NFR)`. 
 - Mandate a flexible `Attribute: Value` format for NFRs, including mandatory `Performance`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "Performance" src/internal/agent/artifacts/spec/requirements.yaml | grep "instruction"` should succeed.
 
 - [x] T1.2: [CONFIG] Update Instructions for Global Sections
@@ -30,7 +30,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Update the `instruction` section to require the presence of `Global UI/UX Contract` and `Global Non-Functional Requirements (NFRs)` sections.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "Global UI/UX Contract" src/internal/agent/artifacts/spec/requirements.yaml | grep "instruction"` should succeed.
 
 - [x] T1.3: [CONFIG] Refactor Conditional Omission Rule
@@ -40,7 +40,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Update the `Conditional Omission` rule in `instruction` to apply to the new `## 5. Global UI/UX Contract` section when lens is "Backend-heavy" or "Integration".
 
-**Verification (TDD):**
+**Acceptance Check:**
 Check that the rule now refers to the correct section name: `grep "Global UI/UX Contract" src/internal/agent/artifacts/spec/requirements.yaml` in the omission part.
 
 ### Phase 2: Refactor Template Structure
@@ -52,7 +52,7 @@ Check that the rule now refers to the correct section name: `grep "Global UI/UX 
 **Action Steps:**
 - In the `template` section of `src/internal/agent/artifacts/spec/requirements.yaml`, insert the `**UI/UX Specifics:**` block (View/Component, Feedback Logic, Keybindings) into the `[REQ-x]` structure.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "UI/UX Specifics" src/internal/agent/artifacts/spec/requirements.yaml` in the template section should succeed.
 
 - [x] T2.2: [CONFIG] Add Localized NFR Block to Requirement Template
@@ -62,7 +62,7 @@ Check that the rule now refers to the correct section name: `grep "Global UI/UX 
 **Action Steps:**
 - In the `template` section, insert the `**Technical Constraints (NFR):**` block with flexible `Attribute: Value` pairs (Safety, Validation, Performance, Observability) into the `[REQ-x]` structure.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "Performance" src/internal/agent/artifacts/spec/requirements.yaml` in the template section should succeed.
 
 - [x] T2.3: [CONFIG] Add Global UI/UX Contract Section
@@ -72,7 +72,7 @@ Check that the rule now refers to the correct section name: `grep "Global UI/UX 
 **Action Steps:**
 - Add the `## 5. Global UI/UX Contract (TUI Ghost Protocol)` section to the bottom of the `template` in `src/internal/agent/artifacts/spec/requirements.yaml`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "TUI Ghost Protocol" src/internal/agent/artifacts/spec/requirements.yaml` should succeed.
 
 - [x] T2.4: [CONFIG] Add Global NFRs Section
@@ -82,7 +82,7 @@ Check that the rule now refers to the correct section name: `grep "Global UI/UX 
 **Action Steps:**
 - Add the `## 6. Global Non-Functional Requirements (NFRs)` section with flexible `Attribute: Value` pairs (including Performance) to the bottom of the `template` in `src/internal/agent/artifacts/spec/requirements.yaml`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "Performance" src/internal/agent/artifacts/spec/requirements.yaml` in the global template section should succeed.
 
 - [x] T2.5: [CONFIG] Remove Legacy UI/UX Section
@@ -92,7 +92,7 @@ Check that the rule now refers to the correct section name: `grep "Global UI/UX 
 **Action Steps:**
 - Delete the old `## 5. UI/UX Contract` section from the `template`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "## 5." src/internal/agent/artifacts/spec/requirements.yaml | wc -l` should be 1.
 
 ### Phase 3: Final Verification
@@ -104,7 +104,7 @@ Check that the rule now refers to the correct section name: `grep "Global UI/UX 
 **Action Steps:**
 - Ensure the modified `src/internal/agent/artifacts/spec/requirements.yaml` is a valid YAML file.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `python3 -c 'import yaml, sys; yaml.safe_load(sys.stdin)' < src/internal/agent/artifacts/spec/requirements.yaml`
 
 - [x] T3.2: [TEST] Content Integrity Audit
@@ -114,5 +114,5 @@ Check that the rule now refers to the correct section name: `grep "Global UI/UX 
 **Action Steps:**
 - Verify that all sub-sections (Safety, Validation, Performance, Observability, etc.) defined in the requirements spec are present in the template.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual comparison between `requirements.md` and the final `requirements.yaml`.

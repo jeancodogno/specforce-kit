@@ -21,7 +21,7 @@ The implementation follows a "Templates-First" approach. We will first update th
 - Update the `template` section to replace `### [REQ-1]` with `### [US-1]`.
 - Update the `template` section to replace `### [REQ-2]` with `### [US-2]`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `grep "\[US-" src/internal/agent/artifacts/spec/requirements.yaml` and verify it returns matches in the template and instruction sections. Run `grep "\[REQ-" src/internal/agent/artifacts/spec/requirements.yaml` and verify it returns no matches in those specific sections.
 
 - [x] T1.2: [CODE] Update Tasks Template Prefix
@@ -32,7 +32,7 @@ Run `grep "\[US-" src/internal/agent/artifacts/spec/requirements.yaml` and verif
 - Navigate to the `template` section in `tasks.yaml`.
 - Replace all occurrences of `**Context:** [REQ-X]` with `**Context:** [US-X]`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `grep "\[US-X\]" src/internal/agent/artifacts/spec/tasks.yaml` and verify that the placeholder in the template now uses the US prefix.
 
 ### Phase 2: Test Alignment
@@ -46,7 +46,7 @@ Run `grep "\[US-X\]" src/internal/agent/artifacts/spec/tasks.yaml` and verify th
 - In `getHierarchyErrorCases`, update all `**Context:**` fields to use `US-1`.
 - In `getFieldAndPhaseErrorCases`, update all `**Context:**` fields to use `US-1`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/spec/...` and verify all tests pass.
 
 - [x] T2.2: [CLI] Global Regression Suite
@@ -56,7 +56,7 @@ Run `go test ./src/internal/spec/...` and verify all tests pass.
 **Action Steps:**
 - Execute the full project test suite to ensure that changing the prefix in templates and tests did not break any unexpected dependencies.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./...` and ensure the output ends with `PASS` and a 0 exit code.
 
 ### Phase 3: Verification of Exclusion
@@ -68,5 +68,5 @@ Run `go test ./...` and ensure the output ends with `PASS` and a 0 exit code.
 **Action Steps:**
 - Inspect the bugfix requirements template to ensure it still uses the `[FIX-x]` prefix.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `grep "\[FIX-" src/internal/agent/artifacts/spec/bug-requirements.yaml` and verify it still returns matches, and `grep "\[US-"` returns no matches in that file.

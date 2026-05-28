@@ -107,4 +107,5 @@
     - **Phases (H3):** Use `### Phase {N}: {Title}` for logical groupings.
     - **Tasks (H4):** Use `#### T{Phase}.{Task}: {Title}` for individual implementation steps.
 - **Action Step Density:** Every individual implementation task MUST contain at least two concrete, technically directive action steps. Tasks with insufficient density are considered "vague" and MUST be rejected by the validation engine.
+- **Task Verification Standard:** Every task MUST include an `**Acceptance Check:**` section containing a specific terminal command or test scenario. This label is mandatory and methodology-agnostic, serving as the "Definition of Done" for the task. The legacy label `**Verification (TDD):**` is deprecated and will trigger a validation error.
 - **DTO Pattern for Flat Access:** Domain models that implement nested structures (like `ImplementationReport` with `Phases`) MUST provide a `Tasks()` helper method that returns a flattened slice of all tasks. This ensures backward compatibility for scanners and progress calculators that expect a sequential list.

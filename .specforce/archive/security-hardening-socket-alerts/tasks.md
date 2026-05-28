@@ -21,7 +21,7 @@ lens: Backend-heavy
 - Remove the `"postinstall"` entry from the `scripts` object.
 - Remove the `"prepare"` entry from the `scripts` object.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `npm install` locally and verify that `make build` is NOT automatically triggered.
 
 ### Phase 2: Code Hardening
@@ -37,7 +37,7 @@ Run `npm install` locally and verify that `make build` is NOT automatically trig
 - If either check fails, invoke `runDiagnostic` and exit with code 1.
 - Add security comments explaining why `child_process` is used and how it prevents shell injection.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Temporarily modify `binaryPath` to a non-existent or relative path and verify that the diagnostic is triggered and the process exits correctly.
 
 ### Phase 3: Documentation & Governance
@@ -51,7 +51,7 @@ Temporarily modify `binaryPath` to a non-existent or relative path and verify th
 - Add a section about "Zero Scripts" installation policy.
 - Explicitly document the proxy security model (No shell, absolute path validation).
 
-**Verification (TDD):**
+**Acceptance Check:**
 Review the file to ensure it reflects the new security measures.
 
 #### T3.2: [DOCS] Record Memorial Lesson
@@ -62,7 +62,7 @@ Review the file to ensure it reflects the new security measures.
 **Action Steps:**
 - Record the decision to remove install scripts to mitigate socket.dev alerts and improve supply chain security.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Review the file content.
 
 ## 3. Pre-emptive Mitigations

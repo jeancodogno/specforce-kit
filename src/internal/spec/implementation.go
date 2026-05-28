@@ -235,7 +235,12 @@ func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int,
 
 	task.Target = extractField(taskBlock, `\*\*Target:\*\* \x60?([^\x60\n]*)\x60?`)
 	task.Context = extractField(taskBlock, `\*\*Context:\*\* \x60?([^\x60\n]*)\x60?`)
-	task.Verification = extractField(taskBlock, `(?s)\*\*Verification \(TDD\):\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
+
+	// Try Acceptance Check first, fallback to Verification (TDD)
+	task.Verification = extractField(taskBlock, `(?s)\*\*Acceptance Check:\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
+	if task.Verification == "" {
+		task.Verification = extractField(taskBlock, `(?s)\*\*Verification \(TDD\):\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
+	}
 
 	actionStepsRegex := regexp.MustCompile(`(?m)^- (.*)$`)
 	actionMatches := actionStepsRegex.FindAllSubmatch(taskBlock, -1)

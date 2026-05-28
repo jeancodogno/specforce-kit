@@ -20,7 +20,7 @@ lens: Backend-heavy
 - In `HandleArchiveInstructions`, replace the call to `e.getMemorialList()` with `memSvc.Consolidate(ctx, 10)`.
 - Update `config.Context["MEMORIAL_FRAGMENTS"]` to use this consolidated string.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `specforce archive instructions` and verify that the output contains the actual markdown content of the fragments instead of just a list of filenames.
 
 - [x] T1.2: [CODE] Implement Distill method in MemorialService
@@ -34,7 +34,7 @@ Run `specforce archive instructions` and verify that the output contains the act
   2. Append the summary with headers and timestamps.
   3. Delete the individual fragment files matching the provided slugs.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Create a unit test in `src/internal/project/memorial_test.go` that records 3 fragments, calls `Distill` for 2 of them, and verifies that `DISTILLED.md` contains the summary and the 2 files are gone.
 
 ### Phase 2: Distillation CLI
@@ -47,7 +47,7 @@ Create a unit test in `src/internal/project/memorial_test.go` that records 3 fra
 - Add a `distill` case to the `HandleArchive` switch statement.
 - Implement `HandleArchiveDistill(ctx, ui, slugs, summary, author)`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go build ./src/cmd/specforce` and verify the code compiles without errors.
 
 - [x] T2.2: [CLI] Define 'archive distill' command and flags
@@ -59,7 +59,7 @@ Run `go build ./src/cmd/specforce` and verify the code compiles without errors.
 - Mark both flags as required.
 - In `RunE`, call `executor.HandleArchiveDistill`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `specforce archive distill --help` and verify all flags are listed.
 
 ### Phase 3: Cleanup & Instructions
@@ -72,7 +72,7 @@ Run `specforce archive distill --help` and verify all flags are listed.
 - In `handleNewInitFlow`, add a step to check for the existence of `.specforce/docs/memorial.md` and delete it.
 - Also add this check to `HandleArchiveInstructions` to ensure immediate cleanup for existing users.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Create a dummy `.specforce/docs/memorial.md`, run `specforce archive instructions`, and verify the file is deleted.
 
 - [x] T3.2: [DOCS] Update Agent Instructions & Commands
@@ -83,7 +83,7 @@ Create a dummy `.specforce/docs/memorial.md`, run `specforce archive instruction
 - Update `src/internal/agent/kit/instructions/archive.md` to include Step 9: Memory Distillation.
 - Update `src/internal/agent/kit/commands/archive.yaml` to include the `distill` command mapping.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `specforce archive instructions` and verify the new step appears in the protocol.
 
 ## 3. Pre-emptive Mitigations

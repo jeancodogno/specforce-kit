@@ -22,7 +22,7 @@ lens: Backend-heavy
 - Implement `LoadMetadata` with backward compatibility (defaulting to `feature`).
 - Implement `SaveMetadata` using `yaml.Marshal`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/...` with a test case that creates a directory, saves metadata, and loads it back.
 
 ### Phase 2: Registry Evolution
@@ -35,7 +35,7 @@ lens: Backend-heavy
 - Add `GetForType(typeName, artifactName)`: Checks for `{type}-{name}.yaml`, then falls back to `{name}.yaml`.
 - Add `ListForType(typeName)`: Returns the ordered list of artifacts, prioritizing typed versions.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Unit test in `registry_test.go` with a mock filesystem containing `requirements.yaml` and `bug-requirements.yaml`.
 
 ### Phase 3: Command Implementation
@@ -48,7 +48,7 @@ Unit test in `registry_test.go` with a mock filesystem containing `requirements.
 - Add `--type` flag to the `init` command.
 - Call `spec.SaveMetadata` after directory creation.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `specforce spec init test-bug --type bug` should create `.specforce/specs/YYYYMMDD-HHMM-test-bug/spec.yaml` with `type: bug`.
 
 ### Phase 4: Status Integration
@@ -61,7 +61,7 @@ Unit test in `registry_test.go` with a mock filesystem containing `requirements.
 - Update `GetStatus` to load metadata at the start.
 - Use `registry.ListForType(meta.Type)` instead of the generic list.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `specforce spec status <slug>` should show different artifact lists based on the `type` in `spec.yaml`.
 
 ### Phase 5: Artifact Injection
@@ -73,7 +73,7 @@ Unit test in `registry_test.go` with a mock filesystem containing `requirements.
 **Action Steps:**
 - Define bug-specific requirements template (RCA, Reproduction, Evidence).
 
-**Verification (TDD):**
+**Acceptance Check:**
 `specforce spec artifact bug-requirements` shows the correct new template.
 
 - [x] T5.2: [DOCS] Create Bugfix-specialized design artifact
@@ -83,7 +83,7 @@ Unit test in `registry_test.go` with a mock filesystem containing `requirements.
 **Action Steps:**
 - Define bug-specific design template (Regression strategy, fix blueprint).
 
-**Verification (TDD):**
+**Acceptance Check:**
 `specforce spec artifact bug-design` shows the correct new template.
 
 ## 3. Pre-emptive Mitigations

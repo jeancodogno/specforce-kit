@@ -139,7 +139,7 @@ func updateTaskBlockState(task *taskBlock, trimmed string) {
 	} else if task.inActionSteps && strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "- [") {
 		task.hasActionItems = true
 		task.actionItemsCount++
-	} else if strings.HasPrefix(trimmed, "**Verification (TDD):**") {
+	} else if strings.HasPrefix(trimmed, "**Acceptance Check:**") || strings.HasPrefix(trimmed, "**Verification (TDD):**") {
 		task.hasVerify = true
 		task.inActionSteps = false
 	}
@@ -163,7 +163,7 @@ func (s *taskValidationState) validateLastTask(task *taskBlock) {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) has insufficient action density (found %d, expected at least 2)", task.id, task.line, task.actionItemsCount))
 	}
 	if !task.hasVerify {
-		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Verification (TDD):** section", task.id, task.line))
+		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Acceptance Check:** section", task.id, task.line))
 	}
 }
 

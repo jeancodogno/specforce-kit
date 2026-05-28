@@ -21,7 +21,7 @@ The implementation follows a data-first approach: update the core state model, i
 - Add `Worktree string` field to the `StateItem` struct.
 - Update `NewStateTree` or initialization logic if necessary.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/...` (Ensure no regressions in existing scanner tests and struct alignment).
 
 #### T1.2: [CODE] Implement Worktree Discovery
@@ -33,7 +33,7 @@ The implementation follows a data-first approach: update the core state model, i
 - Implement a helper function `discoverWorktrees` that executes `git worktree list --porcelain`.
 - Parse the output into a slice of structs containing `Path` and `Branch`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Add a unit test in `src/internal/spec/scanner_test.go` that mocks the git output and verifies parsing logic.
 
 ### Phase 2: Scanner Integration
@@ -50,7 +50,7 @@ Add a unit test in `src/internal/spec/scanner_test.go` that mocks the git output
 - If the path is an external worktree, execute `scanActiveSpecs` and `scanArchivedSpecs` (skipping `scanConstitution`).
 - Ensure `StateItem` instances are tagged with the `Worktree` (branch name) for external items.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v src/internal/spec/scanner_test.go` with a simulated multi-worktree environment.
 
 ### Phase 3: UI Rendering
@@ -64,5 +64,5 @@ Add a unit test in `src/internal/spec/scanner_test.go` that mocks the git output
 - Update the rendering logic in `renderDashboard` or the component responsible for the spec list.
 - If `item.Worktree` is not empty and not the current branch, append a muted label like `[wt:branch-name]` to the display name.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manually run `specforce console` in a repo with worktrees and verify the visual output.

@@ -66,7 +66,7 @@ The `ValidateTasks` function will be upgraded to perform content-aware validatio
 | **Action Quality** | Warning | `count(ActionSteps) < 3` |
 | **Phase Sequence** | Error | `CurrentPhaseID != PreviousPhaseID + 1` |
 | **Task Sequence** | Error | `CurrentTaskID != PreviousTaskID + 1` (within Phase) |
-| **Field Presence** | Error | Missing `**Target:**`, `**Context:**`, or `**Verification (TDD):**` |
+| **Field Presence** | Error | Missing `**Target:**`, `**Context:**`, or `**Acceptance Check:**` |
 
 #### Data Structure Changes:
 ```go

@@ -131,7 +131,7 @@ Strategy details here.
 - step 1
 - step 2
 
-**Verification (TDD):**
+**Acceptance Check:**
 run verify 1
 
 ### Phase 2: Implementation
@@ -143,7 +143,7 @@ run verify 1
 **Action Steps:**
 - step A
 
-**Verification (TDD):**
+**Acceptance Check:**
 run verify 2
 
 ## 3. Pre-emptive Mitigations

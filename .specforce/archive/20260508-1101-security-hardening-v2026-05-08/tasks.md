@@ -20,7 +20,7 @@ Foundation-up hardening: Secure the runtime and CI environment first, then enfor
 - Update `go` directive to `1.26.3`.
 - Run `go mod tidy`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go version` and `go mod verify` confirm the toolchain update.
 
 - [x] T1.2: [INFRA] Update CI/Release Workflows
@@ -30,7 +30,7 @@ Foundation-up hardening: Secure the runtime and CI environment first, then enfor
 **Action Steps:**
 - Update `go-version` to `1.26.3` in all workflow steps.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual inspection of `.github/workflows/` files.
 
 ### Phase 2: File Permission Hardening (REQ-2)
@@ -43,7 +43,7 @@ Manual inspection of `.github/workflows/` files.
 - Change `os.WriteFile` permission parameter from `0644` to `0600`.
 - Ensure directory creation for state uses `0750`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Test case asserting file mode is `0600` after state write.
 
 - [x] T2.2: [CODE] Tighten Spec Metadata Permissions
@@ -54,7 +54,7 @@ Test case asserting file mode is `0600` after state write.
 - Update `SaveMetadata` to use `0600` for file creation.
 - Ensure `os.MkdirAll` uses `0750`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/metadata_test.go` with file permission assertions.
 
 - [x] T2.3: [CODE] Tighten AGENTS.md Permissions
@@ -64,7 +64,7 @@ Test case asserting file mode is `0600` after state write.
 **Action Steps:**
 - Update `os.WriteFile` for `AGENTS.md` to use `0600`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Verification of `AGENTS.md` permissions in project initialization tests.
 
 ### Phase 3: Static Analysis & Security Refinement (REQ-3)
@@ -76,7 +76,7 @@ Verification of `AGENTS.md` permissions in project initialization tests.
 **Action Steps:**
 - Remove `-exclude=G304,G306,G703` from the `security` target.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `make security` fails (confirming scanning is active and strict).
 
 - [x] T3.2: [CODE] Apply Granular Justifications in Upgrade Service
@@ -86,7 +86,7 @@ Verification of `AGENTS.md` permissions in project initialization tests.
 **Action Steps:**
 - Add `// #nosec G304` with "Path validated by core.SecurePath" justification to `os.Open` and `os.Create` sites.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `make security` passes for the modified files.
 
 - [x] T3.3: [CODE] Apply Granular Justifications in Spec Service
@@ -96,7 +96,7 @@ Verification of `AGENTS.md` permissions in project initialization tests.
 **Action Steps:**
 - Add `// #nosec G304` with justification to `os.ReadFile` and `os.Open` calls.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `make security` passes for the modified files.
 
 - [x] T3.4: [CODE] Apply Granular Justifications in Agent & Project
@@ -106,7 +106,7 @@ Verification of `AGENTS.md` permissions in project initialization tests.
 **Action Steps:**
 - Add `#nosec G304` in Agent Registry and `#nosec G703` in Project Service with appropriate justifications.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `make security` returns zero findings across the codebase.
 
 ### Phase 4: Final Verification
@@ -120,5 +120,5 @@ Verification of `AGENTS.md` permissions in project initialization tests.
 - Run `go mod verify`.
 - Run `go test ./...`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 All tests and scans pass cleanly on the new Go 1.26.3 baseline.

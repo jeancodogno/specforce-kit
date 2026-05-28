@@ -25,7 +25,7 @@ lens: Backend-heavy
 - Prepend timestamp to the final segment if missing.
 - Sanitize the resulting segment to prevent double hyphens (e.g., `-feature` -> `{TS}-feature`).
 - Join segments back using `filepath.FromSlash`.
-**Verification (TDD):** `go test -v ./src/internal/spec/slug_test.go` (Note: Test file created in T1.2)
+**Acceptance Check:** `go test -v ./src/internal/spec/slug_test.go` (Note: Test file created in T1.2)
 
 #### T1.2: [TEST] Implement Unit Tests for PrepareSlug
 **State:** [FINISHED]
@@ -39,7 +39,7 @@ lens: Backend-heavy
     - Already timestamped: `20260101-1200-feature` -> `20260101-1200-feature`.
     - Hyphen prefix: `-feature` -> `YYYYMMDD-HHMM-feature`.
     - Multiple slashes: `team-a//feature` -> `team-a/YYYYMMDD-HHMM-feature`.
-**Verification (TDD):** `go test -v ./src/internal/spec/slug_test.go`
+**Acceptance Check:** `go test -v ./src/internal/spec/slug_test.go`
 
 ### Phase 2: CLI Integration
 
@@ -51,7 +51,7 @@ lens: Backend-heavy
 - In `HandleSpecInit`, call `spec.PrepareSlug(slug)` to transform the input.
 - Assign the result back to the `slug` variable.
 - Ensure the updated `slug` is used for `spec.SpecExists`, `filepath.Join`, and logging.
-**Verification (TDD):** `go test -v ./src/internal/cli/cli_test.go`
+**Acceptance Check:** `go test -v ./src/internal/cli/cli_test.go`
 
 #### T2.2: [UI] Verify CLI Output and Directory Creation
 **State:** [FINISHED]
@@ -61,7 +61,7 @@ lens: Backend-heavy
 - Run `go run src/cmd/specforce/main.go spec init manual-verification-test`.
 - Confirm the output displays the timestamped path.
 - Confirm the directory `.specforce/specs/<TS>-manual-verification-test` exists.
-**Verification (TDD):** `ls -d .specforce/specs/*manual-verification-test`
+**Acceptance Check:** `ls -d .specforce/specs/*manual-verification-test`
 
 ### Phase 3: Integration Testing
 
@@ -72,4 +72,4 @@ lens: Backend-heavy
 **Action Steps:**
 - Add a new integration test case in `src/internal/agent/integration_test.go` that specifically checks the timestamping behavior during `spec init`.
 - Verify both root-level and nested-level spec initialization.
-**Verification (TDD):** `go test -v ./src/internal/agent/integration_test.go`
+**Acceptance Check:** `go test -v ./src/internal/agent/integration_test.go`

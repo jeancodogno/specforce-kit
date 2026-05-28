@@ -83,12 +83,12 @@ func TestNewAgentMappings(t *testing.T) {
 
 func testAgentMappings(t *testing.T, projectRoot string, kitFS fs.FS, kitConfig *core.KitConfig, agentID, folder string) {
 	// Test agent mapping
-	err := processBlueprint(context.Background(), projectRoot, kitFS, kitConfig, "agents/technical-developer.yaml", agentID, installer.Options{})
+	err := processBlueprint(context.Background(), projectRoot, kitFS, kitConfig, "agents/specforce-developer.yaml", agentID, installer.Options{})
 	if err != nil {
 		t.Fatalf("processBlueprint failed for %s: %v", agentID, err)
 	}
 
-	expectedPath := filepath.Join(projectRoot, folder, "agents/technical-developer.md")
+	expectedPath := filepath.Join(projectRoot, folder, "agents/specforce-developer.md")
 	if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
 		t.Errorf("expected file %s to exist", expectedPath)
 	}

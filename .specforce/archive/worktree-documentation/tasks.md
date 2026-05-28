@@ -25,7 +25,7 @@ lens: Balanced full-stack
 - Add the main title: `# Git Worktree Support`.
 - Add placeholder headers for: Introduction, Discovery Engine, Constraints, and Scanning Scope.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `test -f docs/git-worktrees.md && grep -q "# Git Worktree Support" docs/git-worktrees.md`
 
 ### Phase 2: Documentation Implementation
@@ -39,7 +39,7 @@ lens: Balanced full-stack
 - Describe how Specforce automatically detects linked git worktrees.
 - Explain the benefit of seeing specs from multiple branches (e.g., `main`, `feature/X`) simultaneously in the TUI console.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep -q "Discovery Engine" docs/git-worktrees.md && grep -i "git worktree" docs/git-worktrees.md`
 
 #### T2.2: [DOC] Detail Permissions and Read-Only Constraints
@@ -52,7 +52,7 @@ lens: Balanced full-stack
 - Clarify that task modification, state transitions, and file edits are blocked for external specs.
 - Note that `.specforce/docs/` (Constitution) from external worktrees are ignored to maintain local architectural integrity.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep -q "Read-Only" docs/git-worktrees.md && grep -q "Constitution" docs/git-worktrees.md`
 
 #### T2.3: [DOC] Define Scanning Scope
@@ -64,7 +64,7 @@ lens: Balanced full-stack
 - Explain what artifacts are included in the cross-worktree scan.
 - List: Active Specs (`.specforce/specs/**`), Implementations (referenced in specs), and Archived Specs (`.specforce/archive/**`).
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep -q "Active Specs" docs/git-worktrees.md && grep -q "Archived Specs" docs/git-worktrees.md`
 
 ### Phase 3: README Integration
@@ -79,5 +79,5 @@ lens: Balanced full-stack
 - Add a bullet point or link describing "Git Worktree Support".
 - Link directly to `docs/git-worktrees.md`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep -q "docs/git-worktrees.md" README.md`

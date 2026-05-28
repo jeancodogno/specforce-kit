@@ -21,7 +21,7 @@ Foundation-up: Core logic first (Registry/Status), then CLI exposure, and finall
 - If prefix exists, use `GetForType(prefix, base)`.
 - Fallback to base if not found.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/registry_test.go` (Add a test case for prefixed lookup).
 
 - [x] T1.2: [CODE] Harden Metadata Defaulting
@@ -31,7 +31,7 @@ Foundation-up: Core logic first (Registry/Status), then CLI exposure, and finall
 **Action Steps:**
 - Ensure `LoadMetadata` always returns `Type: "feature"` if the field is missing or file is absent.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/metadata_test.go`.
 
 ### Phase 2: Status & CLI Handlers
@@ -45,7 +45,7 @@ Foundation-up: Core logic first (Registry/Status), then CLI exposure, and finall
 - Update `processArtifactStatus` to prefix `ArtifactStatus.Name` with the spec type.
 - Ensure `Path` remains the physical base path.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/spec/status_test.go`.
 
 - [x] T2.2: [CODE] Update CLI spec init and status
@@ -56,7 +56,7 @@ Foundation-up: Core logic first (Registry/Status), then CLI exposure, and finall
 - Add type validation to `HandleSpecInit`.
 - Include type in the success message.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go run src/cmd/specforce/main.go spec init test-bug --type bug --json`.
 
 ### Phase 3: Orchestration Kit
@@ -69,7 +69,7 @@ Foundation-up: Core logic first (Registry/Status), then CLI exposure, and finall
 - Update initialization instructions to ask for type.
 - Update artifact fetch logic to use the names from status JSON.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual inspection of the YAML content.
 
 ### Phase 4: Final Verification
@@ -83,5 +83,5 @@ Manual inspection of the YAML content.
 - Check status --json (verify prefixed names).
 - Run `spec artifact bug-requirements --json`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 All commands return expected type-aware outputs.

@@ -1,0 +1,52 @@
+slug: 20260527-2259-standardize-acceptance-check
+name: 20260527-2259-standardize-acceptance-check
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-05-28T02:07:17.120432412Z
+              completed_at: 2026-05-28T02:08:39.102696286Z
+    T1.2:
+        sessions:
+            - started_at: 2026-05-28T02:08:46.933410586Z
+              completed_at: 2026-05-28T02:09:12.902630341Z
+    T1.3:
+        sessions:
+            - started_at: 2026-05-28T02:09:20.965265702Z
+              completed_at: 2026-05-28T02:09:50.886763896Z
+    T1.4:
+        sessions:
+            - started_at: 2026-05-28T02:07:58.354103933Z
+              completed_at: 2026-05-28T02:08:29.840115474Z
+    T2.1:
+        sessions:
+            - started_at: 2026-05-28T02:09:59.194129758Z
+              completed_at: 2026-05-28T02:10:35.135928458Z
+    T2.2:
+        sessions:
+            - started_at: 2026-05-28T02:10:43.561208935Z
+              completed_at: 2026-05-28T02:11:05.955179051Z
+    T2.3:
+        sessions:
+            - started_at: 2026-05-28T02:11:14.335677949Z
+              completed_at: 2026-05-28T02:11:29.83356839Z
+    T2.4:
+        sessions:
+            - started_at: 2026-05-28T02:11:38.682442123Z
+              completed_at: 2026-05-28T02:12:02.226461992Z
+    T3.1:
+        sessions:
+            - started_at: 2026-05-28T02:12:10.589838018Z
+              completed_at: 2026-05-28T02:12:37.509801821Z
+    T3.2:
+        sessions:
+            - started_at: 2026-05-28T02:12:45.838214766Z
+              completed_at: 2026-05-28T03:38:13.575984526Z
+    T4.1:
+        sessions:
+            - started_at: 2026-05-28T03:38:22.328416573Z
+              completed_at: 2026-05-28T03:39:11.741433685Z
+    T4.2:
+        sessions:
+            - started_at: 2026-05-28T03:39:20.43162204Z
+              completed_at: 2026-05-28T03:40:04.344903221Z

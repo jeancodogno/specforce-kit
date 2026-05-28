@@ -38,7 +38,7 @@ template: |
   - [Step 1: Concrete change]
   - [Step 2: Concrete change]
 
-  **Verification (TDD):**
+  **Acceptance Check:**
   [MANDATORY: Define the exact test scenario or CLI command the developer MUST write/run to prove this task works.]
 
   ### Phase 2: [Phase Name]
@@ -50,7 +50,7 @@ template: |
   **Action Steps:**
   - [Step 1: Concrete change]
 
-  **Verification (TDD):**
+  **Acceptance Check:**
   [Explicit test scenario or CLI command]
 
   ## 3. Pre-emptive Mitigations

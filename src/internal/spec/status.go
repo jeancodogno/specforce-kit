@@ -134,7 +134,7 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug, specType stri
 		}
 
 		if len(validationErrors) > 0 {
-			validationGuide = "### Phase 1: Example Phase\n- [ ] T1.1: Example Task\n**Target:** `path/to/file.go`\n**Context:** [US-1]\n**Action Steps:**\n- Step 1\n**Verification (TDD):**\n- run test"
+			validationGuide = "### Phase 1: Example Phase\n- [ ] T1.1: Example Task\n**Target:** `path/to/file.go`\n**Context:** [US-1]\n**Action Steps:**\n- Step 1\n**Acceptance Check:**\n- run test"
 		}
 	}
 

@@ -21,7 +21,7 @@ lens: Backend-heavy
 - Modify `Artifact` struct: Change `Path` field YAML tag to `yaml:"path,omitempty"`.
 - Update `loadArtifact` function: Check if `art.Path` is set before applying default `.specforce/docs/` logic.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/constitution/...` (Add test case for path override).
 
 - [x] T1.2: Configure Memorial custom path
@@ -31,7 +31,7 @@ lens: Backend-heavy
 **Action Steps:**
 - Add `path: .specforce/memorial/ROUTING.md` to the YAML frontmatter.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "path: .specforce/memorial/ROUTING.md" src/internal/agent/artifacts/constitution/memorial.yaml`
 
 ### Phase 2: Memorial Service Refactor
@@ -45,7 +45,7 @@ lens: Backend-heavy
 - Replace hardcoded `routingContent` with the `template` parameter.
 - Add minimal fallback if `template` is empty.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Compilation check (will fail until T2.2 is done).
 
 - [x] T2.2: Update Memorial unit tests
@@ -56,7 +56,7 @@ Compilation check (will fail until T2.2 is done).
 - Update all `Initialize(ctx)` calls to `Initialize(ctx, template)`.
 - Add test case verifying custom template content in `ROUTING.md`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v src/internal/project/memorial_test.go`
 
 ### Phase 3: Service Integration & Verification
@@ -69,7 +69,7 @@ Compilation check (will fail until T2.2 is done).
 - Load `memorial` artifact from registry in `InitializeProject`.
 - Pass artifact template to `memSvc.Initialize`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go build ./src/cmd/specforce/...`
 
 - [x] T3.2: Final Integration Verification
@@ -80,5 +80,5 @@ Compilation check (will fail until T2.2 is done).
 - Run `specforce init` in a fresh directory.
 - Verify `ROUTING.md` content and `specforce constitution status` output.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual verification as defined in requirements.md.

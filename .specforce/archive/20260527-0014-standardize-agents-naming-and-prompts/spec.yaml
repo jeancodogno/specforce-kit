@@ -1,0 +1,28 @@
+slug: 20260527-0014-standardize-agents-naming-and-prompts
+name: 20260527-0014-standardize-agents-naming-and-prompts
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-05-27T03:23:45.402495996Z
+              completed_at: 2026-05-27T03:30:57.735690897Z
+    T1.2:
+        sessions:
+            - started_at: 2026-05-27T03:24:07.876111465Z
+              completed_at: 2026-05-27T03:31:03.620312027Z
+    T2.1:
+        sessions:
+            - started_at: 2026-05-27T03:24:15.788318256Z
+              completed_at: 2026-05-27T03:31:09.250380979Z
+    T2.2:
+        sessions:
+            - started_at: 2026-05-27T03:25:00.639115778Z
+              completed_at: 2026-05-27T03:31:14.970653999Z
+    T3.1:
+        sessions:
+            - started_at: 2026-05-27T03:26:02.061487418Z
+              completed_at: 2026-05-27T03:31:20.613693877Z
+    T3.2:
+        sessions:
+            - started_at: 2026-05-27T03:26:27.932652023Z
+              completed_at: 2026-05-27T03:31:26.450470746Z

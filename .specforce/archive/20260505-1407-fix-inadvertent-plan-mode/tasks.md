@@ -21,7 +21,7 @@ lens: Integration
 - Add an "Internalized Planning" guardrail in the `content` block.
 - Update Step 2.B (Agent Discovery) in the `content` block to include a "Context-Isolation" directive.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the file content contains the new instructions.
 
 ### Phase 2: Subagent Constraint Hardening (Source)
@@ -33,7 +33,7 @@ lens: Integration
 **Action Steps:**
 - Add an "Atomic Execution" guardrail to the `content` block.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the file content.
 
 - [x] T2.2: [CODE] Update Product Analyst Master Template
@@ -43,7 +43,7 @@ lens: Integration
 **Action Steps:**
 - Add an "Atomic Execution" guardrail to the `content` block.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the file content.
 
 - [x] T2.3: [CODE] Update Technical Project Planner Master Template
@@ -53,7 +53,7 @@ lens: Integration
 **Action Steps:**
 - Add an "Atomic Execution" guardrail to the `content` block.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the file content.
 
 - [x] T2.4: [CODE] Update Technical QA Engineer Master Template
@@ -63,5 +63,5 @@ lens: Integration
 **Action Steps:**
 - Add an "Atomic Execution" guardrail to the `content` block.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the file content.

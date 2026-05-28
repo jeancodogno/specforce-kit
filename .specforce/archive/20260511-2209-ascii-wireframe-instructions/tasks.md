@@ -20,7 +20,7 @@ Re-implement updates to kit commands, agent definitions, and the design artifact
 - Update the "Interface Wireframing (ASCII Layouts)" section to mention all UI types (Web, TUI, etc.).
 - Ensure the example remains ASCII-based.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/discovery.yaml` and verify the generalized language.
 
 - [x] T1.2: [SCAFFOLD] Update spec.yaml (General UI)
@@ -30,7 +30,7 @@ Re-implement updates to kit commands, agent definitions, and the design artifact
 **Action Steps:**
 - Generalize the task verification step for any UI layout.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/commands/spec.yaml` and verify the content update.
 
 - [x] T1.3: [SCAFFOLD] Update technical-solution-architect.yaml (General UI)
@@ -40,7 +40,7 @@ Re-implement updates to kit commands, agent definitions, and the design artifact
 **Action Steps:**
 - Update section `4. Surface Blueprint` to mandate ASCII wireframes for all UI types.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/kit/agents/technical-solution-architect.yaml` and verify the mandate.
 
 ### Phase 2: Update Artifact Template (General UI)
@@ -52,7 +52,7 @@ Re-implement updates to kit commands, agent definitions, and the design artifact
 **Action Steps:**
 - Generalize the ASCII wireframe mandate to include all UI surfaces.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/artifacts/spec/design.yaml` and verify the instruction line.
 
 ### Phase 3: Verification
@@ -64,5 +64,5 @@ Re-implement updates to kit commands, agent definitions, and the design artifact
 **Action Steps:**
 - Run the agent test suite to ensure YAML parsing still works.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/agent/...`

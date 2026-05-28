@@ -24,7 +24,7 @@ The implementation follows a logical flow from internal domain logic to the user
 - Add `ValidationErrors []string` to `ArtifactStatus` struct.
 - Add `IsValid bool` to `SpecStatus` struct.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify that `go build ./src/internal/spec/...` succeeds and the new fields are available in the JSON tags.
 
 - [x] T1.2: [CODE] Implement `ValidateTasks` in `tasks.go`
@@ -40,10 +40,10 @@ The implementation follows a logical flow from internal domain logic to the user
     - `**Target:**`
     - `**Context:**`
     - `**Action Steps:**` (must have at least one `-` item)
-    - `**Verification (TDD):**`
+    - `**Acceptance Check:**`
 - Validate no Phase is empty.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Create a new test file `src/internal/spec/tasks_validation_test.go` with table-driven tests covering happy paths, malformed hierarchies, naming violations, and missing mandatory task block sections.
 
 ### Phase 2: Service Integration
@@ -57,7 +57,7 @@ The implementation follows a logical flow from internal domain logic to the user
 - Populate `ArtifactStatus.ValidationErrors` for the "tasks" artifact.
 - Set `SpecStatus.IsValid` to `false` if any validation errors are found.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Update `src/internal/spec/status_test.go` to include a test case where a malformed `tasks.md` is present and verify `IsValid` is false.
 
 ### Phase 3: CLI & TUI Enhancement
@@ -70,7 +70,7 @@ The implementation follows a logical flow from internal domain logic to the user
 - Update `RenderSpecStatus` to check for `ValidationErrors` in each artifact.
 - If errors exist, render them below the artifact description in a red-indented list.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go run ./src/cmd/specforce/main.go spec status <slug>` on a spec with a malformed `tasks.md` and visually confirm the error reporting.
 
 ## 3. Pre-emptive Mitigations

@@ -22,7 +22,7 @@ lens: Integration
 - Add explicit instructions for `Layer 3: Consultative Brainstorming` detailing the requirement to present 1-3 paths with trade-offs.
 - Ensure the Non-Mutation Covenant remains prominently displayed.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `/spf:discovery` on a dummy vague request (e.g., "I want to add a caching layer") and verify the agent:
 1. Reads the constitution.
 2. Checks the codebase for existing caching.

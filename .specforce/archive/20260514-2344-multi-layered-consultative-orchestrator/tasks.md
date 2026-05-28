@@ -22,7 +22,7 @@ The implementation focuses on refactoring the `spec.yaml` instruction file. Sinc
 - Explicitly define the "Empirical Grounding" step.
 - Explicitly define the "Consultative Grill" step with the recommendation mandate.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `/spf:spec` on a dummy request and verify that the agent:
 1. Mentions reading `.specforce/docs/`.
 2. Performs a `grep` or search for existing code.

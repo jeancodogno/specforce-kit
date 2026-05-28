@@ -21,7 +21,7 @@ lens: Technical-Debt
 - Add `evalPath(path string) string` helper function to `scanner.go` that uses `filepath.EvalSymlinks` and `filepath.Abs`.
 - Update `ScanProject` to use `evalPath` for both `projectRoot` and `wt.Path` before comparison in `isMainRoot`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -run TestScanProject_WithWorktrees ./src/internal/spec/...`
 
 #### T1.2: [TEST] Make tilde expansion test resilient to platform fallbacks
@@ -34,7 +34,7 @@ lens: Technical-Debt
 - After unsetting `HOME`, call `os.UserHomeDir()`.
 - If `err == nil`, call `t.Skip` with a message explaining that the platform has a fallback for home directory.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -run TestResolveMapping_TildeExpansionFailure ./src/internal/agent/...`
 
 ### Phase 2: Improve upgrade Package Coverage (>80%)
@@ -49,7 +49,7 @@ lens: Technical-Debt
 - Add `TestNewNPMInstaller` to `installer_npm_test.go`.
 - Add `TestNewStateManager` to `state_test.go`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -cover ./src/internal/upgrade/...`
 
 #### T2.2: [TEST] Implement tests for binary replacement and move fallback
@@ -61,7 +61,7 @@ lens: Technical-Debt
 - Add `TestBinaryInstaller_Replace` (mocking `os.Executable` or testing via a helper).
 - Add `TestBinaryInstaller_MoveFile_Fallback` to test the copy+delete logic in `moveFile`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -cover ./src/internal/upgrade/...`
 
 #### T2.3: [TEST] Test Service.PerformUpgrade and error paths
@@ -73,7 +73,7 @@ lens: Technical-Debt
 - Add `TestService_PerformUpgrade` to `service_test.go`.
 - Add tests for failure scenarios in `BinaryInstaller.DownloadAndVerify` (e.g., checksum mismatch, download error).
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v -cover ./src/internal/upgrade/...`
 
 ### Phase 3: Final Verification
@@ -87,5 +87,5 @@ lens: Technical-Debt
 - Run the full test suite with coverage.
 - Verify that the `upgrade` package coverage is above 80%.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out | grep "github.com/jeancodogno/specforce-kit/src/internal/upgrade" | awk '{print $NF}'`

@@ -70,7 +70,7 @@ func getHappyPathCases() []validateTasksTestCase {
 **Action Steps:**
 - Run init
 - Verify output
-**Verification (TDD):**
+**Acceptance Check:**
 Check files`,
 			expected: nil,
 		},
@@ -87,7 +87,7 @@ func getDensityErrorCases() []validateTasksTestCase {
 **Context:** US-1
 **Action Steps:**
 - Only one step
-**Verification (TDD):**
+**Acceptance Check:**
 Verify`,
 			expected: []string{
 				"Task T1.1 (line 2) has insufficient action density (found 1, expected at least 2)",
@@ -106,7 +106,7 @@ func getHierarchyErrorCases() []validateTasksTestCase {
 **Action Steps:**
 - Do something
 - Step 2
-**Verification (TDD):**
+**Acceptance Check:**
 Check it`,
 			expected: []string{
 				"Task T1.1 (line 1) found before any Phase definition",
@@ -131,7 +131,7 @@ Check it`,
 **Action Steps:**
 - Do something
 - Step 2
-**Verification (TDD):**
+**Acceptance Check:**
 Check it`,
 			expected: []string{"Task T2.1 (line 2) does not match the parent Phase 1"},
 		},
@@ -144,7 +144,7 @@ Check it`,
 **Action Steps:**
 - Do something
 - Step 2
-**Verification (TDD):**
+**Acceptance Check:**
 Check it
 - [ ] T1.3: Gapped Task
 **Target:** CLI
@@ -152,7 +152,7 @@ Check it
 **Action Steps:**
 - Do something
 - Step 2
-**Verification (TDD):**
+**Acceptance Check:**
 Check it`,
 			expected: []string{"Task sequence gap at line 10: expected T1.2, found T1.3"},
 		},
@@ -169,7 +169,7 @@ func getFieldAndPhaseErrorCases() []validateTasksTestCase {
 				"Task T1.1 (line 2) is missing mandatory **Target:** field",
 				"Task T1.1 (line 2) is missing mandatory **Context:** field",
 				"Task T1.1 (line 2) is missing mandatory **Action Steps:** header",
-				"Task T1.1 (line 2) is missing mandatory **Verification (TDD):** section",
+				"Task T1.1 (line 2) is missing mandatory **Acceptance Check:** section",
 			},
 		},
 		{
@@ -182,7 +182,7 @@ func getFieldAndPhaseErrorCases() []validateTasksTestCase {
 **Action Steps:**
 - Step
 - Step 2
-**Verification (TDD):**
+**Acceptance Check:**
 Verify`,
 			expected: []string{"Phase 1 (line 1) has no tasks"},
 		},
@@ -193,7 +193,7 @@ Verify`,
 **Target:** CLI
 **Context:** US-1
 **Action Steps:**
-**Verification (TDD):**
+**Acceptance Check:**
 - Step that looks like action step but is under verification`,
 			expected: []string{
 				"Task T1.1 (line 2) is missing mandatory items under **Action Steps:**",

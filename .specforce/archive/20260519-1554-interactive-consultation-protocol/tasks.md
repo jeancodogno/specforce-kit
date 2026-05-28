@@ -15,7 +15,7 @@ Update the foundational agent guidance template in the Go source.
 **Action Steps:**
 - Add "## 5. Interactive Consultation Protocol" section to the template string.
 - Include the agnostic tool usage mandate.
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/project/agents_md_test.go` and manual inspection.
 
 - [x] T1.2: [TEST] Run existing tests for `AGENTS.md` generation
@@ -23,7 +23,7 @@ Update the foundational agent guidance template in the Go source.
 **Context:** [AC-1]
 **Action Steps:**
 - Execute the project's internal tests to ensure no marker regressions.
-**Verification (TDD):**
+**Acceptance Check:**
 Test suite passes.
 
 ### Phase 2: Agent Kit Personas
@@ -34,7 +34,7 @@ Inject the protocol into individual agent definitions.
 **Context:** [US-2, AC-2]
 **Action Steps:**
 - Append the protocol to the `content` field.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep` for the protocol in the file.
 
 - [x] T2.2: [KIT] Update `technical-developer.yaml`
@@ -42,7 +42,7 @@ Inject the protocol into individual agent definitions.
 **Context:** [US-2, AC-2]
 **Action Steps:**
 - Append the protocol to the `content` field.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep` for the protocol in the file.
 
 - [x] T2.3: [KIT] Update `technical-project-planner.yaml`
@@ -50,7 +50,7 @@ Inject the protocol into individual agent definitions.
 **Context:** [US-2, AC-2]
 **Action Steps:**
 - Append the protocol to the `content` field.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep` for the protocol in the file.
 
 - [x] T2.4: [KIT] Update `technical-qa-engineer.yaml`
@@ -58,7 +58,7 @@ Inject the protocol into individual agent definitions.
 **Context:** [US-2, AC-2]
 **Action Steps:**
 - Append the protocol to the `content` field.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep` for the protocol in the file.
 
 - [x] T2.5: [KIT] Update `technical-solution-architect.yaml`
@@ -66,7 +66,7 @@ Inject the protocol into individual agent definitions.
 **Context:** [US-2, AC-2]
 **Action Steps:**
 - Append the protocol to the `content` field.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep` for the protocol in the file.
 
 ### Phase 3: Core Skills Refinement
@@ -77,7 +77,7 @@ Update the logic of interactive skills.
 **Context:** [US-3, AC-3]
 **Action Steps:**
 - Update "Interview Rules" to mandate native tool usage.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep` for the protocol in the file.
 
 - [x] T3.2: [KIT] Update `opportunity-framing/SKILL.yaml`
@@ -85,7 +85,7 @@ Update the logic of interactive skills.
 **Context:** [US-3, AC-3]
 **Action Steps:**
 - Update "How to use it" to mandate native tool usage.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep` for the protocol in the file.
 
 ### Phase 4: Final Validation
@@ -96,5 +96,5 @@ Comprehensive verification of the implementation.
 **Context:** [AC-4]
 **Action Steps:**
 - Perform a workspace-wide grep to ensure all components are updated.
-**Verification (TDD):**
+**Acceptance Check:**
 `grep -r "Interactive Consultation Protocol" src/internal/agent/kit/` returns all expected files.

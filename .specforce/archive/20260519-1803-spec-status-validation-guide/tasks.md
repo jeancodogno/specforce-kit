@@ -19,7 +19,7 @@ lens: Backend-heavy
 **Action Steps:**
 - Add `ValidationGuide string \`json:"validation_guide,omitempty"\`` to the `ArtifactStatus` struct.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify the struct compiles successfully.
 
 - [x] T1.2: [CODE] Inject Golden Model
@@ -30,5 +30,5 @@ lens: Backend-heavy
 - In `processArtifactStatus`, after calling `ValidateTasks` for `tasks.md`, check if `len(validationErrors) > 0`.
 - If true, assign a static, fully valid Markdown string to `ValidationGuide` containing a valid Phase and Task structure.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go test ./src/internal/spec/...` and verify no existing tests break. Create a dummy spec with errors and verify `validation_guide` is present in the `spec status --json` output.

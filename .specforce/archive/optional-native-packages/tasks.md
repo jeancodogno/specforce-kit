@@ -21,7 +21,7 @@ lens: Migration
 - Update `.goreleaser.yaml` archives section to output binaries in a directory structure compatible with standard NPM packaging.
 - Remove legacy `checksums.txt` generation if no longer needed.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `goreleaser build --snapshot --clean` and ensure binaries are generated correctly.
 
 #### T1.2: [SCAFFOLD] Create Sub-package Generation Target
@@ -32,7 +32,7 @@ Run `goreleaser build --snapshot --clean` and ensure binaries are generated corr
 **Action Steps:**
 - Write a Make target that generates `package.json` for each supported OS/Arch combination (linux-x64, darwin-arm64, etc.) pointing to the compiled binaries in the `dist/` folder.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run the Make target locally and verify that a valid `package.json` with correct `os` and `cpu` properties is generated for each target platform.
 
 ### Phase 2: Proxy and Main Package
@@ -49,7 +49,7 @@ Run the Make target locally and verify that a valid `package.json` with correct 
 - Use `child_process.spawnSync` to execute it with `stdio: "inherit"`.
 - Handle `MODULE_NOT_FOUND` exceptions with a clear diagnostic message and `process.exit(1)`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Create a mock executable in a local `node_modules` sub-folder, run `node index.js`, and verify it forwards execution and standard streams properly.
 
 #### T2.2: [CODE] Update Main Package Definition
@@ -63,7 +63,7 @@ Create a mock executable in a local `node_modules` sub-folder, run `node index.j
 - Add the generated sub-packages to the `optionalDependencies` block.
 - Point the `"bin"` field to `"index.js"`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `npm pack` and verify the `package.json` inside the tarball no longer references `go-npm` or `postinstall`.
 
 ### Phase 3: CI Pipeline
@@ -76,5 +76,5 @@ Run `npm pack` and verify the `package.json` inside the tarball no longer refere
 **Action Steps:**
 - Modify `.github/workflows/release.yml` to publish the generated native sub-packages to NPM before publishing the main `@jeancodogno/specforce-kit` package.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Use an action linter or syntax checker to ensure the workflow syntax is correct.

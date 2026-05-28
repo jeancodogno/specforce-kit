@@ -22,7 +22,7 @@ lens: Backend-heavy
 - Implement `topologicalSort()` method using Kahn's Algorithm or DFS with cycle detection.
 - Update `NewRegistry` to call `topologicalSort()` and fail if a cycle is detected.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/spec -run TestTopologicalSort` (Must create this test to verify sorting with A->B->C and failure on A->A).
 
 - [x] T1.2: [CODE] Update Registry listing methods to use sorted order
@@ -34,7 +34,7 @@ Run `go test ./src/internal/spec -run TestTopologicalSort` (Must create this tes
 - Modify `ListForType()` to respect the topological order while filtering by type.
 - Ensure any artifacts not in the dependency graph are appended at the end.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `specforce spec artifact --json` and verify that the order of the list follows Requirements -> Design -> Tasks.
 
 ### Phase 2: Service & Instruction Manager Logic (Prepend Rules)
@@ -47,7 +47,7 @@ Run `specforce spec artifact --json` and verify that the order of the list follo
 - Modify `GetArtifact` logic to prepend the `custom` instructions string to `art.Instruction` instead of appending it.
 - Ensure proper spacing (`\n\n`) between the custom rules and the base instructions.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/spec -run TestGetArtifactInstructions` to verify that project-specific rules appear BEFORE base instructions.
 
 - [x] T2.2: [CODE] Refactor `InstructionManager` for prepending
@@ -58,7 +58,7 @@ Run `go test ./src/internal/spec -run TestGetArtifactInstructions` to verify tha
 - Update `GetInstructions` to merge config instructions at the TOP of the content.
 - Update `InjectVariables` to ensure it works correctly with the prepended content.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/agent -run TestInstructionMerging`.
 
 ### Phase 3: Orchestrator Logic (Mission Brief Prompt)
@@ -73,7 +73,7 @@ Run `go test ./src/internal/agent -run TestInstructionMerging`.
 - Update the delegation prompt template to include sections for MANDATED SKILLS, PROJECT RULES, SHARED CONTEXT, and BASE INSTRUCTIONS.
 - Ensure subagents are explicitly told which skills to activate for the task.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Execute a mock `/spf:spec` run and inspect the constructed subagent prompt in logs or debug output.
 
 ### Phase 4: Skill Hardening & Final Verification
@@ -86,7 +86,7 @@ Execute a mock `/spf:spec` run and inspect the constructed subagent prompt in lo
 - Move "TDD-First Verification" rules from Best Practices to the top of the content.
 - Update the `Checklist` to include a mandatory check for TDD-ready verification steps.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `specforce spec artifact task-atomic-decomposition --json` and verify the new instruction weight.
 
 - [x] T4.2: [CLI] Final System Integration Test
@@ -98,5 +98,5 @@ Run `specforce spec artifact task-atomic-decomposition --json` and verify the ne
 - Run `specforce spec status spec-generation-optimization`.
 - Run `specforce spec artifact feature-tasks --json` and verify "Always use TDD approach" is at the VERY TOP.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Confirm that all artifacts in `spec status` are listed in the order: requirements, design, tasks.

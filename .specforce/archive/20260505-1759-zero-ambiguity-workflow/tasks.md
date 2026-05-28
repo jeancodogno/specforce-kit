@@ -23,7 +23,7 @@ Purge existing YAML templates of ambiguity-related sections and inject mandatory
 - Remove the `3. [Ambiguity]` scenario from the `template` section.
 - Prepend the rule: "ASSUMPTIONS PROHIBITED: You MUST NOT make assumptions about business logic. If a rule is missing, you MUST halt and request clarification via the orchestrator." to the `instruction` field.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep -i "ambiguity" src/internal/agent/artifacts/spec/requirements.yaml` should return 0 matches in the template section.
 
 - [x] T1.2: [CONFIG] Inject Determinism Mandate into `design.yaml`
@@ -33,7 +33,7 @@ Purge existing YAML templates of ambiguity-related sections and inject mandatory
 **Action Steps:**
 - Add rule: "DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden." to the `instruction` field.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/artifacts/spec/design.yaml | grep "DETERMINISM MANDATE"` should succeed.
 
 - [x] T1.3: [CONFIG] Inject Determinism Mandate into `tasks.yaml`
@@ -43,7 +43,7 @@ Purge existing YAML templates of ambiguity-related sections and inject mandatory
 **Action Steps:**
 - Add rule: "DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden." to the `instruction` field.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `cat src/internal/agent/artifacts/spec/tasks.yaml | grep "DETERMINISM MANDATE"` should succeed.
 
 ### Phase 2: Orchestration & Skill Hardening
@@ -57,7 +57,7 @@ Update the core command logic and specialized skills to transform ambiguity dete
 - Change "If necessary, use your user-interaction tool to clarify" to "You MUST use your user-interaction tool to clarify ALL technical and business ambiguities before proceeding."
 - Add a "Zero-Doubt Policy" guardrail: "Any artifact containing a placeholder or ambiguity marker is considered a failure and MUST be regenerated after clarification."
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "Zero-Doubt Policy" src/internal/agent/kit/commands/spec.yaml` should return the new guardrail.
 
 - [x] T2.2: [CONFIG] Update `pragmatic-product-owner` Skill
@@ -67,7 +67,7 @@ Update the core command logic and specialized skills to transform ambiguity dete
 **Action Steps:**
 - Add a "Zero-Ambiguity Mandate" section requiring binary, non-ambiguous ACs.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "Zero-Ambiguity Mandate" src/internal/agent/kit/skills/pragmatic-product-owner/SKILL.yaml` should succeed.
 
 - [x] T2.3: [CONFIG] Redefine `spec-clarification-interview` as a Blocking Gate
@@ -77,7 +77,7 @@ Update the core command logic and specialized skills to transform ambiguity dete
 **Action Steps:**
 - Update description to emphasize its role as a mandatory gate for resolving unknowns.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `grep "mandatory gate" src/internal/agent/kit/skills/spec-clarification-interview/SKILL.yaml` should succeed.
 
 ### Phase 3: Integration Verification
@@ -91,5 +91,5 @@ Validate that the entire pipeline correctly halts and triggers resolution when p
 - Attempt to generate a spec using a deliberately vague prompt (e.g., "Add a feature that does something with users"). 
 - Assert that the agent halts generation and invokes the `spec-clarification-interview` tool instead of creating a `requirements.md` with placeholders.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Manual verification of the agent behavior in a new session or subagent delegation.
