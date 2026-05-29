@@ -109,3 +109,24 @@ tools:
         path: "skills/spf-*"
         name: "SKILL"
         ext: ".md"
+
+  cursor:
+    name: "Cursor"
+    description: "Cursor AI Editor integration."
+    target: ".cursor/"
+    mappings:
+      agents:
+        - path: "agents"
+          name: "*"
+          ext: ".md"
+      commands:
+        - path: "commands"
+          name: "spf-*"
+          ext: ".md"
+        - path: "skills/spf-*"
+          name: "SKILL"
+          ext: ".md"
+      skills:
+        - path: "skills"
+          name: "SKILL"
+          ext: ".md"

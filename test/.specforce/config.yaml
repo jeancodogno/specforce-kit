@@ -1,0 +1,37 @@
+instructions:
+  # Instructions can be generic (base type) or specific (prefixed name).
+  # Generic instructions are applied to all matching artifacts.
+  
+  # Example: Generic instructions for all requirements
+  # requirements:
+  #   - "Always use BDD GIVEN/WHEN/THEN syntax"
+  
+  # Example: Specific instructions for bug requirements only
+  # bug-requirements:
+  #   - "Always include Root Cause Analysis (RCA)"
+
+  # design:
+  #   - "Use Mermaid.js for architecture diagrams"
+
+  # tasks:
+  #   - "Each task must have a clear verification step"
+
+  # implementation:
+  #   - "Always run 'go fmt' before finishing a task"
+
+  # archive:
+  #   - "Always update the project memorial with lessons learned"
+
+# Global context variables for instruction injection
+# context:
+#   project_name: "Specforce Kit"
+#   technical_stack: "Go, Bubbletea, Cobra"
+
+hooks:
+  # Example: Run linting and tests automatically when finishing tasks
+  # on_task_finished:
+  #   - "golangci-lint run"
+  # on_phase_finished:
+  #   - "go test ./src/internal/..."
+  # on_all_tasks_finished:
+  #   - "go test ./..."

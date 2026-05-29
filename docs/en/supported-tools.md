@@ -12,6 +12,7 @@ Specforce is designed to be independent of any specific tool or ecosystem (tool-
 - **KiloCode**
 - **Codex**
 - **Antigravity**
+- **Cursor** (Cursor AI) - Uses standard `.md` files in `.cursor/agents/`, `.cursor/commands/`, and `.cursor/skills/`. Natively supports the root `AGENTS.md`.
 
 ## Automated Configuration
 
@@ -26,5 +27,6 @@ Specforce automatically configures your environment to ensure agents can discove
   }
   ```
 - **Antigravity & Claude Code**: Automatically creates symbolic links at `.agent/rules/AGENTS.md` and `.claude/rules/AGENTS.md` pointing to the root rules file.
+- **Cursor**: Automatically creates the `.cursor/` directory structure for agents, commands, and skills. It natively reads the root `AGENTS.md` for project context.
 
 *Can't find your favorite agent? Submit a PR creating a Kit for it!*

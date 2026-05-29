@@ -6,6 +6,7 @@ const Version = "1.0.0-alpha.2"
 var ToolPrefixes = []string{
 	".gemini/",
 	".claude/",
+	".cursor/",
 	".opencode/",
 	".kilocode/",
 	".agents/",

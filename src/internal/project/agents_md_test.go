@@ -56,45 +56,34 @@ func TestEnsureAgentsMD(t *testing.T) {
 	})
 }
 
-func TestEnsurePlatformConfigs(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "specforce-test-*")
+func TestEnsurePlatformConfigs_NoSelection(t *testing.T) {
+	tempDir := t.TempDir()
+
+	err := EnsureAgentsMD(tempDir, nil, []string{})
 	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
+		t.Errorf("expected no error, got %v", err)
 	}
-	defer func() { _ = os.RemoveAll(tempDir) }()
 
-	t.Run("Does not create configs if dirs missing and not selected", func(t *testing.T) {
-		err = EnsureAgentsMD(tempDir, nil, []string{})
-		if err != nil {
-			t.Errorf("expected no error, got %v", err)
+	// Verify no directories were created
+	for _, dir := range []string{".gemini", ".claude"} {
+		path := filepath.Join(tempDir, dir)
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("expected directory %s NOT to exist", dir)
 		}
+	}
+}
 
-		// Verify no directories were created
-		for _, dir := range []string{".gemini", ".claude"} {
-			path := filepath.Join(tempDir, dir)
-			if _, err := os.Stat(path); err == nil {
-				t.Errorf("expected directory %s NOT to exist", dir)
-			}
-		}
-	})
-
+func TestEnsurePlatformConfigs_Gemini(t *testing.T) {
 	t.Run("Creates configs if selected", func(t *testing.T) {
 		subTempDir := t.TempDir()
-		err = EnsureAgentsMD(subTempDir, nil, []string{"gemini-cli", "claude", "antigravity"})
+		err := EnsureAgentsMD(subTempDir, nil, []string{"gemini-cli"})
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
 
-		// Gemini
 		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
 		if _, err := os.Stat(geminiPath); err != nil {
 			t.Errorf("Gemini settings.json not created: %v", err)
-		}
-
-		// Claude Code symlink
-		claudeLink := filepath.Join(subTempDir, ".claude", "rules", "AGENTS.md")
-		if _, err := os.Lstat(claudeLink); err != nil {
-			t.Errorf("Claude Code symlink not created: %v", err)
 		}
 	})
 
@@ -104,7 +93,7 @@ func TestEnsurePlatformConfigs(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = EnsureAgentsMD(subTempDir, nil, []string{})
+		err := EnsureAgentsMD(subTempDir, nil, []string{})
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
@@ -112,6 +101,61 @@ func TestEnsurePlatformConfigs(t *testing.T) {
 		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
 		if _, err := os.Stat(geminiPath); err != nil {
 			t.Errorf("Gemini settings.json should be created because directory exists")
+		}
+	})
+}
+
+func TestEnsurePlatformConfigs_Claude(t *testing.T) {
+	t.Run("Creates configs if selected", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		err := EnsureAgentsMD(subTempDir, nil, []string{"claude"})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		claudeLink := filepath.Join(subTempDir, ".claude", "rules", "AGENTS.md")
+		if _, err := os.Lstat(claudeLink); err != nil {
+			t.Errorf("Claude Code symlink not created: %v", err)
+		}
+	})
+}
+
+func TestEnsurePlatformConfigs_Cursor(t *testing.T) {
+	t.Run("Does NOT create symlinks for Cursor", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		err := EnsureAgentsMD(subTempDir, nil, []string{"cursor"})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		// Cursor symlink (should NOT exist)
+		cursorLink := filepath.Join(subTempDir, ".cursor", "rules", "AGENTS.md")
+		if _, err := os.Lstat(cursorLink); err == nil {
+			t.Errorf("Cursor symlink should NOT be created")
+		}
+
+		cursorDir := filepath.Join(subTempDir, ".cursor")
+		if _, err := os.Stat(cursorDir); err == nil {
+			t.Errorf("Cursor directory should NOT be created by EnsureAgentsMD")
+		}
+	})
+
+	t.Run("Does NOT create symlinks for Cursor even if directory exists", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		cursorDir := filepath.Join(subTempDir, ".cursor")
+		if err := os.MkdirAll(cursorDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		err := EnsureAgentsMD(subTempDir, nil, []string{})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		// Cursor symlink (should NOT exist)
+		cursorLink := filepath.Join(subTempDir, ".cursor", "rules", "AGENTS.md")
+		if _, err := os.Lstat(cursorLink); err == nil {
+			t.Errorf("Cursor symlink should NOT be created even if .cursor directory exists")
 		}
 	})
 }

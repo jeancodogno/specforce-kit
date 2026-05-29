@@ -1,0 +1,32 @@
+slug: 20260529-1122-cursor-tool-support
+name: 20260529-1122-cursor-tool-support
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-05-29T14:49:26.099745461Z
+              completed_at: 2026-05-29T14:50:06.669569452Z
+    T1.2:
+        sessions:
+            - started_at: 2026-05-29T14:50:24.457840803Z
+              completed_at: 2026-05-29T14:51:09.990826676Z
+    T2.1:
+        sessions:
+            - started_at: 2026-05-29T14:51:32.429325844Z
+              completed_at: 2026-05-29T14:53:17.75761885Z
+    T2.2:
+        sessions:
+            - started_at: 2026-05-29T14:53:16.049612047Z
+              completed_at: 2026-05-29T14:54:36.708391006Z
+    T3.1:
+        sessions:
+            - started_at: 2026-05-29T14:55:04.375813299Z
+              completed_at: 2026-05-29T14:56:47.772851659Z
+    T3.2:
+        sessions:
+            - started_at: 2026-05-29T14:56:46.565979909Z
+              completed_at: 2026-05-29T15:00:22.206451962Z
+    T4.1:
+        sessions:
+            - started_at: 2026-05-29T15:00:20.79233883Z
+              completed_at: 2026-05-29T15:01:17.159087184Z

@@ -144,6 +144,9 @@ func ensurePlatformConfigs(root string, selectedAgents []string) error {
 	}
 
 	// 2. Symlinks
+	// agentMappings defines which tool directories require a symlink to AGENTS.md.
+	// NOTE: Cursor (.cursor) is explicitly excluded because it natively reads
+	// AGENTS.md from the project root.
 	agentMappings := map[string][]string{
 		".claude": {"claude"},
 	}

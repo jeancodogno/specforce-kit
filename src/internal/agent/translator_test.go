@@ -553,9 +553,6 @@ func TestStandardizedNaming(t *testing.T) {
 	}
 }
 
-
-
-
 func TestResolveMapping_TargetOverride(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "specforce-test-target-override-*")
 	if err != nil {
@@ -754,5 +751,115 @@ func TestCodexGlobalLocalIsolation(t *testing.T) {
 	expectedLocal := filepath.Clean(filepath.Join(".codex/", "skills"))
 	if mapping.Path != expectedLocal {
 		t.Errorf("expected local path %s, got %s", expectedLocal, mapping.Path)
+	}
+}
+
+func TestResolveMapping_UseSubdir(t *testing.T) {
+	kitConfig := &core.KitConfig{
+		Tools: map[string]core.ToolRoute{
+			"cursor": {
+				Target: ".cursor/",
+				Mappings: map[string]core.MappingConfigs{
+					"skills": {
+						core.MappingConfig{
+							Path:      "skills",
+							Ext:       ".md",
+							UseSubdir: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	bp := &core.Blueprint{ID: "test"}
+
+	// Slug should be "tdd" based on path "skills/tdd.yaml"
+	mappings, err := resolveMappings(kitConfig, "skills/tdd.yaml", bp, "cursor")
+	if err != nil {
+		t.Fatalf("resolveMappings failed: %v", err)
+	}
+	mapping := mappings[0]
+
+	// Expected path: .cursor/skills/tdd
+	expected := filepath.Clean(filepath.Join(".cursor/", "skills", "tdd"))
+	if mapping.Path != expected {
+		t.Errorf("expected path %s, got %s", expected, mapping.Path)
+	}
+}
+
+func TestResolveMapping_UseSubdirOverride(t *testing.T) {
+	kitConfig := &core.KitConfig{
+		Tools: map[string]core.ToolRoute{
+			"cursor": {
+				Target: ".cursor/",
+				Mappings: map[string]core.MappingConfigs{
+					"skills": {
+						core.MappingConfig{
+							Path:      "skills",
+							Ext:       ".md",
+							UseSubdir: false, // Default is false
+						},
+					},
+				},
+			},
+		},
+	}
+	bp := &core.Blueprint{
+		ID: "test",
+		Metadata: core.BlueprintMetadata{
+			Mapping: map[string]core.MappingConfig{
+				"cursor": {
+					UseSubdir: true, // Override to true
+				},
+			},
+		},
+	}
+
+	mappings, err := resolveMappings(kitConfig, "skills/tdd.yaml", bp, "cursor")
+	if err != nil {
+		t.Fatalf("resolveMappings failed: %v", err)
+	}
+	mapping := mappings[0]
+
+	// Expected path: .cursor/skills/tdd
+	expected := filepath.Clean(filepath.Join(".cursor/", "skills", "tdd"))
+	if mapping.Path != expected {
+		t.Errorf("expected path %s, got %s", expected, mapping.Path)
+	}
+}
+
+func TestResolveMapping_UseSubdirWithSubparts(t *testing.T) {
+	kitConfig := &core.KitConfig{
+		Tools: map[string]core.ToolRoute{
+			"cursor": {
+				Target: ".cursor/",
+				Mappings: map[string]core.MappingConfigs{
+					"skills": {
+						core.MappingConfig{
+							Path:      "skills",
+							Ext:       ".md",
+							UseSubdir: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	bp := &core.Blueprint{ID: "test"}
+
+	// Path "skills/my-skill/SKILL.yaml"
+	// slug is "SKILL"
+	// parts are ["skills", "my-skill", "SKILL.yaml"]
+	// applyWildcards will add "my-skill" to Path -> "skills/my-skill"
+	// UseSubdir will add slug "SKILL" to Path -> "skills/my-skill/SKILL"
+	mappings, err := resolveMappings(kitConfig, "skills/my-skill/SKILL.yaml", bp, "cursor")
+	if err != nil {
+		t.Fatalf("resolveMappings failed: %v", err)
+	}
+	mapping := mappings[0]
+
+	expected := filepath.Clean(filepath.Join(".cursor/", "skills", "my-skill", "SKILL"))
+	if mapping.Path != expected {
+		t.Errorf("expected path %s, got %s", expected, mapping.Path)
 	}
 }

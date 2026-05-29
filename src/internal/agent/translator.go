@@ -261,6 +261,10 @@ func finalizeMapping(mapping *core.MappingConfig, toolRoute core.ToolRoute, slug
 	initialPath := mapping.Path
 	applyWildcards(mapping, slug, parts, initialPath)
 
+	if mapping.UseSubdir {
+		mapping.Path = filepath.Join(mapping.Path, slug)
+	}
+
 	// Default naming logic: If mapping.Name is missing, resolve it based on source filename
 	if mapping.Name == "" {
 		mapping.Name = slug
@@ -293,6 +297,9 @@ func applyBlueprintOverrides(mapping *core.MappingConfig, bp *core.Blueprint, ag
 			}
 			if override.Ext != "" {
 				mapping.Ext = override.Ext
+			}
+			if override.UseSubdir {
+				mapping.UseSubdir = override.UseSubdir
 			}
 		}
 	}

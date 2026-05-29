@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"os"
 	"testing"
 )
 
@@ -54,5 +55,37 @@ func TestKitManifests(t *testing.T) {
 		if kimicode.DirName != ".kimi/" {
 			t.Errorf("expected kimi-code DirName '.kimi/', got '%s'", kimicode.DirName)
 		}
+	}
+
+	// Check cursor
+	cursor, ok := registry.GetAgent("cursor")
+	if !ok {
+		t.Error("expected to find 'cursor' agent in kit")
+	} else {
+		if cursor.DirName != ".cursor/" {
+			t.Errorf("expected cursor DirName '.cursor/', got '%s'", cursor.DirName)
+		}
+	}
+}
+
+func TestCursorMapping(t *testing.T) {
+	// We use the local FS to test the recent kit.yaml changes
+	kitFS := os.DirFS("kit")
+	registry := &Registry{}
+	err := registry.Initialize(kitFS, "")
+	if err != nil {
+		t.Fatalf("failed to initialize registry with local kit FS: %v", err)
+	}
+
+	cursor, ok := registry.GetAgent("cursor")
+	if !ok {
+		t.Fatal("expected to find 'cursor' agent in local kit")
+	}
+
+	if cursor.Name != "Cursor" {
+		t.Errorf("expected Name 'Cursor', got '%s'", cursor.Name)
+	}
+	if cursor.DirName != ".cursor/" {
+		t.Errorf("expected DirName '.cursor/', got '%s'", cursor.DirName)
 	}
 }

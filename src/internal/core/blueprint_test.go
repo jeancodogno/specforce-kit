@@ -22,6 +22,7 @@ mapping:
     path: path/to/agent1
     name: name1
     ext: .md
+    use_subdir: true
 content: |
   This is the content.
 `,
@@ -51,6 +52,9 @@ content: |
 				}
 				if got.Content != "This is the content." {
 					t.Errorf("ParseBlueprint() Content = %v, want %v", got.Content, "This is the content.")
+				}
+				if !got.Metadata.Mapping["agent1"].UseSubdir {
+					t.Errorf("ParseBlueprint() Mapping[\"agent1\"].UseSubdir = false, want true")
 				}
 			}
 		})

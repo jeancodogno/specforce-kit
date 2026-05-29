@@ -9,10 +9,11 @@ import (
 
 // MappingConfig defines where and how a blueprint should be adapted for an agent.
 type MappingConfig struct {
-	Target string `yaml:"target,omitempty"`
-	Path   string `yaml:"path"`
-	Name   string `yaml:"name"`
-	Ext    string `yaml:"ext"`
+	Target    string `yaml:"target,omitempty"`
+	Path      string `yaml:"path"`
+	Name      string `yaml:"name"`
+	Ext       string `yaml:"ext"`
+	UseSubdir bool   `yaml:"use_subdir,omitempty"`
 }
 
 // BlueprintMetadata contains the structured metadata of a framework asset.
