@@ -86,8 +86,12 @@ tools:
   antigravity:
     name: "Antigravity"
     description: "Antigravity workflow integration."
-    target: ".agent/"
+    target: ".agents/"
     mappings:
+      agents:
+        - path: "agents/*"
+          name: "agent"
+          ext: ".json"
       commands:
         - path: "workflows"
           name: "spf-*"

@@ -155,6 +155,12 @@ func (s *Service) UpdateTools(ctx context.Context, ui core.UI, selectedAgents []
 		ui.LogSubTask("UPDATING AGENT ARTIFACTS")
 	}
 
+	if err := MigrateLegacyAgents(s.projectRoot, ui); err != nil {
+		if ui != nil {
+			ui.Warn(fmt.Sprintf("Migration failed: %v", err))
+		}
+	}
+
 	opts := installer.Options{ToolsOnly: true}
 
 	// Iterate through selected tools and update them
@@ -173,6 +179,12 @@ func (s *Service) UpdateTools(ctx context.Context, ui core.UI, selectedAgents []
 
 	if err := EnsureAgentsMD(s.projectRoot, ui, selectedAgents); err != nil {
 		return fmt.Errorf("failed to update AGENTS.md: %w", err)
+	}
+
+	if err := CleanupLegacySymlinks(s.projectRoot); err != nil {
+		if ui != nil {
+			ui.Warn(fmt.Sprintf("Failed to cleanup legacy symlinks: %v", err))
+		}
 	}
 
 	return nil

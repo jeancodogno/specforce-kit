@@ -41,8 +41,8 @@ func TestKitManifests(t *testing.T) {
 	if !ok {
 		t.Error("expected to find 'antigravity' agent in kit")
 	} else {
-		if antigravity.DirName != ".agent/" {
-			t.Errorf("expected antigravity DirName '.agent/', got '%s'", antigravity.DirName)
+		if antigravity.DirName != ".agents/" {
+			t.Errorf("expected antigravity DirName '.agents/', got '%s'", antigravity.DirName)
 		}
 	}
 

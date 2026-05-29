@@ -70,7 +70,7 @@ func TestEnsurePlatformConfigs(t *testing.T) {
 		}
 
 		// Verify no directories were created
-		for _, dir := range []string{".gemini", ".agent", ".claude"} {
+		for _, dir := range []string{".gemini", ".claude"} {
 			path := filepath.Join(tempDir, dir)
 			if _, err := os.Stat(path); err == nil {
 				t.Errorf("expected directory %s NOT to exist", dir)
@@ -89,12 +89,6 @@ func TestEnsurePlatformConfigs(t *testing.T) {
 		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
 		if _, err := os.Stat(geminiPath); err != nil {
 			t.Errorf("Gemini settings.json not created: %v", err)
-		}
-
-		// Antigravity symlink
-		agentLink := filepath.Join(subTempDir, ".agent", "rules", "AGENTS.md")
-		if _, err := os.Lstat(agentLink); err != nil {
-			t.Errorf("Antigravity symlink not created: %v", err)
 		}
 
 		// Claude Code symlink

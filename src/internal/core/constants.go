@@ -8,7 +8,7 @@ var ToolPrefixes = []string{
 	".claude/",
 	".opencode/",
 	".kilocode/",
-	".agent/",
+	".agents/",
 	".qwen/",
 	".codex/",
 	".kimi/",

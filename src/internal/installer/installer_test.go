@@ -18,7 +18,7 @@ func TestShouldInstall_ToolsOnly(t *testing.T) {
 		{".specforce/docs/architecture.md", false},
 		{"README.md", false},
 		{"go.mod", false},
-		{".agent/workflows/spf.md", true},
+		{".agents/workflows/spf.md", true},
 	}
 
 	for _, tt := range tests {

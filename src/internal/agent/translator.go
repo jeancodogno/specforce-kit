@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -24,6 +25,21 @@ var transformers = map[string]Transformer{
 		}
 		// Gemini TOML format: REQ-2 AC-5
 		return fmt.Sprintf("description = %q\nprompt = \"\"\"\n%s\n\"\"\"\n", desc, bp.Content)
+	},
+	".json": func(bp *core.Blueprint, mapping core.MappingConfig) string {
+		profile := struct {
+			Name         string   `json:"name"`
+			Description  string   `json:"description"`
+			Instructions string   `json:"instructions"`
+			Tools        []string `json:"tools"` // Initialized as empty slice
+		}{
+			Name:         bp.Metadata.Name,
+			Description:  bp.Metadata.Description,
+			Instructions: bp.Content,
+			Tools:        []string{},
+		}
+		data, _ := json.MarshalIndent(profile, "", "  ")
+		return string(data)
 	},
 }
 

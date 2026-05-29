@@ -145,7 +145,6 @@ func ensurePlatformConfigs(root string, selectedAgents []string) error {
 
 	// 2. Symlinks
 	agentMappings := map[string][]string{
-		".agent":  {"antigravity"},
 		".claude": {"claude"},
 	}
 
@@ -166,6 +165,40 @@ func ensurePlatformConfigs(root string, selectedAgents []string) error {
 
 			if err := os.Symlink("../../AGENTS.md", linkPath); err != nil {
 				return fmt.Errorf("failed to create symlink at %s: %w", linkPath, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// CleanupLegacySymlinks removes any legacy AGENTS.md symlinks created within .agents/*/rules/ directories.
+func CleanupLegacySymlinks(root string) error {
+	agentsDir := filepath.Join(root, ".agents")
+	
+	// Clean up old root-level rules symlink: .agents/rules/AGENTS.md
+	rootLinkPath := filepath.Join(agentsDir, "rules", "AGENTS.md")
+	if info, err := os.Lstat(rootLinkPath); err == nil && info.Mode()&os.ModeSymlink != 0 {
+		_ = os.Remove(rootLinkPath)
+	}
+
+	// Try to remove the rules directory if it's empty now
+	_ = os.Remove(filepath.Join(agentsDir, "rules"))
+
+	entries, err := os.ReadDir(agentsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			linkPath := filepath.Join(agentsDir, entry.Name(), "rules", "AGENTS.md")
+			info, err := os.Lstat(linkPath)
+			if err == nil && info.Mode()&os.ModeSymlink != 0 {
+				_ = os.Remove(linkPath) // Best effort removal
 			}
 		}
 	}

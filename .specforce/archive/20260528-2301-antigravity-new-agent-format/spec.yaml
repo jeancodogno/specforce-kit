@@ -1,0 +1,44 @@
+slug: 20260528-2301-antigravity-new-agent-format
+name: 20260528-2301-antigravity-new-agent-format
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-05-29T12:19:34.109136302Z
+              completed_at: 2026-05-29T12:19:54.520041606Z
+            - started_at: 2026-05-29T13:26:37.690165922Z
+              completed_at: 2026-05-29T13:28:15.016583333Z
+    T1.2:
+        sessions:
+            - started_at: 2026-05-29T12:20:02.479410167Z
+              completed_at: 2026-05-29T12:20:49.794076189Z
+    T1.3:
+        sessions:
+            - started_at: 2026-05-29T12:20:58.950403781Z
+              completed_at: 2026-05-29T12:21:37.291402808Z
+    T2.1:
+        sessions:
+            - started_at: 2026-05-29T12:21:45.503273028Z
+              completed_at: 2026-05-29T12:22:02.583724206Z
+    T2.2:
+        sessions:
+            - started_at: 2026-05-29T12:22:10.558085143Z
+              completed_at: 2026-05-29T12:22:35.768507753Z
+    T2.3:
+        sessions:
+            - started_at: 2026-05-29T12:22:43.937855052Z
+              completed_at: 2026-05-29T12:23:41.490742225Z
+    T3.1:
+        sessions:
+            - started_at: 2026-05-29T12:23:49.596779375Z
+              completed_at: 2026-05-29T12:24:16.106020518Z
+    T3.2:
+        sessions:
+            - started_at: 2026-05-29T12:24:24.17367067Z
+              completed_at: 2026-05-29T12:24:53.765390915Z
+    T4.1:
+        sessions:
+            - started_at: 2026-05-29T12:25:02.502642793Z
+              completed_at: 2026-05-29T12:29:52.947914944Z
+            - started_at: 2026-05-29T13:29:12.54171227Z
+              completed_at: 2026-05-29T13:30:38.609267557Z
