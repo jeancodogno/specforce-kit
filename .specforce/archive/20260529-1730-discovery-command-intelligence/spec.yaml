@@ -1,0 +1,12 @@
+slug: 20260529-1730-specforce-discover-agent-delegation
+name: 20260529-1730-specforce-discover-agent-delegation
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-05-29T21:10:32.805431713Z
+              completed_at: 2026-05-29T21:15:57.021881283Z
+    T2.1:
+        sessions:
+            - started_at: 2026-05-29T21:16:05.469932052Z
+              completed_at: 2026-05-29T21:18:11.242100438Z
