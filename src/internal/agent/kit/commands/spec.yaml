@@ -47,10 +47,10 @@ content: |
   - **Shared Understanding:** Ask the user to confirm your recommendation or choose an alternative. You are STRICTLY FORBIDDEN from proceeding to artifact generation until core branches (Security, Architecture, Domain Logic) are resolved and confirmed via this Grill. Consolidate design decisions to prevent looping.
   
   **D. Initialization (Once Shared Understanding is Reached)**
-  - Execute `specforce spec list` to avoid duplicate slugs.
+  - Execute: `specforce spec list` to avoid duplicate slugs.
   - Determine if the specification is a **feature** or a **bug**.
   - Determine the `slug` for the new spec (MUST be in `kebab-case`).
-  - Execute `specforce spec init <slug> --type <feature|bug>` to create the directory.
+  - Execute: `specforce spec init <slug> --type <feature|bug>` to create the directory.
   - If the intent is to **Update** an existing spec, identify the specific artifact(s) to modify.
 
   ### 2. Artifact Processing (Batch Execution)

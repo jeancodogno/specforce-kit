@@ -101,21 +101,30 @@ content: |
   +------------------------------------------------------------------------------+
   ```
 
+  ## Scope & Complexity Assessment
+
+  Before formalizing, you MUST evaluate if the brainstormed idea is too large for a single specification.
+  - **Splitting Criteria:** If the idea spans multiple independent domains, involves more than ~15-20 distinct requirements, or has a high degree of architectural decoupling, it is "Too Large".
+  - **Consultative Action:** Propose a decomposition strategy to the user. Explain the benefits of smaller, atomic specs (faster implementation, easier testing, clearer focus).
+  - **Wait for Confirmation:** You MUST use the `ask_user` tool to obtain explicit confirmation. Ask if they want to proceed with a single large spec or pivot to the **Consultative Decomposition Strategy** to split it into multiple atomic proposals.
+
   ## Formalization Handoff (The Proposal Protocol)
 
   When technical clarity is achieved or the exploration reaches a point of action, you MUST guide the user toward formalization.
 
   **1. Proposal Presentation:**
   - Brief the user with a "Scout Intelligence Brief" summarizing your findings.
-  - ASK the user if they would like to formalize these findings into a `proposal.md` file to jumpstart the planning phase. Use your environment's interaction tool (e.g., `ask_user`).
+  - **For Large Specs:** Present the "Decomposition Strategy" listing the proposed sub-feature slugs and the architectural rationale for the split.
+  - ASK the user if they would like to formalize these findings into `proposal.md` file(s) to jumpstart the planning phase. Use your environment's interaction tool (e.g., `ask_user`).
 
   **2. If Confirmed (The Proposal Exception):**
-  - Execute: `specforce spec init <slug> --type <feature|bug>` (Slug must be kebab-case).
-  - Write your detailed research and strategy to: `.specforce/specs/<slug>/proposal.md`.
-  - Inform the user that the proposal is saved and suggest running `/spec` to continue.
+  - Execute: `specforce spec init <slug> --type <feature|bug>` for each confirmed slug (Slugs must be kebab-case).
+  - For each slug, write the corresponding research and strategy to: `.specforce/specs/<slug>/proposal.md`. 
+  - **Contextual Linkage:** If multiple proposals are created, ensure each `proposal.md` mentions the related sub-feature slugs for cross-reference.
+  - Inform the user that the proposal(s) are saved and suggest running `/spec` to continue.
 
   **3. If Declined:**
-  - Suggest the user proceeds directly to the `/spec` pipeline using the current chat context.
+  - Revert to single-spec initialization or suggest the user proceeds directly to the `/spec` pipeline using the current chat context.
 
   **Format for Briefing:**
   ```markdown
