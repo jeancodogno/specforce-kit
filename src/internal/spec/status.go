@@ -21,27 +21,31 @@ type ArtifactStatus struct {
 
 // SpecStatus represents the overall completion state of a specific feature spec.
 type SpecStatus struct {
-	Slug      string           `json:"slug"`
-	Type      string           `json:"type"`
-	Artifacts []ArtifactStatus `json:"artifacts"`
-	Progress  int              `json:"progress"`
-	Total     int              `json:"total"`
-	Found     int              `json:"found"`
-	IsValid   bool             `json:"is_valid"`
+	Slug         string           `json:"slug"`
+	Type         string           `json:"type"`
+	Artifacts    []ArtifactStatus `json:"artifacts"`
+	Progress     int              `json:"progress"`
+	Total        int              `json:"total"`
+	Found        int              `json:"found"`
+	IsValid      bool             `json:"is_valid"`
+	ContextFiles []string         `json:"context_files,omitempty"`
 }
 
 // GetStatus checks the filesystem for the required artifacts from the registry and returns a progress summary.
 func GetStatus(ctx context.Context, projectRoot string, slug string, registry *Registry) (SpecStatus, error) {
 	slug = ResolveSlug(projectRoot, slug)
 
-	// Load Metadata to determine spec type
 	meta, err := LoadMetadata(projectRoot, slug)
 	if err != nil {
 		return SpecStatus{}, fmt.Errorf("failed to load metadata for %s: %w", slug, err)
 	}
 
-	artifacts := registry.ListForType(meta.Type)
+	specDir, err := resolveSpecDir(projectRoot, slug)
+	if err != nil {
+		return SpecStatus{}, err
+	}
 
+	artifacts := registry.ListForType(meta.Type)
 	status := SpecStatus{
 		Slug:      slug,
 		Type:      meta.Type,
@@ -50,29 +54,53 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 		IsValid:   true,
 	}
 
-	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
-	if _, err := os.Stat(specDir); os.IsNotExist(err) {
-		specDir = filepath.Join(projectRoot, ".specforce", "archive", slug)
-		if _, err := os.Stat(specDir); os.IsNotExist(err) {
-			return SpecStatus{}, fmt.Errorf("feature directory not found: %s", slug)
-		}
-	}
+	detectProposal(projectRoot, specDir, &status)
 
 	existsMap, foundCount, err := scanArtifactExistence(ctx, specDir, artifacts)
 	if err != nil {
 		return SpecStatus{}, err
 	}
 
-	shouldValidate := (foundCount == len(artifacts))
+	if err := processAllArtifacts(ctx, projectRoot, slug, meta.Type, artifacts, existsMap, registry, foundCount == len(artifacts), &status); err != nil {
+		return status, err
+	}
 
+	if status.Total > 0 {
+		status.Progress = (status.Found * 100) / status.Total
+	}
+
+	return status, nil
+}
+
+func resolveSpecDir(projectRoot, slug string) (string, error) {
+	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
+	if _, err := os.Stat(specDir); os.IsNotExist(err) {
+		specDir = filepath.Join(projectRoot, ".specforce", "archive", slug)
+		if _, err := os.Stat(specDir); os.IsNotExist(err) {
+			return "", fmt.Errorf("feature directory not found: %s", slug)
+		}
+	}
+	return specDir, nil
+}
+
+func detectProposal(projectRoot, specDir string, status *SpecStatus) {
+	proposalPath := filepath.Join(specDir, "proposal.md")
+	if _, err := os.Stat(proposalPath); err == nil {
+		if rel, err := filepath.Rel(projectRoot, proposalPath); err == nil {
+			status.ContextFiles = append(status.ContextFiles, rel)
+		}
+	}
+}
+
+func processAllArtifacts(ctx context.Context, projectRoot, slug, specType string, artifacts []Artifact, existsMap map[string]bool, registry *Registry, shouldValidate bool, status *SpecStatus) error {
 	for _, art := range artifacts {
 		if err := ctx.Err(); err != nil {
-			return status, err
+			return err
 		}
 
-		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, meta.Type, art, existsMap, registry, shouldValidate)
+		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, specType, art, existsMap, registry, shouldValidate)
 		if err != nil {
-			return status, err
+			return err
 		}
 
 		if len(artStatus.ValidationErrors) > 0 {
@@ -84,12 +112,7 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 
 		status.Artifacts = append(status.Artifacts, artStatus)
 	}
-
-	if status.Total > 0 {
-		status.Progress = (status.Found * 100) / status.Total
-	}
-
-	return status, nil
+	return nil
 }
 
 func scanArtifactExistence(ctx context.Context, specDir string, artifacts []Artifact) (map[string]bool, int, error) {

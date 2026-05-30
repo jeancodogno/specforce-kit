@@ -26,10 +26,11 @@ content: |
   ### 1. Discovery & Intent Clarification (Multi-Layered Pre-Flight)
   Before generating any artifacts or even asking the user for design decisions, you MUST perform the following sequence to ground the new feature in the project's reality:
 
-  **A. Layer 1: Constitutional Anchor**
+  **A. Layer 1: Constitutional Anchor (and Discovery Handoff)**
   - **Memory Check:** If the constitution context is already loaded in your conversation history, REUSE it.
   - If missing, execute `specforce constitution status --json` and read `.specforce/docs/` files relevant to the user's prompt (e.g., `ui-ux.md` for frontend, `security.md` for auth).
-  - Store these constraints internally. You MUST flag any user request that violates a constitutional rule.
+  - **Proposal Check:** Execute `specforce spec status <slug> --json` (if the spec is already initialized) and check the `context_files` array. If a `proposal.md` exists, you MUST read it. This file contains the "Scout's Intelligence" from the discovery phase and serves as your primary source of technical intent.
+  - Store these constraints internally. You MUST flag any user request that violates a constitutional rule or deviates significantly from the approved proposal without justification.
 
   **B. Layer 2: Empirical Grounding (Codebase Scan)**
   - Parse the user's prompt for technical keywords.
@@ -68,6 +69,7 @@ content: |
     1. Decisions reached during the Consultative Grill.
     2. Relevant codebase insights from Layer 2.
     3. Key technical details from the upstream dependency artifact.
+    4. **The Discovery Proposal:** If `proposal.md` was found in `context_files`, its details MUST be included in the synthesis for all downstream artifacts.
 
   **B. Dynamic Agent Discovery & Skill Mandate:**
   - Identify the ideal subagent and skill for the artifact:
