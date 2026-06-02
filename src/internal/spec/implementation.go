@@ -23,6 +23,8 @@ type ImplementationTask struct {
 	Verification string        `json:"verification"`
 	TotalTime    time.Duration `json:"total_time"`
 	IsWorking    bool          `json:"is_working"`
+	ParallelWith []string      `json:"parallel_with"`
+	IsParallel   bool          `json:"is_parallel"`
 }
 
 type Phase struct {
@@ -159,6 +161,8 @@ func ParseTasks(ctx context.Context, projectRoot, slug string) (*ImplementationR
 		return nil, err
 	}
 
+	evaluateTaskReadiness(report)
+
 	report.Status = calculateReportStatus(report.Tasks())
 
 	// Calculate total report time
@@ -235,6 +239,15 @@ func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int,
 
 	task.Target = extractField(taskBlock, `\*\*Target:\*\* \x60?([^\x60\n]*)\x60?`)
 	task.Context = extractField(taskBlock, `\*\*Context:\*\* \x60?([^\x60\n]*)\x60?`)
+
+	parallelStr := extractField(taskBlock, `\*\*Parallel With:\*\* (T[\d.]+(?:,\s*T[\d.]+)*)`)
+	if parallelStr != "" {
+		parts := strings.Split(parallelStr, ",")
+		for _, p := range parts {
+			task.ParallelWith = append(task.ParallelWith, strings.TrimSpace(p))
+		}
+		task.IsParallel = true
+	}
 
 	// Try Acceptance Check first, fallback to Verification (TDD)
 	task.Verification = extractField(taskBlock, `(?s)\*\*Acceptance Check:\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
@@ -334,7 +347,7 @@ func calculateReportStatus(tasks []ImplementationTask) string {
 		if st != "FINISHED" {
 			allFinished = false
 		}
-		if st != "PENDING" && st != "" {
+		if st != "PENDING" && st != "READY" && st != "" {
 			allPending = false
 		}
 	}
@@ -354,4 +367,62 @@ func extractField(block []byte, pattern string) string {
 		return strings.TrimSpace(string(match[1]))
 	}
 	return ""
+}
+
+func evaluateTaskReadiness(report *ImplementationReport) {
+	activePhaseIdx := getActivePhaseIdx(report)
+	if activePhaseIdx == -1 {
+		return // all finished
+	}
+
+	evaluateTasksInPhase(&report.Phases[activePhaseIdx])
+}
+
+func getActivePhaseIdx(report *ImplementationReport) int {
+	for i, p := range report.Phases {
+		phaseFinished := true
+		for _, t := range p.Tasks {
+			if strings.ToUpper(t.State) != "FINISHED" {
+				phaseFinished = false
+				break
+			}
+		}
+		if !phaseFinished {
+			return i
+		}
+	}
+	return -1
+}
+
+func evaluateTasksInPhase(phase *Phase) {
+	for i := range phase.Tasks {
+		task := &phase.Tasks[i]
+		if strings.ToUpper(task.State) != "PENDING" {
+			continue
+		}
+
+		if isTaskReady(task, phase.Tasks[:i]) {
+			task.State = "READY"
+		}
+	}
+}
+
+func isTaskReady(task *ImplementationTask, precedingTasks []ImplementationTask) bool {
+	for _, precTask := range precedingTasks {
+		if strings.ToUpper(precTask.State) != "FINISHED" {
+			if !isTaskParallel(task, precTask.ID) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isTaskParallel(task *ImplementationTask, precTaskID string) bool {
+	for _, pID := range task.ParallelWith {
+		if pID == precTaskID {
+			return true
+		}
+	}
+	return false
 }

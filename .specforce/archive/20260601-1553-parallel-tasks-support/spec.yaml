@@ -1,0 +1,48 @@
+slug: 20260601-1553-parallel-tasks-support
+name: 20260601-1553-parallel-tasks-support
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-06-02T16:49:13.874466067Z
+              completed_at: 2026-06-02T16:51:28.051829646Z
+    T1.2:
+        sessions:
+            - started_at: 2026-06-02T16:51:38.49702182Z
+              completed_at: 2026-06-02T16:59:35.370908319Z
+    T1.3:
+        sessions:
+            - started_at: 2026-06-02T16:59:57.21039388Z
+              completed_at: 2026-06-02T17:01:40.454417463Z
+    T2.1:
+        sessions:
+            - started_at: 2026-06-02T17:01:50.798926817Z
+              completed_at: 2026-06-02T17:05:13.765829523Z
+    T2.2:
+        sessions:
+            - started_at: 2026-06-02T17:06:08.50129101Z
+              completed_at: 2026-06-02T17:08:50.208835926Z
+    T2.3:
+        sessions:
+            - started_at: 2026-06-02T17:08:59.822206752Z
+              completed_at: 2026-06-02T17:15:11.066621414Z
+    T2.4:
+        sessions:
+            - started_at: 2026-06-02T17:15:21.092746234Z
+              completed_at: 2026-06-02T17:22:02.635940474Z
+    T3.1:
+        sessions:
+            - started_at: 2026-06-02T17:22:13.221724643Z
+              completed_at: 2026-06-02T18:08:57.556657953Z
+    T4.1:
+        sessions:
+            - started_at: 2026-06-02T18:09:20.8040915Z
+              completed_at: 2026-06-02T18:10:03.320274184Z
+    T4.2:
+        sessions:
+            - started_at: 2026-06-02T18:10:11.376484764Z
+              completed_at: 2026-06-02T18:10:47.663146907Z
+    T5.1:
+        sessions:
+            - started_at: 2026-06-02T18:10:58.421427252Z
+              completed_at: 2026-06-02T18:11:44.175726866Z

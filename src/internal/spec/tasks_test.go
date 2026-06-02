@@ -239,3 +239,36 @@ func TestUpdateTaskStatusFile_TimeTracking(t *testing.T) {
 		t.Error("expected session to be closed")
 	}
 }
+
+func TestUpdateTaskBlockState_ParallelWith(t *testing.T) {
+	task := &taskBlock{}
+	
+	// Test basic parallel with
+	updateTaskBlockState(task, "**Parallel With:** T1.2, T1.3")
+	if !task.isParallel {
+		t.Error("expected isParallel to be true")
+	}
+	if len(task.parallelWith) != 2 || task.parallelWith[0] != "T1.2" || task.parallelWith[1] != "T1.3" {
+		t.Errorf("unexpected parallelWith: %v", task.parallelWith)
+	}
+
+	// Test spacing and empty peer logic
+	task2 := &taskBlock{}
+	updateTaskBlockState(task2, "**Parallel With:**   T2.1  ,  , T2.2   ")
+	if !task2.isParallel {
+		t.Error("expected isParallel to be true")
+	}
+	if len(task2.parallelWith) != 2 || task2.parallelWith[0] != "T2.1" || task2.parallelWith[1] != "T2.2" {
+		t.Errorf("unexpected parallelWith: %v", task2.parallelWith)
+	}
+
+	// Test empty parallel with
+	task3 := &taskBlock{}
+	updateTaskBlockState(task3, "**Parallel With:**")
+	if !task3.isParallel {
+		t.Error("expected isParallel to be true")
+	}
+	if len(task3.parallelWith) != 0 {
+		t.Errorf("unexpected parallelWith: %v", task3.parallelWith)
+	}
+}

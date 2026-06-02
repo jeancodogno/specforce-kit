@@ -19,19 +19,24 @@ type taskValidationState struct {
 	lastPhaseLine    int
 	taskCountInPhase int
 	errors           []string
+	allTasks         []*taskBlock
 }
 
 // taskBlock tracks mandatory fields within a task block.
 type taskBlock struct {
 	id               string
 	line             int
+	phaseID          int
 	hasTarget        bool
+	targetPath       string
 	hasContext       bool
 	hasActionHeader  bool
 	hasActionItems   bool
 	actionItemsCount int
 	hasVerify        bool
 	inActionSteps    bool
+	parallelWith     []string
+	isParallel       bool
 }
 
 // ValidateTasks performs an exhaustive structural and content validation of tasks.md.
@@ -85,6 +90,9 @@ func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, err
 		state.errors = append(state.errors, "No valid Phase (### Phase N: Name) found in tasks.md")
 	}
 
+	state.validateParallelReferences()
+	state.validateParallelTargets()
+
 	return state.errors, nil
 }
 
@@ -123,13 +131,20 @@ func (s *taskValidationState) handleTaskHeader(match []string, lineNum int, curr
 
 	s.nextTaskIdx = tIdx + 1
 	s.taskCountInPhase++
-	return &taskBlock{id: taskID, line: lineNum}
+	
+	newTask := &taskBlock{id: taskID, line: lineNum, phaseID: s.currentPhase}
+	s.allTasks = append(s.allTasks, newTask)
+	return newTask
 }
 
 func updateTaskBlockState(task *taskBlock, trimmed string) {
 	if strings.HasPrefix(trimmed, "**Target:**") {
 		task.hasTarget = true
 		task.inActionSteps = false
+		target := strings.TrimPrefix(trimmed, "**Target:**")
+		target = strings.TrimSpace(target)
+		target = strings.Trim(target, "`")
+		task.targetPath = target
 	} else if strings.HasPrefix(trimmed, "**Context:**") {
 		task.hasContext = true
 		task.inActionSteps = false
@@ -142,6 +157,18 @@ func updateTaskBlockState(task *taskBlock, trimmed string) {
 	} else if strings.HasPrefix(trimmed, "**Acceptance Check:**") || strings.HasPrefix(trimmed, "**Verification (TDD):**") {
 		task.hasVerify = true
 		task.inActionSteps = false
+	} else if strings.HasPrefix(trimmed, "**Parallel With:**") {
+		task.isParallel = true
+		peersStr := strings.TrimSpace(strings.TrimPrefix(trimmed, "**Parallel With:**"))
+		if peersStr != "" {
+			peers := strings.Split(peersStr, ",")
+			for _, p := range peers {
+				p = strings.TrimSpace(p)
+				if p != "" {
+					task.parallelWith = append(task.parallelWith, p)
+				}
+			}
+		}
 	}
 }
 
@@ -170,6 +197,108 @@ func (s *taskValidationState) validateLastTask(task *taskBlock) {
 func (s *taskValidationState) checkEmptyPhase() {
 	if s.taskCountInPhase == 0 && s.currentPhase > 0 {
 		s.errors = append(s.errors, fmt.Sprintf("Phase %d (line %d) has no tasks", s.currentPhase, s.lastPhaseLine))
+	}
+}
+
+func (s *taskValidationState) validateParallelReferences() {
+	taskMap := s.buildTaskMap()
+	adjacencyMap := s.buildAdjacencyMap()
+
+	for _, t := range s.allTasks {
+		peers := adjacencyMap[t.id]
+		for _, peerID := range peers {
+			peer, exists := taskMap[peerID]
+			if !exists {
+				s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) references unknown parallel task %s", t.id, t.line, peerID))
+			} else if peer.phaseID != t.phaseID {
+				s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) references parallel task %s from a different phase", t.id, t.line, peerID))
+			}
+		}
+	}
+}
+
+func (s *taskValidationState) buildTaskMap() map[string]*taskBlock {
+	taskMap := make(map[string]*taskBlock)
+	for _, t := range s.allTasks {
+		taskMap[t.id] = t
+	}
+	return taskMap
+}
+
+func (s *taskValidationState) buildAdjacencyMap() map[string][]string {
+	adjacencyMap := make(map[string][]string)
+
+	for _, t := range s.allTasks {
+		if !t.isParallel {
+			continue
+		}
+		for _, peerID := range t.parallelWith {
+			addUniquePeer(adjacencyMap, t.id, peerID)
+			addUniquePeer(adjacencyMap, peerID, t.id)
+		}
+	}
+	return adjacencyMap
+}
+
+func addUniquePeer(adjacencyMap map[string][]string, key, peer string) {
+	for _, p := range adjacencyMap[key] {
+		if p == peer {
+			return
+		}
+	}
+	adjacencyMap[key] = append(adjacencyMap[key], peer)
+}
+
+func (s *taskValidationState) validateParallelTargets() {
+	taskMap := s.buildTaskMap()
+	adjacencyMap := s.buildAdjacencyMap()
+	visited := make(map[string]bool)
+
+	for _, t := range s.allTasks {
+		if visited[t.id] || len(adjacencyMap[t.id]) == 0 {
+			continue
+		}
+		group := getParallelGroup(t.id, adjacencyMap, visited)
+		s.checkGroupTargetConflicts(group, taskMap)
+	}
+}
+
+func getParallelGroup(startNode string, adjacencyMap map[string][]string, visited map[string]bool) []string {
+	var group []string
+	queue := []string{startNode}
+	visited[startNode] = true
+
+	for len(queue) > 0 {
+		curr := queue[0]
+		queue = queue[1:]
+		group = append(group, curr)
+
+		for _, peer := range adjacencyMap[curr] {
+			if !visited[peer] {
+				visited[peer] = true
+				queue = append(queue, peer)
+			}
+		}
+	}
+	return group
+}
+
+func (s *taskValidationState) checkGroupTargetConflicts(group []string, taskMap map[string]*taskBlock) {
+	for i := 0; i < len(group); i++ {
+		for j := i + 1; j < len(group); j++ {
+			t1, ok1 := taskMap[group[i]]
+			t2, ok2 := taskMap[group[j]]
+			if !ok1 || !ok2 || t1.targetPath == "" || t2.targetPath == "" {
+				continue
+			}
+			if t1.targetPath == t2.targetPath {
+				id1, id2 := t1.id, t2.id
+				if id1 > id2 {
+					id1, id2 = id2, id1
+				}
+				s.errors = append(s.errors, fmt.Sprintf("Parallel conflict: %s and %s both target %q", id1, id2, t1.targetPath))
+			}
+		}
 	}
 }
 

@@ -1,4 +1,4 @@
-description: "Atomic, sequential implementation roadmap and TDD verification steps using natural Markdown checklist format."
+description: "Atomic implementation roadmap and TDD verification steps using natural Markdown checklist format. Supports strategic parallelism."
 dependency: design
 instruction: |
   DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden. The roadmap MUST be actionable by an AI agent with zero access to the previous conversation history.
@@ -8,7 +8,9 @@ instruction: |
   1. **Directive Logic:** Action steps MUST be technical directives (e.g., "Add if guard", "Implement interface X"). Passive descriptions (e.g., "Check logic") are forbidden.
   2. **Action Density Mandate:** Every task MUST have at least 3 concrete action steps that describe the technical implementation within the target file.
   3. **TDD-First Verification:** Every task MUST include a specific terminal command or test scenario that objectively proves the task is finished.
-  4. **Strict Sequentiality:** Tasks MUST be strictly sequential. Do not use parallel execution flags.
+  4. **Strategic Parallelism:** Tasks are sequential by default. However, you MAY mark independent tasks as parallel within the same phase if they can be implemented simultaneously.
+     - **Syntax:** Use `**Parallel With: T{Phase}.{Task}**` to declare relationships.
+     - **File Isolation Rule:** Parallel tasks MUST NEVER share the same `**Target:**` or have conflicting implementation paths. If multiple tasks target the same file, they MUST be sequential.
   5. **Traceability:** Every task MUST explicitly link to a requirement using the `**Context:** [US-x]` field.
   6. **Phases**: Group tasks into logical phases using `### Phase {N}: [Phase Name]` headers.
   7. **Task Format**: Use standard Markdown checklist items for tasks: `- [ ] T{Phase}.{Task}: Title`.
@@ -33,6 +35,7 @@ template: |
   - [ ] T1.1: [SCAFFOLD/CLI] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
   **Context:** [US-X]
+  **Parallel With:** T1.2
 
   **Action Steps:**
   - [Step 1: Concrete change]
@@ -41,11 +44,23 @@ template: |
   **Acceptance Check:**
   [MANDATORY: Define the exact test scenario or CLI command the developer MUST write/run to prove this task works.]
 
+  - [ ] T1.2: [CODE] {Task Title}
+  **Target:** `{Different/File/Path.ext}`
+  **Context:** [US-X]
+  **Parallel With:** T1.1
+
+  **Action Steps:**
+  - [Step 1: Concrete change]
+
+  **Acceptance Check:**
+  [Explicit test scenario or CLI command]
+
   ### Phase 2: [Phase Name]
 
   - [ ] T2.1: [CODE] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
   **Context:** [US-X]
+  **Parallel With:** [Optional: T2.x]
 
   **Action Steps:**
   - [Step 1: Concrete change]

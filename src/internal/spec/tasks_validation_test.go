@@ -56,7 +56,123 @@ func getValidateTasksTestCases() []validateTasksTestCase {
 	tests = append(tests, getHierarchyErrorCases()...)
 	tests = append(tests, getFieldAndPhaseErrorCases()...)
 	tests = append(tests, getDensityErrorCases()...)
+	tests = append(tests, getParallelTaskErrorCases()...)
 	return tests
+}
+
+func getParallelTaskErrorCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		getUnknownParallelTaskErrorCase(),
+		getCrossPhaseParallelTaskErrorCase(),
+		getAsymmetricCrossPhaseParallelTaskErrorCase(),
+		getTargetIsolationConflictErrorCase(),
+	}
+}
+
+func getUnknownParallelTaskErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Unknown Parallel Task",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T9.9
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Task T1.1 (line 2) references unknown parallel task T9.9",
+		},
+	}
+}
+
+func getCrossPhaseParallelTaskErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Cross Phase Parallel Task",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T2.1
+**Acceptance Check:**
+Check it
+### Phase 2: Phase Two
+- [ ] T2.1: Second Task
+**Target:** API
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T1.1
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Task T1.1 (line 2) references parallel task T2.1 from a different phase",
+			"Task T2.1 (line 12) references parallel task T1.1 from a different phase",
+		},
+	}
+}
+
+func getAsymmetricCrossPhaseParallelTaskErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Asymmetric Cross Phase Parallel Task",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T2.1
+**Acceptance Check:**
+Check it
+### Phase 2: Phase Two
+- [ ] T2.1: Second Task
+**Target:** API
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Task T1.1 (line 2) references parallel task T2.1 from a different phase",
+			"Task T2.1 (line 12) references parallel task T1.1 from a different phase",
+		},
+	}
+}
+
+func getTargetIsolationConflictErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Target Isolation Conflict",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** src/common.go
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T1.2
+**Acceptance Check:**
+Check it
+- [ ] T1.2: Second Task
+**Target:** src/common.go
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T1.1
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Parallel conflict: T1.1 and T1.2 both target \"src/common.go\"",
+		},
+	}
 }
 
 func getHappyPathCases() []validateTasksTestCase {
@@ -70,6 +186,28 @@ func getHappyPathCases() []validateTasksTestCase {
 **Action Steps:**
 - Run init
 - Verify output
+**Acceptance Check:**
+Check files`,
+			expected: nil,
+		},
+		{
+			name: "Implicit Parallel Symmetry",
+			content: `### Phase 1: Setup
+- [ ] T1.1: Task 1
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do this
+- Do that
+**Parallel With:** T1.2
+**Acceptance Check:**
+Check files
+- [ ] T1.2: Task 2
+**Target:** API
+**Context:** US-1
+**Action Steps:**
+- Do this
+- Do that
 **Acceptance Check:**
 Check files`,
 			expected: nil,

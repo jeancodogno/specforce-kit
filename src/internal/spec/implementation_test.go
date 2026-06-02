@@ -2,8 +2,10 @@ package spec
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -299,7 +301,7 @@ func TestParseTasks_HybridFormat(t *testing.T) {
 	}
 
 	// Verify T1.2 (Modern - [ ])
-	if tasks[1].ID != "T1.2" || tasks[1].State != "PENDING" {
+	if tasks[1].ID != "T1.2" || tasks[1].State != "READY" && tasks[1].State != "PENDING" { // It should be READY now because preceding T1.1 is FINISHED
 		t.Errorf("T1.2 mismatch: ID=%s, State=%s", tasks[1].ID, tasks[1].State)
 	}
 
@@ -314,3 +316,129 @@ func TestParseTasks_HybridFormat(t *testing.T) {
 	}
 }
 
+func TestImplementationTaskJSON(t *testing.T) {
+	task := ImplementationTask{
+		ID:           "T1.1",
+		Title:        "Test Task",
+		ParallelWith: []string{"T1.2", "T1.3"},
+		IsParallel:   true,
+	}
+
+	data, err := json.Marshal(task)
+	if err != nil {
+		t.Fatalf("Failed to marshal task: %v", err)
+	}
+
+	expectedParallelWith := `"parallel_with":["T1.2","T1.3"]`
+	expectedIsParallel := `"is_parallel":true`
+
+	strData := string(data)
+	if !strings.Contains(strData, expectedParallelWith) {
+		t.Errorf("JSON output missing or incorrect parallel_with field. Got: %s", strData)
+	}
+	if !strings.Contains(strData, expectedIsParallel) {
+		t.Errorf("JSON output missing or incorrect is_parallel field. Got: %s", strData)
+	}
+
+	var unmarshaled ImplementationTask
+	if err := json.Unmarshal(data, &unmarshaled); err != nil {
+		t.Fatalf("Failed to unmarshal task: %v", err)
+	}
+
+	if unmarshaled.IsParallel != true {
+		t.Errorf("Expected IsParallel to be true, got %v", unmarshaled.IsParallel)
+	}
+	if len(unmarshaled.ParallelWith) != 2 || unmarshaled.ParallelWith[0] != "T1.2" || unmarshaled.ParallelWith[1] != "T1.3" {
+		t.Errorf("Expected ParallelWith [T1.2, T1.3], got %v", unmarshaled.ParallelWith)
+	}
+}
+
+func TestParseTaskBlock_Parallel(t *testing.T) {
+	content := []byte(`### T1.2 - [PARSER] Implement Parallel Metadata Extraction
+**State:** [PENDING]
+**Target:** src/internal/spec/implementation.go
+**Context:** [REQ-1](requirements.md)
+**Parallel With:** T1.1, T1.2
+**Acceptance Check:**
+- Ensure tests pass.
+
+- Extract ParallelWith.
+`)
+	tm := []int{
+		0, len(content),
+		0, 3,
+		4, 8,
+		11, strings.Index(string(content), "\n"),
+	}
+	
+	task := parseTaskBlock(content, tm, [][]int{}, [][]int{}, nil)
+
+	if task.ID != "T1.2" {
+		t.Errorf("Expected ID T1.2, got %s", task.ID)
+	}
+	if !task.IsParallel {
+		t.Errorf("Expected IsParallel to be true")
+	}
+	if len(task.ParallelWith) != 2 {
+		t.Fatalf("Expected 2 parallel tasks, got %d: %v", len(task.ParallelWith), task.ParallelWith)
+	}
+	if task.ParallelWith[0] != "T1.1" {
+		t.Errorf("Expected T1.1, got %s", task.ParallelWith[0])
+	}
+	if task.ParallelWith[1] != "T1.2" {
+		t.Errorf("Expected T1.2, got %s", task.ParallelWith[1])
+	}
+}
+
+func TestParseTasks_ParallelTasks(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	slug := "parallel-feature"
+	content := `
+# Implementation Roadmap
+
+### Phase 1: Setup
+#### T1.1: Task One
+**State:** [FINISHED]
+**Target:** target/one
+
+#### T1.2: Task Two
+**State:** [PENDING]
+**Target:** target/two
+**Parallel With:** T1.1, T1.3
+
+#### T1.3: Task Three
+**State:** [PENDING]
+**Target:** target/three
+**Parallel With:** T1.1, T1.2
+
+#### T1.4: Task Four
+**State:** [PENDING]
+**Target:** target/four
+`
+	setupTasksFile(t, tmpDir, slug, content)
+
+	report, err := ParseTasks(context.Background(), tmpDir, slug)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	tasks := report.Tasks()
+	if len(tasks) != 4 {
+		t.Fatalf("Expected 4 tasks, got %d", len(tasks))
+	}
+
+	if tasks[1].State != "READY" {
+		t.Errorf("Expected T1.2 to be READY, got %s", tasks[1].State)
+	}
+	if tasks[2].State != "READY" {
+		t.Errorf("Expected T1.3 to be READY, got %s", tasks[2].State)
+	}
+	if tasks[3].State != "PENDING" {
+		t.Errorf("Expected T1.4 to be PENDING because T1.2/T1.3 are not finished, got %s", tasks[3].State)
+	}
+}

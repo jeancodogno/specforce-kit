@@ -1,6 +1,7 @@
 # --- Padrões Globais ---
 .git/
 .gitignore
+.env
 .env.local
 .env.*.local
 *.log
