@@ -1,0 +1,24 @@
+slug: 20260602-1650-fix-discovery-intrusiveness
+name: 20260602-1650-fix-discovery-intrusiveness
+type: bug
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-06-02T20:06:36.021403592Z
+              completed_at: 2026-06-02T20:07:01.975391868Z
+    T2.1:
+        sessions:
+            - started_at: 2026-06-02T20:07:11.213996243Z
+              completed_at: 2026-06-02T20:07:27.008256303Z
+    T2.2:
+        sessions:
+            - started_at: 2026-06-02T20:07:35.038721478Z
+              completed_at: 2026-06-02T20:07:53.334676109Z
+    T2.3:
+        sessions:
+            - started_at: 2026-06-02T20:08:01.63367047Z
+              completed_at: 2026-06-02T20:08:23.306617081Z
+    T3.1:
+        sessions:
+            - started_at: 2026-06-02T20:08:33.328520576Z
+              completed_at: 2026-06-02T20:09:07.80665668Z
