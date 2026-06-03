@@ -1,6 +1,7 @@
 package core
 
-const Version = "1.0.0-alpha.2"
+// Version is the current tool version, synced from package.json and optionally overwritten at build time.
+var Version = "9.9.9"
 
 // Tool directory prefixes that are considered "agent tools" and can be updated independently of the project constitution.
 var ToolPrefixes = []string{

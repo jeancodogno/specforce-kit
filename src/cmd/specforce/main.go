@@ -9,10 +9,9 @@ import (
 	"time"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/cli/cobra"
+	"github.com/jeancodogno/specforce-kit/src/internal/core"
 	"github.com/jeancodogno/specforce-kit/src/internal/upgrade"
 )
-
-var version = "1.0.0-alpha.2"
 
 func main() {
 	// 1. Check for internal upgrade check flag (must be first to be silent and fast)
@@ -30,7 +29,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if err := cobra.Execute(ctx, version); err != nil {
+	if err := cobra.Execute(ctx, core.Version); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -49,7 +48,7 @@ func checkForSwap() {
 
 	// Create service to perform swap
 	// We use a mock provider here because we won't need it for swap
-	svc := upgrade.NewService(mgr, &upgrade.MockProvider{}, version)
+	svc := upgrade.NewService(mgr, &upgrade.MockProvider{}, core.Version)
 	
 	exePath, err := os.Executable()
 	if err != nil {
@@ -78,7 +77,7 @@ func runInternalUpgradeCheck() {
 
 	// TODO: Proper provider detection. For now, default to GitHub.
 	provider := upgrade.NewGitHubProvider()
-	svc := upgrade.NewService(mgr, provider, version)
+	svc := upgrade.NewService(mgr, provider, core.Version)
 
 	// Perform the background update (check + stage)
 	// Timeout after 1 minute to avoid zombie processes

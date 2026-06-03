@@ -92,7 +92,6 @@ func Execute(ctx context.Context, v string) error {
 	appVersion = v
 	rootCmd.Version = v
 	rootCmd.SetVersionTemplate("specforce version {{.Version}}\n")
-	tui.AppVersion = v
 	return rootCmd.ExecuteContext(ctx)
 }
 

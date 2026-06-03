@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
-
-var AppVersion = "v1.0.0-alpha.2"
 
 var brailleLines = []string{
 	`    ⢠⣶⣶⡄     `,
@@ -52,7 +51,7 @@ func GenerateLogo(withSubtitle bool) string {
 	textLines = append(textLines, "") // Alignment for Line 0
 
 	specforceText := lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF")).Bold(true).Render("SPECFORCE ")
-	versionStr := AppVersion
+	versionStr := core.Version
 	if !strings.HasPrefix(versionStr, "v") {
 		versionStr = "v" + versionStr
 	}

@@ -1,3 +1,4 @@
+VERSION ?= $(shell node -p "require('./package.json').version")
 BINARY=specforce
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
@@ -7,7 +8,7 @@ GOPATH=$(shell go env GOPATH)
 GOBIN=$(GOPATH)/bin
 
 build:
-	go build -o $(BINARY) src/cmd/specforce/main.go
+	go build -ldflags="-s -w -X 'github.com/jeancodogno/specforce-kit/src/internal/core.Version=$(VERSION)'" -o $(BINARY) src/cmd/specforce/main.go
 
 install: build
 	install -d $(DESTDIR)$(BINDIR)

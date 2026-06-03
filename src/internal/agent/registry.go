@@ -83,7 +83,7 @@ func (r *Registry) parseAgents(data []byte) error {
 			Name:        name,
 			Description: route.Description,
 			DirName:     route.Target,
-			Version:     "1.0.0-alpha.2",
+			Version:     core.Version,
 		}
 
 		r.agents[id] = metadata

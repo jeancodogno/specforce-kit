@@ -1,6 +1,6 @@
 {
   "name": "@jeancodogno/specforce-kit",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "SpecForce Kit CLI - Distributed via Native Binaries",
   "repository": {
     "type": "git",

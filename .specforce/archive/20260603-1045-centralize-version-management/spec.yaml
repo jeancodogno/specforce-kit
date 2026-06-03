@@ -1,0 +1,28 @@
+slug: 20260603-1045-centralize-version-management
+name: 20260603-1045-centralize-version-management
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-06-03T15:27:04.311353223Z
+              completed_at: 2026-06-03T15:37:01.405525976Z
+    T2.2:
+        sessions:
+            - started_at: 2026-06-03T15:37:26.23911591Z
+              completed_at: 2026-06-03T15:39:36.200523883Z
+    T2.3:
+        sessions:
+            - started_at: 2026-06-03T15:37:31.256445655Z
+              completed_at: 2026-06-03T15:39:41.973362873Z
+    T2.4:
+        sessions:
+            - started_at: 2026-06-03T15:37:36.27901236Z
+              completed_at: 2026-06-03T15:39:47.76159473Z
+    T3.1:
+        sessions:
+            - started_at: 2026-06-03T15:39:56.49691345Z
+              completed_at: 2026-06-03T15:42:31.55226992Z
+    T3.2:
+        sessions:
+            - started_at: 2026-06-03T15:40:01.513758904Z
+              completed_at: 2026-06-03T15:55:49.225676977Z
