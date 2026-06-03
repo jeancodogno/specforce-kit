@@ -1,0 +1,49 @@
+slug: 20260602-1744-spec-refinement-loop
+name: 20260602-1744-spec-refinement-loop
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-06-03T01:42:42.218630699Z
+              completed_at: 2026-06-03T01:43:23.176049693Z
+    T1.2:
+        sessions:
+            - started_at: 2026-06-03T01:43:32.153897265Z
+              completed_at: 2026-06-03T01:43:51.911420088Z
+    T1.3:
+        sessions:
+            - started_at: 2026-06-03T01:44:02.015232097Z
+              completed_at: 2026-06-03T01:44:26.464700083Z
+    T1.4:
+        sessions:
+            - started_at: 2026-06-03T01:44:35.499548019Z
+              completed_at: 2026-06-03T01:46:18.310849689Z
+    T2.1:
+        sessions:
+            - started_at: 2026-06-03T01:46:27.53918072Z
+              completed_at: 2026-06-03T01:47:07.552400429Z
+    T2.2:
+        sessions:
+            - started_at: 2026-06-03T01:47:17.401568704Z
+              completed_at: 2026-06-03T01:47:53.057162368Z
+    T3.1:
+        sessions:
+            - started_at: 2026-06-03T01:48:02.134706394Z
+              completed_at: 2026-06-03T01:49:44.130748906Z
+    T3.2:
+        sessions:
+            - started_at: 2026-06-03T01:49:53.958359735Z
+              completed_at: 2026-06-03T01:50:51.072932463Z
+    T4.1:
+        sessions:
+            - started_at: 2026-06-03T01:51:00.155683948Z
+              completed_at: 2026-06-03T01:51:32.473628831Z
+    T4.2:
+        sessions:
+            - started_at: 2026-06-03T01:51:41.893136127Z
+refinement:
+    iteration_count: 3
+    last_audit_at: 2026-06-03T01:52:56.57010992Z
+    is_valid: false
+    errors:
+        - '[TASKS] Missing US-1'

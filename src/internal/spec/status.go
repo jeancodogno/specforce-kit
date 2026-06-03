@@ -29,6 +29,10 @@ type SpecStatus struct {
 	Found        int              `json:"found"`
 	IsValid      bool             `json:"is_valid"`
 	ContextFiles []string         `json:"context_files,omitempty"`
+	
+	// Refinement state
+	RefinementIteration int      `json:"refinement_iteration"`
+	RefinementErrors    []string `json:"refinement_errors,omitempty"`
 }
 
 // GetStatus checks the filesystem for the required artifacts from the registry and returns a progress summary.
@@ -52,6 +56,13 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 		Artifacts: make([]ArtifactStatus, 0, len(artifacts)),
 		Total:     len(artifacts),
 		IsValid:   true,
+		
+		RefinementIteration: meta.Refinement.IterationCount,
+		RefinementErrors:    meta.Refinement.Errors,
+	}
+
+	if !meta.Refinement.IsValid && len(meta.Refinement.Errors) > 0 {
+		status.IsValid = false
 	}
 
 	detectProposal(projectRoot, specDir, &status)

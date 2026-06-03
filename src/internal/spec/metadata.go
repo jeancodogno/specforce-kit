@@ -20,12 +20,21 @@ type TaskTimeLog struct {
 	Sessions []TimeSession `json:"sessions" yaml:"sessions"`
 }
 
+// RefinementMetadata tracks the state of the automated refinement loop.
+type RefinementMetadata struct {
+	IterationCount int       `json:"iteration_count" yaml:"iteration_count"`
+	LastAuditAt    time.Time `json:"last_audit_at,omitempty" yaml:"last_audit_at,omitempty"`
+	IsValid        bool      `json:"is_valid" yaml:"is_valid"`
+	Errors         []string  `json:"errors,omitempty" yaml:"errors,omitempty"`
+}
+
 // Metadata represents the core configuration of a specification.
 type Metadata struct {
-	Slug     string                 `json:"slug" yaml:"slug"`
-	Name     string                 `json:"name" yaml:"name"`
-	Type     string                 `json:"type" yaml:"type"` // "feature" | "bug"
-	TimeLogs map[string]TaskTimeLog `json:"time_logs,omitempty" yaml:"time_logs,omitempty"`
+	Slug       string                 `json:"slug" yaml:"slug"`
+	Name       string                 `json:"name" yaml:"name"`
+	Type       string                 `json:"type" yaml:"type"` // "feature" | "bug"
+	TimeLogs   map[string]TaskTimeLog `json:"time_logs,omitempty" yaml:"time_logs,omitempty"`
+	Refinement RefinementMetadata     `json:"refinement,omitempty" yaml:"refinement,omitempty"`
 }
 
 // LoadMetadata reads the spec.yaml from the specification directory.

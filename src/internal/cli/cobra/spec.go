@@ -1,8 +1,10 @@
 package cobra
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
+
 	"github.com/jeancodogno/specforce-kit/src/internal/tui"
+	"github.com/spf13/cobra"
 )
 
 var jsonMode bool
@@ -78,6 +80,47 @@ var specArchiveCmd = &cobra.Command{
 	},
 }
 
+var auditError string
+var auditClear bool
+var auditIteration int
+var auditValid bool
+var auditInvalid bool
+
+var specAuditCmd = &cobra.Command{
+	Use:   "audit [slug]",
+	Short: "Update refinement audit state for a specification",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		executor := GetExecutor()
+		appUI := tui.NewUI()
+		
+		// Build manual args for HandleSpec if we want to reuse it, 
+		// but HandleSpec calls handleSpecAuditCmd which parses flags from args.
+		// It's cleaner to just call HandleSpec with reconstructed args.
+		cliArgs := []string{"audit", args[0]}
+		if auditError != "" {
+			cliArgs = append(cliArgs, "--error", auditError)
+		}
+		if auditClear {
+			cliArgs = append(cliArgs, "--clear")
+		}
+		if auditIteration > 0 {
+			cliArgs = append(cliArgs, "--iteration", fmt.Sprintf("%d", auditIteration))
+		}
+		if auditValid {
+			cliArgs = append(cliArgs, "--valid")
+		}
+		if auditInvalid {
+			cliArgs = append(cliArgs, "--invalid")
+		}
+		if jsonMode {
+			cliArgs = append(cliArgs, "--json")
+		}
+
+		return executor.HandleSpec(cmd.Context(), appUI, cliArgs...)
+	},
+}
+
 func init() {
 	specInitCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specInitCmd.Flags().StringVar(&specType, "type", "feature", "type of specification (feature, bug)")
@@ -86,10 +129,18 @@ func init() {
 	specArtifactCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specArchiveCmd.Flags().BoolVar(&forceArchive, "force", false, "force archive even if pending tasks remain")
 
+	specAuditCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
+	specAuditCmd.Flags().StringVar(&auditError, "error", "", "append a coherence error message")
+	specAuditCmd.Flags().BoolVar(&auditClear, "clear", false, "clear all coherence errors")
+	specAuditCmd.Flags().IntVar(&auditIteration, "iteration", 0, "set current refinement iteration count")
+	specAuditCmd.Flags().BoolVar(&auditValid, "valid", false, "mark spec as valid")
+	specAuditCmd.Flags().BoolVar(&auditInvalid, "invalid", false, "mark spec as invalid")
+
 	specCmd.AddCommand(specInitCmd)
 	specCmd.AddCommand(specListCmd)
 	specCmd.AddCommand(specStatusCmd)
 	specCmd.AddCommand(specArtifactCmd)
 	specCmd.AddCommand(specArchiveCmd)
+	specCmd.AddCommand(specAuditCmd)
 	rootCmd.AddCommand(specCmd)
 }

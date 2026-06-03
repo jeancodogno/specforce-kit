@@ -108,8 +108,27 @@ content: |
   - **Visual Verification:** If the feature is `UI-heavy`, ensure the Architect includes an ASCII wireframe in the Design artifact.
   - Write the completed content to the exact `path` specified in the Status JSON.
 
-  ### 3. Verification & Handoff
-  - **MANDATORY FINAL CHECK:** ONLY after writing all planned artifacts for this session, you MUST execute `specforce spec status <slug> --json` ONE final time in the terminal.
+  ### 3. Automated Refinement (The Quality Gate)
+  Once artifacts are generated, you MUST perform an automated audit to ensure cross-artifact coherence.
+
+  **A. Execute Audit:**
+  - Invoke the `specforce-spec-reviewer` agent.
+  - Send the full content of `requirements.md`, `design.md`, and `tasks.md`.
+  - The Reviewer will output standardized `[COHERENCE_ERROR]` blocks if gaps are found.
+
+  **B. Persist Findings:**
+  - For every `[COHERENCE_ERROR]` found, you MUST execute:
+  `specforce spec audit <slug> --error "[ARTIFACT] Message: Context"`
+  - This ensures the errors are visible in the TUI status and persisted in `spec.yaml`.
+
+  **C. Refinement Loop (Max 3 iterations):**
+  - If errors exist, re-invoke the responsible agent (Analyst, Architect, or Planner).
+  - Use the **Surgical Correction** payload: send the specific error and the relevant source-of-truth snippet.
+  - Once corrected, execute `specforce spec audit <slug> --clear` and re-run the `specforce-spec-reviewer`.
+  - If the loop exceeds 3 iterations, you MUST escalate to the user and present the remaining errors.
+
+  ### 4. Verification & Handoff
+  - **MANDATORY FINAL CHECK:** ONLY after writing all planned artifacts and passing the Refinement Loop, you MUST execute `specforce spec status <slug> --json` ONE final time in the terminal.
   - **The Coherence Gate:** Before concluding, you MUST perform a cross-artifact audit to ensure structural and logical alignment:
     1. **Requirement Coverage:** Verify that every Functional Requirement `[US-X]` in `requirements.md` has at least one corresponding task in `tasks.md`.
     2. **Logical Flow:** Ensure that technical decisions made in `design.md` are reflected in the `tasks.md` action steps.

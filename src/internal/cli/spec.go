@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
@@ -19,7 +20,7 @@ import (
 // HandleSpec dispatches to the correct spec sub-command.
 func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) error {
 	if len(args) == 0 {
-		fmt.Println("Available commands: init, list, status, artifact, archive")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive")
 		return nil
 	}
 
@@ -41,11 +42,13 @@ func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) e
 		return e.handleSpecStatusCmd(ctx, ui, args, jsonMode)
 	case "artifact":
 		return e.handleSpecArtifactCmd(ctx, ui, args, jsonMode)
+	case "audit":
+		return e.handleSpecAuditCmd(ctx, ui, args, jsonMode)
 	case "archive":
 		return e.handleSpecArchiveCmd(ctx, ui, args)
 	default:
 		fmt.Printf("Unknown spec command: %s\n", subCommand)
-		fmt.Println("Available commands: init, list, status, artifact, archive")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive")
 		return nil
 	}
 }
@@ -79,6 +82,61 @@ func (e *Executor) handleSpecArtifactCmd(ctx context.Context, ui core.UI, args [
 		slug = args[1]
 	}
 	return e.HandleSpecArtifact(ctx, ui, slug, jsonMode)
+}
+
+func (e *Executor) handleSpecAuditCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
+	if len(args) < 2 {
+		return fmt.Errorf("missing slug for spec audit. Usage: specforce spec audit <slug> [--error <msg>] [--clear] [--iteration <n>]")
+	}
+
+	slug := args[1]
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+
+	slug = spec.ResolveSlug(projectRoot, slug)
+	meta, err := spec.LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return err
+	}
+
+	for i := 2; i < len(args); i++ {
+		switch args[i] {
+		case "--error":
+			if i+1 < len(args) {
+				meta.Refinement.Errors = append(meta.Refinement.Errors, args[i+1])
+				i++
+			}
+		case "--clear":
+			meta.Refinement.Errors = []string{}
+			meta.Refinement.IsValid = true
+		case "--iteration":
+			if i+1 < len(args) {
+				var n int
+				if _, err := fmt.Sscanf(args[i+1], "%d", &n); err == nil {
+					meta.Refinement.IterationCount = n
+					i++
+				}
+			}
+		case "--valid":
+			meta.Refinement.IsValid = true
+		case "--invalid":
+			meta.Refinement.IsValid = false
+		}
+	}
+
+	meta.Refinement.LastAuditAt = time.Now().UTC()
+	if err := spec.SaveMetadata(projectRoot, slug, meta); err != nil {
+		return fmt.Errorf("failed to save metadata: %w", err)
+	}
+
+	if jsonMode {
+		return e.outputJSON(map[string]string{"status": "ok", "slug": slug})
+	}
+
+	fmt.Printf("[OK] Audit state updated for %s\n", slug)
+	return nil
 }
 
 func (e *Executor) handleSpecArchiveCmd(ctx context.Context, ui core.UI, args []string) error {

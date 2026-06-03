@@ -50,6 +50,28 @@ func TestMetadataPersistence(t *testing.T) {
 	if loaded.Name != "Test Spec" {
 		t.Errorf("expected name 'Test Spec', got %q", loaded.Name)
 	}
+
+	// 4. Test refinement persistence
+	loaded.Refinement.IterationCount = 2
+	loaded.Refinement.IsValid = true
+	loaded.Refinement.Errors = []string{"Error 1", "Error 2"}
+	if err := SaveMetadata(tmpDir, slug, loaded); err != nil {
+		t.Fatalf("failed to save refinement metadata: %v", err)
+	}
+
+	refined, err := LoadMetadata(tmpDir, slug)
+	if err != nil {
+		t.Fatalf("failed to load refined metadata: %v", err)
+	}
+	if refined.Refinement.IterationCount != 2 {
+		t.Errorf("expected iteration 2, got %d", refined.Refinement.IterationCount)
+	}
+	if !refined.Refinement.IsValid {
+		t.Error("expected IsValid to be true")
+	}
+	if len(refined.Refinement.Errors) != 2 {
+		t.Errorf("expected 2 errors, got %d", len(refined.Refinement.Errors))
+	}
 }
 
 func TestMetadataSessionManagement(t *testing.T) {
