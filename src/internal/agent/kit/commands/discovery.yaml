@@ -51,6 +51,7 @@ content: |
   specforce constitution status --json
   ```
   - Read relevant constitution files in `.specforce/docs/` to align with global project rules.
+  - **Module Affinity (Lazy Load):** Check the `modules` list in the constitution status for any slug that matches the current working directory, feature intent, or user mention. If a match is found, you MUST perform a `read_file` on the corresponding `.specforce/docs/modules/<slug>.md` to ground your discovery in domain-specific rules.
   - Identify potential integration points or conflicts with existing specifications.
 
   ### Layer 2: Codebase Archeology (Empirical Grounding)

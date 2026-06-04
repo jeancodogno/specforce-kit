@@ -1,0 +1,30 @@
+description: "Domain-specific document for module behavior and invariants."
+instruction: |
+  Generate the Module Manifest document strictly using the provided template. You are capturing the "Golden Rules" and patterns of a specific domain.
+  
+  Adhere to the following rules:
+  1. Domain Invariants: Focus on immutable business logic (e.g., "Always validate X before Y"). Use imperative language.
+  2. Technical Patterns: Document module-specific implementation choices (libraries, prefixes, patterns).
+  3. Success Metrics: Define how this specific module's value is measured.
+  4. Integration Points: Briefly list critical dependencies or consumers.
+
+  CRITICAL: The final output must be high-density Markdown (bullet points preferred). Avoid prose.
+template: |
+  # Module: {{MODULE_NAME}}
+
+  ## 1. Domain Invariants
+  > Core business rules that are unique to this domain.
+  - [Invariant 1: e.g., "Must validate stock before reserving"]
+  - [Invariant 2: e.g., "Total value cannot be negative"]
+
+  ## 2. Technical Patterns
+  > Domain-specific implementation details and standards.
+  - [Pattern 1: e.g., "Uses Redis for session caching"]
+  - [Pattern 2: e.g., "All tables use the 'm_' prefix"]
+
+  ## 3. Success Metrics (Local)
+  - [Metric 1: e.g., "Response time < 50ms"]
+  - [Metric 2: e.g., "Zero invalid transitions in state machine"]
+
+  ## 4. Integration Points
+  - [Consumer/Dependency A]: [Brief description of contract]

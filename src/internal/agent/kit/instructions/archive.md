@@ -31,15 +31,19 @@ specforce implementation status <slug> --json
   - **Precedents:** Does this feature introduce a precedent that is NOT yet documented in any of these global standards?
   - **Error Prevention:** Do the challenges and bugs encountered indicate a missing rule or lack of clarity in the Constitution? If so, formulate a rule to prevent the same error from repeating.
 
-### 5. Knowledge Harvesting (Memorial Update)
-- Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, or critical decisions as a new memory fragment.
-- **Action:** Record your findings using the CLI:
+### 5. Knowledge Harvesting (Memorial & Module Update)
+- Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, or critical decisions.
+- **Harvest Module Invariants:** 
+  1. Check the `modules` list in the Constitution status for affinity with the feature's domain.
+  2. If a match is found, scan the code for new domain-specific invariants or patterns.
+  3. Propose an update to the relevant `.specforce/docs/modules/<module>.md` file via a `replace` or `write_file` operation (requires user approval).
+- **Memorial Update:** Record findings using the CLI:
   ```bash
   specforce archive memorial <slug> --type <lesson|decision|context> --title "<brief-summary>" --content "<detailed-description>"
   ```
 - **Context:**
   - **Existing Fragments:** {{MEMORIAL_FRAGMENTS}}
-- This ensures cross-session memory without causing merge conflicts and standardizes the archival metadata.
+- This ensures domain knowledge and cross-session memory are standardized.
 
 ### 6. Information Gathering (Tool Discovery) & Constitution Update
 - If you identify new patterns or missing rules to prevent errors, you MUST scan your environment tools for the capability to prompt the user (e.g., the "ask user" tool).
