@@ -33,7 +33,7 @@ You are STRICTLY FORBIDDEN from using mutation tools (`replace`, `write_file`) t
 
 ## 3. Environment Recovery
 If the `specforce` binary is not found in the environment:
-1. Run: `npm i -g @jeancodogno/specforce-kit@1.0.0-alpha.2`
+1. Run: `npm i -g @jeancodogno/specforce-kit@1.0.0-alpha.3`
 2. Ensure your global npm bin directory is in your PATH.
 
 ## 4. Project Constitution
@@ -73,6 +73,8 @@ If you encounter ambiguity, require user iteration, or need to make a critical d
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
+
 
 
 

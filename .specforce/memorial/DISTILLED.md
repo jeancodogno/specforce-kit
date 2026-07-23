@@ -12,3 +12,9 @@
 
 ---
 
+## [2026-07-23] Distillation: proposal-md-integration, large-spec-handling, parallel-tasks-support, fix-discovery-intrusiveness, specforce-spec-reviewer, centralize-version-management, module-manifests-support, mandatory-memorial-distillation
+**Author:** agent
+**Summary:** Consolidated 8 fragments from June-July 2026. Established proposal protocol, large spec handling, task parallel execution, passive discovery model, surgical reviewer corrections, Go version synchronization, affinity-based module lazy loading, and mandatory memorial distillation before spec archiving.
+
+---
+

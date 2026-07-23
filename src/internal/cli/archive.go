@@ -142,6 +142,7 @@ func (e *Executor) HandleArchiveInstructions(ctx context.Context, ui core.UI) er
 	config.Context["CURRENT_DATETIME"] = now.Format("20060102-1504")
 
 	memSvc := project.NewMemorialService(".")
+	fragmentCount, _ := memSvc.CountFragments(ctx)
 	fragments, err := memSvc.Consolidate(ctx, 10)
 	if err != nil {
 		fragments = "None"
@@ -154,12 +155,17 @@ func (e *Executor) HandleArchiveInstructions(ctx context.Context, ui core.UI) er
 		return fmt.Errorf("failed to get archive instructions: %w", err)
 	}
 
-	e.printArchiveInstructions(&status, finalInstructions)
+	e.printArchiveInstructions(&status, finalInstructions, fragmentCount)
 	return nil
 }
 
-func (e *Executor) printArchiveInstructions(status *constitution.ConstitutionStatus, instructions string) {
+func (e *Executor) printArchiveInstructions(status *constitution.ConstitutionStatus, instructions string, fragmentCount int) {
 	fmt.Println("# ARCHIVE INSTRUCTIONS")
+	fmt.Println()
+	fmt.Printf("Active Memorial Fragments: %d\n", fragmentCount)
+	if fragmentCount >= 5 {
+		fmt.Printf("[ATTENTION] High number of active fragments (%d). Memory distillation is required before archiving.\n", fragmentCount)
+	}
 	fmt.Println()
 	fmt.Println("## 1. Project Constitution Context")
 	fmt.Println("These are the global standards of the project:")

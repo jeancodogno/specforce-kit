@@ -189,3 +189,36 @@ func TestMemorialService_Distill(t *testing.T) {
 		t.Errorf("Fragment file should have been deleted: %s", entry.Name())
 	}
 }
+
+func TestMemorialService_CountFragments(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "memorial-test-count")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	svc := NewMemorialService(tmpDir)
+	ctx := context.Background()
+	_ = svc.Initialize(ctx, "")
+
+	count0, err := svc.CountFragments(ctx)
+	if err != nil {
+		t.Fatalf("CountFragments failed on empty directory: %v", err)
+	}
+	if count0 != 0 {
+		t.Errorf("Expected 0 fragments, got %d", count0)
+	}
+
+	f1 := Fragment{Scope: "Auth", Title: "JWT Fix", Content: "Fixed JWT leak."}
+	f2 := Fragment{Scope: "API", Title: "Rate Limit", Content: "Added rate limiting."}
+	_ = svc.Record(ctx, f1)
+	_ = svc.Record(ctx, f2)
+
+	count2, err := svc.CountFragments(ctx)
+	if err != nil {
+		t.Fatalf("CountFragments failed: %v", err)
+	}
+	if count2 != 2 {
+		t.Errorf("Expected 2 fragments, got %d", count2)
+	}
+}

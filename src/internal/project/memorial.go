@@ -43,6 +43,9 @@ type MemorialService interface {
 	// Distill consolidates specific fragments into a single DISTILLED.md file.
 	Distill(ctx context.Context, slugs []string, summary string, author string) error
 
+	// CountFragments returns the number of active memorial fragments.
+	CountFragments(ctx context.Context) (int, error)
+
 	// Initialize sets up the memorial directory and initial ROUTING.md.
 	Initialize(ctx context.Context, template string) error
 }
@@ -219,6 +222,31 @@ func (s *memorialService) Consolidate(ctx context.Context, limit int) (string, e
 	}
 
 	return builder.String(), nil
+}
+
+func (s *memorialService) CountFragments(ctx context.Context) (int, error) {
+	memorialDir, err := core.SecurePath(s.projectRoot, filepath.Join(".specforce", "memorial"))
+	if err != nil {
+		return 0, err
+	}
+
+	entries, err := os.ReadDir(memorialDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	count := 0
+	for _, entry := range entries {
+		if entry.IsDir() || entry.Name() == "ROUTING.md" || entry.Name() == "DISTILLED.md" || !strings.HasSuffix(entry.Name(), ".md") {
+			continue
+		}
+		count++
+	}
+
+	return count, nil
 }
 
 func (s *memorialService) Distill(ctx context.Context, slugs []string, summary string, author string) error {

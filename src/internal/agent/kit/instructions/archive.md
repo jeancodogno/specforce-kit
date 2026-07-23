@@ -45,43 +45,44 @@ specforce implementation status <slug> --json
   - **Existing Fragments:** {{MEMORIAL_FRAGMENTS}}
 - This ensures domain knowledge and cross-session memory are standardized.
 
-### 6. Information Gathering (Tool Discovery) & Constitution Update
+### 6. Memory Distillation (Mandatory Check)
+- **MANDATORY CHECK:** Operating as the Principal Architect, inspect active fragments in `.specforce/memorial/` (or listed in `{{MEMORIAL_FRAGMENTS}}`).
+- **Distillation Evaluation:** If active fragments exist (or total count is >= 5), identify those whose lessons or decisions can be distilled into global rules or `DISTILLED.md`.
+- **Action:** Consolidate these active fragments into a single cohesive architectural summary and execute the distillation command BEFORE proceeding to spec archival:
+  ```bash
+  specforce archive distill <comma-separated-slugs> "<consolidated-architectural-summary>"
+  ```
+- If zero active fragments exist, state "No active fragments to distill" and proceed to Step 7.
+
+### 7. Information Gathering (Tool Discovery) & Constitution Update
 - If you identify new patterns or missing rules to prevent errors, you MUST scan your environment tools for the capability to prompt the user (e.g., the "ask user" tool).
 - Ask the user: *"The feature [<slug>] encountered [Challenge X] and introduced [Pattern/Rule Y]. Should I update the project's Constitution to reflect this as a new standard before archiving to prevent this from repeating?"*
 - If the user approves, identify the appropriate artifact from the previously executed `constitution status --json` output.
 - Use the exact `path` specified in the JSON to perform the update with your file-writing tools. 
 - If the artifact does not yet exist (`"exists": false`), you MUST create it at the provided `path` with the new content.
-- If no updates are required, or the user declines, proceed immediately to Step 7.
+- If no updates are required, or the user declines, proceed immediately to Step 8.
 
-### 7. Archival Execution
-- Once the Constitution and Memorial are up to date (or bypassed), execute the command to formally archive the specification:
+### 8. Archival Execution
+- Once the Constitution and Memorial are up to date and distilled, execute the command to formally archive the specification:
 ```bash
 specforce spec archive <slug>
 ```
 
-### 8. Verification & Handoff
+### 9. Verification & Handoff
 - After the archive command is executed successfully, you MUST output a final summary using the exact Markdown format below:
 
 **Format:**
 ```markdown
 **Archived:** [{FEATURE_NAME}]
 **Constitution Updates:** [Briefly list what was added to the Constitution artifacts, or write "None required"]
-**Memorial Updated:** [Yes/No - List key lessons recorded]
+**Memorial Updated & Distilled:** [Yes/No - List key lessons recorded & distilled]
 
 Feature successfully archived and lifecycle closed. 
 
 > The Specforce system is ready for the next feature.
 ```
 
-### 9. Memory Distillation (Optional but Recommended)
-- Operating as the Principal Architect, check the existing fragments in `.specforce/memorial/`.
-- If there are more than 10 fragments, identify those whose lessons or decisions have already been distilled into the Constitution or are no longer critical for active development.
-- **Action:** Consolidate these old fragments into a single cohesive summary and run the distillation command:
-  ```bash
-  specforce archive distill --slug <comma-separated-slugs> --summary "<consolidated-architectural-summary>"
-  ```
-- This keeps the active memory lean and ensures the `DISTILLED.md` file contains a high-signal historical record.
-
 ## Guardrails
+- **Mandatory Distillation:** Memory distillation must be performed/checked prior to calling `specforce spec archive`.
 - **Zero Bloat:** Do not add feature-specific logic (e.g., "The auth module uses JWT") to the Constitution. Only extract reusable, cross-cutting rules.
 - **Let the CLI Handle Files:** Do not delete or move the specification files manually. Let the CLI command handle the file system operations.

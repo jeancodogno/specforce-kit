@@ -8,8 +8,8 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/mattn/go-isatty v0.0.21
 	github.com/spf13/cobra v1.10.2
-	golang.org/x/mod v0.35.0
-	golang.org/x/text v0.36.0
+	golang.org/x/mod v0.37.0
+	golang.org/x/text v0.40.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

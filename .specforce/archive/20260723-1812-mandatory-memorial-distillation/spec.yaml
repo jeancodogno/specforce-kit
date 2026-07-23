@@ -1,0 +1,16 @@
+slug: 20260723-1812-mandatory-memorial-distillation
+name: 20260723-1812-mandatory-memorial-distillation
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-07-23T21:13:55.313148111Z
+              completed_at: 2026-07-23T21:14:14.203742086Z
+    T2.1:
+        sessions:
+            - started_at: 2026-07-23T21:14:08.332650417Z
+              completed_at: 2026-07-23T21:16:29.920849122Z
+    T3.1:
+        sessions:
+            - started_at: 2026-07-23T21:16:31.854178886Z
+              completed_at: 2026-07-23T21:37:46.546994639Z
