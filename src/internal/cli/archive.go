@@ -162,6 +162,10 @@ func (e *Executor) HandleArchiveInstructions(ctx context.Context, ui core.UI) er
 func (e *Executor) printArchiveInstructions(status *constitution.ConstitutionStatus, instructions string, fragmentCount int) {
 	fmt.Println("# ARCHIVE INSTRUCTIONS")
 	fmt.Println()
+	fmt.Println("## IMPORTANT: Archival Scopes & Command Separation")
+	fmt.Println("1. Memory Scope:     'specforce archive memorial' / 'specforce archive distill' (saves learnings)")
+	fmt.Println("2. Spec State Scope: 'specforce spec archive <slug>' (MANDATORY - closes spec lifecycle)")
+	fmt.Println()
 	fmt.Printf("Active Memorial Fragments: %d\n", fragmentCount)
 	if fragmentCount >= 5 {
 		fmt.Printf("[ATTENTION] High number of active fragments (%d). Memory distillation is required before archiving.\n", fragmentCount)

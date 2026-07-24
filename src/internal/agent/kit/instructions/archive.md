@@ -65,7 +65,11 @@ specforce implementation status <slug> --json
 - If no updates are required, or the user declines, proceed immediately to Step 8.
 
 ### 8. Archival Execution
-- Once the Constitution, Module Documentation, and Memorial are up to date and distilled, execute the command to formally archive the specification:
+> **CRITICAL DUAL-STEP REQUIREMENT:**
+> Recording memory (`specforce archive memorial`) and memory distillation (`specforce archive distill`) manage global memory ONLY.
+> They DO NOT update the specification lifecycle status.
+> You MUST execute the command below to formally alter the specification state from `active` to `archived` in `.specforce/specs/`:
+
 ```bash
 specforce spec archive <slug>
 ```
@@ -86,6 +90,7 @@ Feature successfully archived and lifecycle closed.
 ```
 
 ## Guardrails
+- **Mandatory Spec Archive Execution:** You MUST execute `specforce spec archive <slug>` as the final step. Ending the archival process after memory logging without running `specforce spec archive <slug>` is a strict protocol violation.
 - **Mandatory Distillation:** Memory distillation must be performed/checked prior to calling `specforce spec archive`.
 - **Zero Bloat:** Do not add feature-specific logic (e.g., "The auth module uses JWT") to the Constitution. Only extract reusable, cross-cutting rules.
 - **Let the CLI Handle Files:** Do not delete or move the specification files manually. Let the CLI command handle the file system operations.
