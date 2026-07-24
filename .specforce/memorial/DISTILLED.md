@@ -18,3 +18,9 @@
 
 ---
 
+## [2026-07-23] Distillation: 20260723-2301-consolidation-of-module-behavior-on-archival
+**Author:** agent
+**Summary:** Mandated module behavior consolidation into .specforce/docs/modules/<slug>.md during feature archival step 5 in archive.md.
+
+---
+

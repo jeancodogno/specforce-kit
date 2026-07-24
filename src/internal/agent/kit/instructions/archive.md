@@ -31,19 +31,21 @@ specforce implementation status <slug> --json
   - **Precedents:** Does this feature introduce a precedent that is NOT yet documented in any of these global standards?
   - **Error Prevention:** Do the challenges and bugs encountered indicate a missing rule or lack of clarity in the Constitution? If so, formulate a rule to prevent the same error from repeating.
 
-### 5. Knowledge Harvesting (Memorial & Module Update)
-- Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, or critical decisions.
-- **Harvest Module Invariants:** 
-  1. Check the `modules` list in the Constitution status for affinity with the feature's domain.
-  2. If a match is found, scan the code for new domain-specific invariants or patterns.
-  3. Propose an update to the relevant `.specforce/docs/modules/<module>.md` file via a `replace` or `write_file` operation (requires user approval).
+### 5. Knowledge Harvesting & Module Behavior Consolidation (Mandatory Step)
+- Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, critical decisions, and consolidate module behavior.
+- **Harvest & Consolidate Module Invariants:** 
+  1. Scan the feature's `requirements.md` and `design.md` for new domain invariants, business logic, or technical contracts.
+  2. Check the `modules` list in the Constitution status for affinity with the feature's domain.
+  3. If a matching module document exists in `.specforce/docs/modules/<module>.md`, you MUST merge and update it with the new canonical behavior of that domain.
+  4. If no module document exists for an affected domain, ask the user for approval to create `.specforce/docs/modules/<module>.md` with the new domain invariants.
+  5. Updating or creating module documentation is a **MANDATORY STEP** before completing archival (unless no domain affinity exists).
 - **Memorial Update:** Record findings using the CLI:
   ```bash
   specforce archive memorial <slug> --type <lesson|decision|context> --title "<brief-summary>" --content "<detailed-description>"
   ```
 - **Context:**
   - **Existing Fragments:** {{MEMORIAL_FRAGMENTS}}
-- This ensures domain knowledge and cross-session memory are standardized.
+- This ensures domain knowledge, canonical module behaviors, and cross-session memory are standardized.
 
 ### 6. Memory Distillation (Mandatory Check)
 - **MANDATORY CHECK:** Operating as the Principal Architect, inspect active fragments in `.specforce/memorial/` (or listed in `{{MEMORIAL_FRAGMENTS}}`).
@@ -63,7 +65,7 @@ specforce implementation status <slug> --json
 - If no updates are required, or the user declines, proceed immediately to Step 8.
 
 ### 8. Archival Execution
-- Once the Constitution and Memorial are up to date and distilled, execute the command to formally archive the specification:
+- Once the Constitution, Module Documentation, and Memorial are up to date and distilled, execute the command to formally archive the specification:
 ```bash
 specforce spec archive <slug>
 ```
@@ -75,6 +77,7 @@ specforce spec archive <slug>
 ```markdown
 **Archived:** [{FEATURE_NAME}]
 **Constitution Updates:** [Briefly list what was added to the Constitution artifacts, or write "None required"]
+**Module Behavior Consolidated:** [Yes/No/NA - List updated or created module files in .specforce/docs/modules/]
 **Memorial Updated & Distilled:** [Yes/No - List key lessons recorded & distilled]
 
 Feature successfully archived and lifecycle closed. 
