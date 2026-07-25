@@ -34,10 +34,12 @@ specforce implementation status <slug> --json
 ### 5. Knowledge Harvesting & Module Behavior Consolidation (Mandatory Step)
 - Operating as the Principal Architect, you MUST record any new architectural precedents, lessons learned, critical decisions, and consolidate module behavior.
 - **Harvest & Consolidate Module Invariants:** 
-  1. Scan the feature's `requirements.md` and `design.md` for new domain invariants, business logic, or technical contracts.
-  2. Check the `modules` list in the Constitution status for affinity with the feature's domain.
-  3. If a matching module document exists in `.specforce/docs/modules/<module>.md`, you MUST merge and update it with the new canonical behavior of that domain.
-  4. If no module document exists for an affected domain, ask the user for approval to create `.specforce/docs/modules/<module>.md` with the new domain invariants.
+  1. Determine the business domain/context affected by this feature (e.g., `messaging`, `auth`, `billing`).
+  2. Scan the feature's `requirements.md` and `design.md` for new domain invariants, business logic, or technical contracts.
+  3. Check the `modules` list in the Constitution status for domain affinity:
+     - **If a matching module EXISTS (`.specforce/docs/modules/<module>.md`):** Merge and update it with the new canonical behavior of that domain.
+     - **If NO matching module exists (including when `modules` is empty):** Ask the user for approval to create `.specforce/docs/modules/<domain>.md` containing the new domain invariants.
+  4. Labeling module consolidation as `N/A` is ONLY permitted if the feature is purely cross-cutting infrastructure/tooling without any business domain context.
   5. Updating or creating module documentation is a **MANDATORY STEP** before completing archival (unless no domain affinity exists).
 - **Memorial Update:** Record findings using the CLI:
   ```bash
