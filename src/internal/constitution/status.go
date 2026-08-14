@@ -28,10 +28,7 @@ type ConstitutionStatus struct {
 func GetStatus(ctx context.Context, projectRoot string, registry *Registry) (ConstitutionStatus, error) {
 	artifacts := registry.List()
 
-	// Filter for standard core artifacts (exclude index and module as they are meta/dynamic)
-	// Actually, index IS core. memorial and current-state are also core.
-	// Only 'module' is a generic template.
-
+	// Filter for standard core artifacts (exclude module as it is a generic template)
 	coreArtifacts := make([]Artifact, 0)
 	for _, art := range artifacts {
 		if art.Slug == "module" {

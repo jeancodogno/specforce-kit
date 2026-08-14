@@ -55,9 +55,8 @@ func runEmptyDirTest(t *testing.T, tmpDir string, registry *Registry) {
 		t.Fatalf("GetStatus failed: %v", err)
 	}
 
-	// We removed current-state and index, so it should be 7 artifacts
-	// (principles, architecture, ui-ux, security, engineering, governance, memorial)
-	expectedTotal := 7
+	// (principles, architecture, ui-ux, security, engineering, governance)
+	expectedTotal := 6
 	if status.Total != expectedTotal {
 		t.Errorf("expected %d artifacts, got %d", expectedTotal, status.Total)
 	}

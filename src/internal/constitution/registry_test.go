@@ -18,8 +18,8 @@ func TestNewRegistry(t *testing.T) {
 	}
 
 	artifacts := registry.List()
-	if len(artifacts) < 7 {
-		t.Errorf("Expected at least 7 artifacts, got %d", len(artifacts))
+	if len(artifacts) < 6 {
+		t.Errorf("Expected at least 6 artifacts, got %d", len(artifacts))
 	}
 
 	// Verify Architecture artifact
@@ -42,15 +42,6 @@ func TestNewRegistry(t *testing.T) {
 	}
 	if arch.Path != ".specforce/docs/architecture.md" {
 		t.Errorf("Expected .specforce/docs/architecture.md, got %s", arch.Path)
-	}
-
-	// Verify Memorial artifact (custom path)
-	mem, ok := registry.Get("memorial")
-	if !ok {
-		t.Fatal("Memorial artifact not found")
-	}
-	if mem.Path != ".specforce/memorial/ROUTING.md" {
-		t.Errorf("Expected .specforce/memorial/ROUTING.md, got %s", mem.Path)
 	}
 }
 

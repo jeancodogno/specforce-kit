@@ -20,7 +20,7 @@ instructions:
   implementation:
     - "Do not bypass TypeScript typings. Use Type Guards."
   archive:
-    - "Always update the project memorial with lessons learned."
+    - "Consolide siempre las living specs de módulos con las lecciones aprendidas."
     - "Summarize any technical debt introduced during implementation."
 ```
 

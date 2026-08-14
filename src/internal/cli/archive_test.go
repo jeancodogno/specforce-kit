@@ -56,13 +56,10 @@ func TestHandleArchiveInstructions(t *testing.T) {
 	output := buf.String()
 
 	// Assertions
-	if !strings.Contains(output, "# ARCHIVE INSTRUCTIONS") {
-		t.Errorf("Output missing header")
+	if !strings.Contains(output, "# TASK: Specforce Archival & Knowledge Harvesting") {
+		t.Errorf("Output missing task header")
 	}
-	if !strings.Contains(output, "## 1. Project Constitution Context") {
-		t.Errorf("Output missing constitution context")
-	}
-	if !strings.Contains(output, "## 2. Core Archiving Rules") {
-		t.Errorf("Output missing core rules")
+	if !strings.Contains(output, "### 1. Verification of Completion") {
+		t.Errorf("Output missing verification step")
 	}
 }

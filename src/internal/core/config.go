@@ -45,7 +45,7 @@ const DefaultConfigContent = `instructions:
   #   - "Always run 'go fmt' before finishing a task"
 
   # archive:
-  #   - "Always update the project memorial with lessons learned"
+  #   - "Always consolidate module living specs with lessons learned"
 
 # Global context variables for instruction injection
 # context:

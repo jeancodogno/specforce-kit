@@ -49,7 +49,7 @@ Retrieves the specific context, templates, and injected instructions for a given
 Handle the feature archiving process and instructions.
 
 ### `specforce archive instructions`
-Displays the full set of instructions for archiving a feature. This includes the constitution metadata (descriptions of all constitution documents), core archiving rules (like updating the project memorial), and any custom project-specific instructions defined in `config.yaml`. This command is primarily used by AI agents to ensure they follow the correct archiving protocol.
+Displays the full set of instructions for archiving a feature. This includes the constitution metadata (descriptions of all constitution documents), core archiving rules (like consolidating module living specs), and any custom project-specific instructions defined in `config.yaml`. This command is primarily used by AI agents to ensure they follow the correct archiving protocol.
 
 ---
 

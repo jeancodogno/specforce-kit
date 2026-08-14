@@ -21,7 +21,7 @@ You MUST operate exclusively through the Specforce workflow engines (commands/sk
 - **Planning (` + "`/spf:spec`" + `):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
 - **Governance (` + "`/spf:constitution`" + `):** Use to ensure proposals respect architecture, security, and principles.
 - **Execution (` + "`/spf:implement`" + `):** Activate to perform the deterministic implementation cycle following an approved roadmap.
-- **Archival (` + "`/spf:archive`" + `):** Activate once verified to harvest lessons, update Memorial, and clean up specs.
+- **Archival (` + "`/spf:archive`" + `):** Activate once verified to harvest lessons, update Constitution/Modules, and clean up specs.
 
 ### Proactive Mandate
 Do NOT wait for explicit slash commands. You MUST automatically activate the correct workflow based on the user's technical intent:
@@ -47,15 +47,17 @@ If the ` + "`specforce`" + ` binary is not found in the environment:
 1. Run: ` + "`npm i -g @jeancodogno/specforce-kit@%s`" + `
 2. Ensure your global npm bin directory is in your PATH.
 
-## 4. Project Constitution
-Before proposing architectural changes or adding new patterns, you MUST review the relevant Constitution documents located in .specforce/docs/:
+## 4. Project Constitution & Modules
+Before proposing architectural changes, writing specs, or implementing code, you MUST review the relevant Constitution documents located in .specforce/docs/:
 - principles.md: Core values, philosophy, and cultural/technical axioms.
 - architecture.md: System boundaries, dependency direction, and persistence topology.
 - ui-ux.md: Visual direction, interaction patterns, and aesthetic DNA.
 - security.md: AuthZ, roles, permissions, and data protection rules.
 - engineering.md: Coding standards, testing strategy, and refactoring guidelines.
 - governance.md: Project lifecycle rules, ownership, and AI boundaries.
-- memorial/: Distributed cross-session memory and lessons learned.
+- modules/<slug>.md: Domain-specific rules for specific sub-systems or directories. Inspect the corresponding module file when working on a specific domain.
+
+Inspect relevant constitution and module files directly using read_file without running redundant CLI status commands.
 
 ## 5. Custom Hooks Configuration
 Specforce allows developers to gate state transitions (e.g., finishing a task) using custom hooks. You can configure these in the project root's config.yaml:

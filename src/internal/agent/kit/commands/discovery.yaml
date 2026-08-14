@@ -45,13 +45,11 @@ content: |
   You MUST follow this 3-layer funnel for every new major topic or feature idea to ensure your brainstorming is grounded and consultative.
 
   ### Layer 1: Constitutional Anchor
-  Immediately synchronize with the project's active state. If this context is not already available in your session history, execute:
-  ```bash
-  specforce spec list --json
-  specforce constitution status --json
-  ```
-  - Read relevant constitution files in `.specforce/docs/` to align with global project rules.
-  - **Module Affinity (Lazy Load):** Check the `modules` list in the constitution status for any slug that matches the current working directory, feature intent, or user mention. If a match is found, you MUST perform a `read_file` on the corresponding `.specforce/docs/modules/<slug>.md` to ground your discovery in domain-specific rules.
+  Immediately synchronize with the project's active state:
+  - If existing active specs are not loaded in history, execute `specforce spec list --json`.
+  - Read relevant constitution files in `.specforce/docs/` (e.g., `principles.md`, `architecture.md`, `security.md`) via `read_file` to align with global project rules.
+  - **Module Affinity (Lazy Load):** If your discovery topic touches a specific sub-system or module directory, check if a matching `.specforce/docs/modules/<slug>.md` exists and perform a `read_file` to ground your discovery in domain-specific rules.
+  - *Note:* Execute `specforce constitution status --json` ONLY if you need to dynamically audit missing constitution files or discover available module manifests.
   - Identify potential integration points or conflicts with existing specifications.
 
   ### Layer 2: Codebase Archeology (Empirical Grounding)

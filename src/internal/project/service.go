@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/agent"
-	"github.com/jeancodogno/specforce-kit/src/internal/constitution"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 	"github.com/jeancodogno/specforce-kit/src/internal/installer"
 )
@@ -61,24 +60,6 @@ func (s *Service) InitializeProject(ctx context.Context, ui core.UI, config Init
 
 	if err := EnsureAgentsMD(config.ProjectRoot, ui, config.SelectedAgents); err != nil {
 		return fmt.Errorf("failed to finalize project with AGENTS.md: %w", err)
-	}
-
-	// Initialize Distributed Memorial
-	var memorialTemplate string
-	constFS, err := fs.Sub(s.artifactsFS, "constitution")
-	if err == nil {
-		if reg, err := constitution.NewRegistry(constFS); err == nil {
-			if art, ok := reg.Get("memorial"); ok {
-				memorialTemplate = art.Template
-			}
-		}
-	}
-
-	memSvc := NewMemorialService(config.ProjectRoot)
-	if err := memSvc.Initialize(ctx, memorialTemplate); err != nil {
-		if ui != nil {
-			ui.Warn(fmt.Sprintf("Failed to initialize distributed memorial: %v", err))
-		}
 	}
 
 	if ui != nil {

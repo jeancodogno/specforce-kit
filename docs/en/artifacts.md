@@ -10,9 +10,7 @@ Located in your project's `docs/` directory, these files form the **Global Const
 
 - **`architecture.md`**: Architecture patterns, directory structure, database choices, and data flows.
 - **`engineering.md`**: Developer environment setup, coding standards, testing strategies, and CI/CD pipelines.
-- **`governance.md`**: Project boundaries, non-goals, long-term technical vision, and decision-making processes.
-- **`memorial/`**: A directory containing distributed memory fragments (actions, lessons, and decisions) recorded by AI agents to maintain technical continuity without merge conflicts.
-- **`principles.md`**: The core philosophy of the team or project, guiding the agent's general decisions.
+- **`modules/`**: A directory containing domain-specific living specifications (business rules, canonical use cases, and technical contracts) maintained by AI agents.
 - **`security.md`**: Mandatory security practices, password handling, and sensitive data management.
 - **`ui-ux.md`**: (If applicable) Visual patterns, color palette, accessible components, and interface behaviors.
 

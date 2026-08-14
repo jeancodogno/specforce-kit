@@ -10,9 +10,9 @@ Located in your project's `docs/` directory, these files form the **Global Const
 
 - **`architecture.md`**: Architecture patterns, directory structure, database choices, and data flows.
 - **`engineering.md`**: Developer environment setup, coding standards, testing strategies, and CI/CD pipelines.
-- **`governance.md`**: Project boundaries, non-goals, long-term technical vision, and decision-making processes.
-- **`memorial/`**: Um diretório contendo fragmentos de memória distribuídos (ações, lições e decisões) registrados pelos agentes de IA para manter a continuidade técnica sem conflitos de merge.
-- **`principles.md`**: The core philosophy of the team or project, guiding the agent's general decisions.
+- **`governance.md`**: Limites do projeto, não-objetivos, visão técnica a longo prazo e processos de tomada de decisão.
+- **`modules/`**: Um diretório contendo especificações vivas de domínio (regras de negócio canônicas, casos de uso e contratos técnicos) mantidos pelos agentes de IA.
+- **`principles.md`**: A filosofia central do time ou projeto, guiando as decisões gerais do agente.
 - **`security.md`**: Mandatory security practices, password handling, and sensitive data management.
 - **`ui-ux.md`**: (If applicable) Visual patterns, color palette, accessible components, and interface behaviors.
 

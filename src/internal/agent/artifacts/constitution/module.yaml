@@ -1,30 +1,46 @@
-description: "Domain-specific document for module behavior and invariants."
+description: "Domain-specific living specification for canonical business rules, requirements, use cases, and technical contracts."
 instruction: |
-  Generate the Module Manifest document strictly using the provided template. You are capturing the "Golden Rules" and patterns of a specific domain.
-  
-  Adhere to the following rules:
-  1. Domain Invariants: Focus on immutable business logic (e.g., "Always validate X before Y"). Use imperative language.
-  2. Technical Patterns: Document module-specific implementation choices (libraries, prefixes, patterns).
-  3. Success Metrics: Define how this specific module's value is measured.
-  4. Integration Points: Briefly list critical dependencies or consumers.
+  Generate the Module Canonical Living Specification document strictly using the provided template. This document serves as the single source of truth for the domain's business rules, accumulated use cases, and technical contracts.
 
-  CRITICAL: The final output must be high-density Markdown (bullet points preferred). Avoid prose.
+  Adhere to the following rules:
+  1. Domain Scope: Explicitly define the boundaries and business responsibility of this domain.
+  2. Business Rules & Invariants: Capture immutable, non-negotiable business rules that the system must enforce at all times.
+  3. Canonical Requirements & Use Cases: Document the domain's accumulated features and BDD scenarios (Happy Path & Edge Cases). This represents the "as-built" reality of the module.
+  4. Technical Contracts & Integration Points: Specify exposed APIs, CLI interfaces, events, and external dependencies.
+  5. Operational & Quality Invariants: Define SLAs, performance thresholds, and security requirements specific to this module.
+
+  CRITICAL: The final output must be high-density Markdown ready to be saved as `.specforce/docs/modules/<slug>.md`.
 template: |
   # Module: {{MODULE_NAME}}
 
-  ## 1. Domain Invariants
-  > Core business rules that are unique to this domain.
-  - [Invariant 1: e.g., "Must validate stock before reserving"]
-  - [Invariant 2: e.g., "Total value cannot be negative"]
+  > **Domain Scope:** [Brief description of the domain boundary and business purpose]
 
-  ## 2. Technical Patterns
-  > Domain-specific implementation details and standards.
-  - [Pattern 1: e.g., "Uses Redis for session caching"]
-  - [Pattern 2: e.g., "All tables use the 'm_' prefix"]
+  ## 1. Business Rules & Invariants
+  > Core business rules that are unique to this domain and must never be violated.
+  - **[BR-01]** [Rule description: e.g., "All user actions must be audited before state transition"]
+  - **[BR-02]** [Rule description: e.g., "State cannot transition from FINISHED to PENDING"]
 
-  ## 3. Success Metrics (Local)
-  - [Metric 1: e.g., "Response time < 50ms"]
-  - [Metric 2: e.g., "Zero invalid transitions in state machine"]
+  ## 2. Canonical Requirements & Use Cases
+  > Accumulated functional capabilities and BDD scenarios for this domain.
 
-  ## 4. Integration Points
-  - [Consumer/Dependency A]: [Brief description of contract]
+  ### UC-01: [Use Case Title / Core Capability]
+  - **Context:** [When and why this flow executes]
+  - **Scenario (Happy Path):**
+    - **GIVEN** [Initial system state / precondition]
+    - **WHEN** [Action triggered by user or system event]
+    - **THEN** [Expected outcome and side effects]
+  - **Scenario (Edge Case / Failure):**
+    - **GIVEN** [Precondition with invalid or boundary input]
+    - **WHEN** [Action executed]
+    - **THEN** [Graceful error handling or rejection behavior]
+
+  ## 3. Technical Contracts & Integration Points
+  > Public interfaces, CLI commands, APIs, event schemas, and external consumers.
+  - **Public Contracts / CLI Commands:** [e.g., Signature, parameters, return format]
+  - **Events & Pipelines:** [e.g., Emits `OrderCreated`, consumes `PaymentVerified`]
+  - **Dependencies:** [e.g., Interacts with `auth` module via `core.SecurityContext`]
+
+  ## 4. Operational & Quality Invariants
+  > SLAs, performance, security, and persistence standards for this domain.
+  - [e.g., "Latency P95 < 50ms for local queries"]
+  - [e.g., "All module file operations must use 0600 permissions"]

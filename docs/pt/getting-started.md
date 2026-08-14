@@ -125,7 +125,7 @@ With the approved specification, the agent enters execution mode.
 ### 4. Closure: Archiving (`/spf:archive`)
 After the feature is fully coded and tested, the specification needs to be closed.
 - The agent archives the completed specification to keep the environment clean.
-- It follows standardized **Archiving Instructions** to analyze what was done and update the Global Constitution (and the project Memorial) if new systemic architectural decisions have emerged.
+- Ele segue **Instruções de Arquivamento** padronizadas para analisar o que foi feito, consolidar as Living Specs de Módulos e atualizar a Constituição Global se novas decisões arquiteturais sistêmicas tiverem surgido.
 - You can customize these rules in `config.yaml` to include steps like updating external trackers or specific cleanup tasks.
 
 ---

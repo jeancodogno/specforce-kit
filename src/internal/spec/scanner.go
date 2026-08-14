@@ -127,7 +127,7 @@ func scanConstitution(ctx context.Context, projectRoot string, tree *StateTree) 
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") || entry.Name() == "current-state.md" || entry.Name() == "memorial.md" {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") || entry.Name() == "current-state.md" {
 			continue
 		}
 		slug := strings.TrimSuffix(entry.Name(), ".md")

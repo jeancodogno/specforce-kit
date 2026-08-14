@@ -115,8 +115,8 @@ func (r *Registry) Get(slug string) (Artifact, bool) {
 func (r *Registry) List() []Artifact {
 	list := make([]Artifact, 0, len(r.artifacts))
 	// We want a stable order, but for now simple slice is fine.
-	// Common order: principles, architecture, ui-ux, security, engineering, governance, memorial
-	order := []string{"principles", "architecture", "ui-ux", "security", "engineering", "governance", "memorial"}
+	// Common order: principles, architecture, ui-ux, security, engineering, governance
+	order := []string{"principles", "architecture", "ui-ux", "security", "engineering", "governance"}
 	
 	for _, slug := range order {
 		if art, ok := r.artifacts[slug]; ok {

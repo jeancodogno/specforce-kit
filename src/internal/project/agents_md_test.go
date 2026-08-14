@@ -179,6 +179,12 @@ func TestGenerateAgentsContent(t *testing.T) {
 		t.Errorf("content does not contain Environment Recovery section")
 	}
 
+	if !strings.Contains(content, "## 4. Project Constitution & Modules") {
+		t.Errorf("content does not contain Project Constitution & Modules section")
+	}
+	if !strings.Contains(content, "modules/<slug>.md") {
+		t.Errorf("content does not contain modules/<slug>.md reference")
+	}
 	expectedRecoveryCmd := "npm i -g @jeancodogno/specforce-kit@" + core.Version
 	if !strings.Contains(content, expectedRecoveryCmd) {
 		t.Errorf("content does not contain the correct recovery command with version: %s", expectedRecoveryCmd)

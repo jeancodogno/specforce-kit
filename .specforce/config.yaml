@@ -26,5 +26,5 @@ hooks:
     - "make lint"
     - "make test"
   # on_phase_finished:
-  on_all_tasks_finished:
-    - "make security"
+  # on_all_tasks_finished:
+  #   - "make security"

@@ -52,7 +52,7 @@ Retrieves the specific context, templates, and injected instructions for a given
 Handle the feature archiving process and instructions.
 
 ### `specforce archive instructions`
-Displays the full set of instructions for archiving a feature. This includes the constitution metadata (descriptions of all constitution documents), core archiving rules (like updating the project memorial), and any custom project-specific instructions defined in `config.yaml`. This command is primarily used by AI agents to ensure they follow the correct archiving protocol.
+Muestra el conjunto completo de instrucciones para archivar una feature. Esto incluye los metadatos de la constitución (descripciones de todos los documentos de la constitución), reglas clave de archivado (como consolidar las living specs de módulos) y cualquier instrucción personalizada definida en `config.yaml`. Este comando es utilizado principalmente por los agentes de IA para garantizar que sigan el protocolo correcto de archivado.
 
 ---
 

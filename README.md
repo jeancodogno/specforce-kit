@@ -73,8 +73,8 @@ The early exploration phase. Use this to brainstorm new features or investigate 
 ### 2. The Constitution (`/spf:constitution`)
 **Command:** `/spf:constitution {project description}`
 
-The first step in any project. This generates your project's Constitution, containing all rules, principles, UI/UX guidelines, architecture, security, and agent memory. 
-- **Tool Agnostic & Segmented:** Instead of dumping rules into tool-specific files (like `.clauderc` or `.gemini/GEMINI.md`) or keeping everything in context, Specforce maintains its own specialized, segmented memory files. The agent only loads what it needs. You can switch tools (e.g., from Gemini CLI to Claude Code) and the project memory remains completely intact.
+The first step in any project. This generates your project's Constitution, containing all rules, principles, UI/UX guidelines, architecture, security, and domain module specifications. 
+- **Tool Agnostic & Segmented:** Instead of dumping rules into tool-specific files (like `.clauderc` or `.gemini/GEMINI.md`) or keeping everything in context, Specforce maintains its own specialized, segmented specification files. The agent only loads what it needs. You can switch tools (e.g., from Gemini CLI to Claude Code) and the project context remains completely intact.
 - **Interactive Setup:** Describe your project idea and stack. The agent will ask clarifying questions to help you make foundational decisions.
 - **Flexible:** Run it once to set up, or rerun it anytime to update the constitution. You can use it on brand new ideas or point it at an existing project to analyze and document its current architecture.
 
@@ -91,7 +91,7 @@ After you validate the generated spec documents, execute this command. The agent
 ### 4. Archiving (`/spf:archive`)
 **Command:** `/spf:archive`
 
-Once implementation is fully complete and verified, this command analyzes what needs to be updated in the project's global Constitution based on the new implementation, and archives the completed spec. It follows standardized **Archiving Instructions** that ensure lessons learned are captured in the project memorial and any project-specific cleanup is performed.
+Once implementation is fully complete and verified, this command synthesizes domain living specifications (`.specforce/docs/modules/`), analyzes what needs to be updated in the project's global Constitution, and archives the completed spec. It follows standardized **Archiving Instructions** that ensure as-built reality is captured into living specs and any project-specific cleanup is performed.
 
 ---
 
