@@ -2,7 +2,7 @@
 <p align="center">
   <a href="https://github.com/jeancodogno/specforce-kit/">
     <picture>
-      <img src="assets/logo.png" alt="Logo OpenSpec" height="128">
+      <img src="assets/logo.png" alt="Logo Specforce" height="128">
     </picture>
   </a>
 </p>

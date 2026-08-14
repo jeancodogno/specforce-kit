@@ -35,7 +35,7 @@ specforce implementation status <slug> --json
 - If updates are needed, prompt the user for confirmation and update the relevant `.specforce/docs/*.md` file.
 
 ### 5. Canonical Living Spec Reconciliation (Mandatory As-Built Synthesis)
-- Operating as the Principal Architect, you MUST consolidate the feature's domain behavior into `.specforce/docs/modules/<domain>.md` as an OpenSpec-style Canonical Living Spec.
+- Operating as the Principal Architect, you MUST consolidate the feature's domain behavior into `.specforce/docs/modules/<domain>.md` as a Canonical Living Specification (containing domain scope, business rules, accumulated BDD use cases, and technical contracts).
 - **As-Built Synthesis Protocol:**
   1. **Determine the Domain:** Identify the business domain affected by this feature (e.g., `messaging`, `auth`, `billing`, `agent-kit`).
   2. **Triangulate Reality:** Compare the original `requirements.md` against the **actual implemented source code, unit tests, and interactive user refinements** made during implementation. If requirements evolved during development, extract the verified as-built reality.
