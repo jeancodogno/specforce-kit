@@ -1,7 +1,4 @@
 defaults:
-  agents:
-    path: "agents"
-    ext: ".md"
   skills:
     path: "skills"
     ext: ".md"
@@ -88,10 +85,6 @@ tools:
     description: "Antigravity workflow integration."
     target: ".agents/"
     mappings:
-      agents:
-        - path: "agents/*"
-          name: "agent"
-          ext: ".json"
       commands:
         - path: "workflows"
           name: "spf-*"
@@ -115,10 +108,6 @@ tools:
     description: "Cursor AI Editor integration."
     target: ".cursor/"
     mappings:
-      agents:
-        - path: "agents"
-          name: "*"
-          ext: ".md"
       commands:
         - path: "commands"
           name: "spf-*"

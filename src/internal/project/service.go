@@ -62,6 +62,10 @@ func (s *Service) InitializeProject(ctx context.Context, ui core.UI, config Init
 		return fmt.Errorf("failed to finalize project with AGENTS.md: %w", err)
 	}
 
+	if err := PromptAndCleanupLegacyAssets(config.ProjectRoot, ui); err != nil && ui != nil {
+		ui.Warn(fmt.Sprintf("Legacy cleanup warning: %v", err))
+	}
+
 	if ui != nil {
 		ui.LogSubTask("SYNCING AGENT ARTIFACTS")
 	}
@@ -140,6 +144,10 @@ func (s *Service) UpdateTools(ctx context.Context, ui core.UI, selectedAgents []
 		if ui != nil {
 			ui.Warn(fmt.Sprintf("Migration failed: %v", err))
 		}
+	}
+
+	if err := PromptAndCleanupLegacyAssets(s.projectRoot, ui); err != nil && ui != nil {
+		ui.Warn(fmt.Sprintf("Legacy cleanup warning: %v", err))
 	}
 
 	opts := installer.Options{ToolsOnly: true}

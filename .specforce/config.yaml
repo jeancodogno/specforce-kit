@@ -11,7 +11,9 @@ instructions:
 
   # Example: Project-wide instructions for all tasks artifacts
   tasks:
-    - "Use tdd for planning tasks"
+    - "Always structure tasks using explicit TDD Red-Green pairs within the same phase."
+    - "Each phase must contain [RED] tasks (writing unit/integration tests covering both Happy Path and Edge Cases) followed by [GREEN] tasks (implementing the logic to satisfy those tests)."
+    - "Never place test creation and implementation in separate phases."
   #   - "Group tasks by implementation phases"
 
   # Example: Project-wide instructions for the implementation phase

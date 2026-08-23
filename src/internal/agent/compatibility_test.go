@@ -17,7 +17,6 @@ func getTestKitConfig() *core.KitConfig {
 			"qwen": {
 				Target: ".qwen",
 				Mappings: map[string]core.MappingConfigs{
-					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
 					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
 					"commands": {core.MappingConfig{Path: "commands/spf", Ext: ".md"}},
 				},
@@ -25,7 +24,6 @@ func getTestKitConfig() *core.KitConfig {
 			"open-code": {
 				Target: ".opencode",
 				Mappings: map[string]core.MappingConfigs{
-					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
 					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
 					"commands": {core.MappingConfig{Path: "commands", Ext: ".md"}},
 				},
@@ -33,7 +31,6 @@ func getTestKitConfig() *core.KitConfig {
 			"kilo-code": {
 				Target: ".kilocode",
 				Mappings: map[string]core.MappingConfigs{
-					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
 					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
 					"commands": {core.MappingConfig{Path: "commands", Ext: ".md"}},
 				},
@@ -41,7 +38,6 @@ func getTestKitConfig() *core.KitConfig {
 			"codex": {
 				Target: ".codex",
 				Mappings: map[string]core.MappingConfigs{
-					"agents":   {core.MappingConfig{Path: "agents", Ext: ".md"}},
 					"skills":   {core.MappingConfig{Path: "skills", Ext: ".md"}},
 					"commands": {core.MappingConfig{Path: "commands/spf", Ext: ".md"}},
 				},
@@ -82,23 +78,12 @@ func TestNewAgentMappings(t *testing.T) {
 }
 
 func testAgentMappings(t *testing.T, projectRoot string, kitFS fs.FS, kitConfig *core.KitConfig, agentID, folder string) {
-	// Test agent mapping
-	err := processBlueprint(context.Background(), projectRoot, kitFS, kitConfig, "agents/specforce-developer.yaml", agentID, installer.Options{})
-	if err != nil {
-		t.Fatalf("processBlueprint failed for %s: %v", agentID, err)
-	}
-
-	expectedPath := filepath.Join(projectRoot, folder, "agents/specforce-developer.md")
-	if _, err := os.Stat(expectedPath); os.IsNotExist(err) {
-		t.Errorf("expected file %s to exist", expectedPath)
-	}
-
-	// Test skill mapping
-	err = processBlueprint(context.Background(), projectRoot, kitFS, kitConfig, "skills/task-atomic-decomposition/SKILL.yaml", agentID, installer.Options{})
+	// Test skill mapping with consultative-grill
+	err := processBlueprint(context.Background(), projectRoot, kitFS, kitConfig, "skills/consultative-grill/SKILL.yaml", agentID, installer.Options{})
 	if err != nil {
 		t.Fatalf("processBlueprint failed for skill on %s: %v", agentID, err)
 	}
-	expectedSkillPath := filepath.Join(projectRoot, folder, "skills/task-atomic-decomposition/SKILL.md")
+	expectedSkillPath := filepath.Join(projectRoot, folder, "skills/consultative-grill/SKILL.md")
 	if _, err := os.Stat(expectedSkillPath); os.IsNotExist(err) {
 		t.Errorf("expected skill file %s to exist", expectedSkillPath)
 	}
