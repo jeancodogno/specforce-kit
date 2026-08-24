@@ -272,3 +272,209 @@ func TestUpdateTaskBlockState_ParallelWith(t *testing.T) {
 		t.Errorf("unexpected parallelWith: %v", task3.parallelWith)
 	}
 }
+
+func assertTaskFileContent(t *testing.T, tasksPath, expected string) {
+	t.Helper()
+	updatedContent, err := os.ReadFile(tasksPath)
+	if err != nil {
+		t.Fatalf("failed to read tasks.md: %v", err)
+	}
+	if string(updatedContent) != expected {
+		t.Errorf("Unexpected content after update:\n%s", string(updatedContent))
+	}
+}
+
+func assertTaskSessions(t *testing.T, meta *Metadata, taskIDs []string, expectedCount int, isOpen bool) {
+	t.Helper()
+	for _, taskID := range taskIDs {
+		log, exists := meta.TimeLogs[taskID]
+		if !exists {
+			t.Fatalf("expected time log for %s", taskID)
+		}
+		if len(log.Sessions) != expectedCount {
+			t.Fatalf("expected %d session(s) for %s, got %d", expectedCount, taskID, len(log.Sessions))
+		}
+		if isOpen && log.Sessions[expectedCount-1].CompletedAt != nil {
+			t.Errorf("expected session for %s to be open", taskID)
+		} else if !isOpen && log.Sessions[expectedCount-1].CompletedAt == nil {
+			t.Errorf("expected session for %s to be closed", taskID)
+		}
+	}
+}
+
+const (
+	batchTasksInitialContent = `
+## 2. Tasks
+
+### Phase 1: Batch Updates
+- [ ] T1.1: First Task
+**Target:** src/first.go
+**State:** [PENDING]
+
+- [ ] T1.2: Second Task
+**Target:** src/second.go
+**State:** [PENDING]
+
+- [ ] T1.3: Third Task
+**Target:** src/third.go
+**State:** [PENDING]
+`
+	batchTasksExpectedInProgress = `
+## 2. Tasks
+
+### Phase 1: Batch Updates
+- [/] T1.1: First Task
+**Target:** src/first.go
+**State:** [IN-PROGRESS]
+
+- [/] T1.2: Second Task
+**Target:** src/second.go
+**State:** [IN-PROGRESS]
+
+- [ ] T1.3: Third Task
+**Target:** src/third.go
+**State:** [PENDING]
+`
+	batchTasksExpectedFinished = `
+## 2. Tasks
+
+### Phase 1: Batch Updates
+- [x] T1.1: First Task
+**Target:** src/first.go
+**State:** [FINISHED]
+
+- [x] T1.2: Second Task
+**Target:** src/second.go
+**State:** [FINISHED]
+
+- [ ] T1.3: Third Task
+**Target:** src/third.go
+**State:** [PENDING]
+`
+)
+
+func TestUpdateTaskStatusesFile_Success(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "specforce-batch-tasks-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	projectRoot := tempDir
+	slug := "batch-feature"
+	tasksPath := setupTasksTest(t, projectRoot, slug, batchTasksInitialContent)
+
+	t.Run("transition to in-progress", func(t *testing.T) {
+		if err := updateTaskStatusesFile(projectRoot, slug, []string{"T1.1", "T1.2"}, "in-progress"); err != nil {
+			t.Fatalf("updateTaskStatusesFile failed: %v", err)
+		}
+		assertTaskFileContent(t, tasksPath, batchTasksExpectedInProgress)
+	})
+
+	t.Run("transition to finished", func(t *testing.T) {
+		if err := updateTaskStatusesFile(projectRoot, slug, []string{"T1.1", "T1.2"}, "finished"); err != nil {
+			t.Fatalf("updateTaskStatusesFile failed: %v", err)
+		}
+		assertTaskFileContent(t, tasksPath, batchTasksExpectedFinished)
+	})
+}
+
+func TestUpdateTaskStatusesFile_AtomicFailure(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "specforce-batch-atomic-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	projectRoot := tempDir
+	slug := "atomic-feature"
+	initialContent := `
+## 2. Tasks
+
+### Phase 1: Atomic Test
+- [ ] T1.1: First Task
+**Target:** src/first.go
+**State:** [PENDING]
+
+- [ ] T1.2: Second Task
+**Target:** src/second.go
+**State:** [PENDING]
+`
+	tasksPath := setupTasksTest(t, projectRoot, slug, initialContent)
+
+	// Attempt updating T1.1 (valid) and T99.99 (invalid)
+	err = updateTaskStatusesFile(projectRoot, slug, []string{"T1.1", "T99.99"}, "finished")
+	if err == nil {
+		t.Fatal("expected error for nonexistent task ID, got nil")
+	}
+
+	// Verify file content remains completely unchanged
+	currentContent, readErr := os.ReadFile(tasksPath)
+	if readErr != nil {
+		t.Fatalf("failed to read tasks.md: %v", readErr)
+	}
+	if string(currentContent) != initialContent {
+		t.Errorf("File was modified despite atomic failure:\n%s", string(currentContent))
+	}
+
+	// Verify no session was created in metadata
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err == nil && meta.TimeLogs != nil && len(meta.TimeLogs) > 0 {
+		t.Errorf("expected no metadata time logs, got: %v", meta.TimeLogs)
+	}
+}
+
+func TestUpdateTaskStatusesFile_MetadataTiming(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "specforce-batch-timing-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tempDir) }()
+
+	projectRoot := tempDir
+	slug := "timing-feature"
+	content := `
+## 2. Tasks
+
+### Phase 1: Timing
+- [ ] T1.1: Task 1
+**Target:** src/t1.go
+**State:** [PENDING]
+
+- [ ] T1.2: Task 2
+**Target:** src/t2.go
+**State:** [PENDING]
+
+- [ ] T1.3: Task 3
+**Target:** src/t3.go
+**State:** [PENDING]
+`
+	setupTasksTest(t, projectRoot, slug, content)
+
+	// 1. Batch start sessions for T1.1 and T1.2
+	if err := updateTaskStatusesFile(projectRoot, slug, []string{"T1.1", "T1.2"}, "in-progress"); err != nil {
+		t.Fatalf("updateTaskStatusesFile failed: %v", err)
+	}
+
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err != nil {
+		t.Fatalf("failed to load metadata: %v", err)
+	}
+	assertTaskSessions(t, meta, []string{"T1.1", "T1.2"}, 1, true)
+
+	if _, exists := meta.TimeLogs["T1.3"]; exists {
+		t.Errorf("expected no time log for T1.3")
+	}
+
+	// 2. Batch end sessions for T1.1 and T1.2
+	if err := updateTaskStatusesFile(projectRoot, slug, []string{"T1.1", "T1.2"}, "finished"); err != nil {
+		t.Fatalf("updateTaskStatusesFile failed: %v", err)
+	}
+
+	meta, err = LoadMetadata(projectRoot, slug)
+	if err != nil {
+		t.Fatalf("failed to load metadata: %v", err)
+	}
+	assertTaskSessions(t, meta, []string{"T1.1", "T1.2"}, 1, false)
+}
+

@@ -31,18 +31,17 @@ var implementationUpdateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		executor := GetExecutor()
 		appUI := tui.NewUI()
-		// We'll need to pass the other flags too.
-		return executor.HandleImplementationUpdate(cmd.Context(), appUI, args[0], taskId, taskStatus)
+		return executor.HandleImplementationUpdate(cmd.Context(), appUI, args[0], taskIds, taskStatus)
 	},
 }
 
-var taskId string
+var taskIds []string
 var taskStatus string
 
 func init() {
 	implementationStatusCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	
-	implementationUpdateCmd.Flags().StringVar(&taskId, "task", "", "task ID to update")
+	implementationUpdateCmd.Flags().StringSliceVar(&taskIds, "task", nil, "task ID(s) to update (comma-separated or repeated)")
 	implementationUpdateCmd.Flags().StringVar(&taskStatus, "status", "", "new status for the task")
 	_ = implementationUpdateCmd.MarkFlagRequired("task")
 	_ = implementationUpdateCmd.MarkFlagRequired("status")

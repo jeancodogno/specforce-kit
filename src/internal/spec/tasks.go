@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -302,8 +303,12 @@ func (s *taskValidationState) checkGroupTargetConflicts(group []string, taskMap 
 	}
 }
 
-// updateTaskStatusFile updates the status of a task in tasks.md.
-func updateTaskStatusFile(projectRoot, slug, taskID, newStatus string) error {
+// updateTaskStatusesFile updates the status of multiple tasks in tasks.md atomically.
+func updateTaskStatusesFile(projectRoot, slug string, taskIDs []string, newStatus string) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
 	tasksPath, err := core.SecurePath(projectRoot, filepath.Join(".specforce", "specs", slug, "tasks.md"))
 	if err != nil {
 		return fmt.Errorf("security: %w", err)
@@ -314,40 +319,10 @@ func updateTaskStatusFile(projectRoot, slug, taskID, newStatus string) error {
 		return fmt.Errorf("failed to read tasks.md: %w", err)
 	}
 
-	contentStr := string(content)
-	start, end, err := findTaskBlock(contentStr, taskID)
+	uniqueTaskIDs := deduplicateStrings(taskIDs)
+	newContent, err := applyTaskReplacements(string(content), uniqueTaskIDs, newStatus)
 	if err != nil {
 		return err
-	}
-
-	taskBlockContent := contentStr[start:end]
-	newContent := contentStr
-
-	// 1. Update checklist header if present in the block
-	checklistHeaderRegex := regexp.MustCompile(fmt.Sprintf(`(?m)^- \[[ xX/]?\] %s: .*$`, regexp.QuoteMeta(taskID)))
-	checklistMatch := checklistHeaderRegex.FindStringIndex(taskBlockContent)
-	if checklistMatch != nil {
-		char := mapStatusToCheckbox(newStatus)
-		startInContent := start + checklistMatch[0]
-		// The checkbox is at index 3 in "- [ ]"
-		newContent = newContent[:startInContent+3] + char + newContent[startInContent+4:]
-	}
-
-	// 2. Find and replace the state line in the block (if it exists)
-	stateRegex := regexp.MustCompile(`\*\*State:\*\* (\x60?)\[(.*?)\](\x60?)`)
-	stateMatch := stateRegex.FindStringSubmatchIndex(taskBlockContent)
-
-	if stateMatch != nil {
-		preTick := taskBlockContent[stateMatch[2]:stateMatch[3]]
-		postTick := taskBlockContent[stateMatch[6]:stateMatch[7]]
-		mappedStatus := mapStatus(newStatus)
-		newStateLine := fmt.Sprintf("**State:** %s[%s]%s", preTick, mappedStatus, postTick)
-
-		startInContent := start + stateMatch[0]
-		endInContent := start + stateMatch[1]
-		newContent = newContent[:startInContent] + newStateLine + newContent[endInContent:]
-	} else if checklistMatch == nil {
-		return fmt.Errorf("state field or checkbox not found for task %s", taskID)
 	}
 
 	// #nosec G306, G703 - Path is secured by SecurePath
@@ -355,19 +330,116 @@ func updateTaskStatusFile(projectRoot, slug, taskID, newStatus string) error {
 		return fmt.Errorf("failed to write tasks.md: %w", err)
 	}
 
-	// 3. Update time logs in spec.yaml
-	meta, err := LoadMetadata(projectRoot, slug)
-	if err == nil {
-		switch strings.ToLower(newStatus) {
-		case "in-progress":
-			meta.StartSession(taskID)
-		case "finished", "todo", "pending":
-			meta.EndSession(taskID)
+	updateTaskMetadataLogs(projectRoot, slug, newStatus, uniqueTaskIDs)
+	return nil
+}
+
+type taskReplacement struct {
+	start      int
+	end        int
+	newContent string
+}
+
+func applyTaskReplacements(contentStr string, uniqueTaskIDs []string, newStatus string) (string, error) {
+	replacements := make([]taskReplacement, 0, len(uniqueTaskIDs))
+
+	for _, taskID := range uniqueTaskIDs {
+		start, end, err := findTaskBlock(contentStr, taskID)
+		if err != nil {
+			return "", err
 		}
-		_ = SaveMetadata(projectRoot, slug, meta)
+
+		updatedBlock, err := updateTaskBlockContent(contentStr[start:end], taskID, newStatus)
+		if err != nil {
+			return "", err
+		}
+
+		replacements = append(replacements, taskReplacement{
+			start:      start,
+			end:        end,
+			newContent: updatedBlock,
+		})
 	}
 
-	return nil
+	sort.Slice(replacements, func(i, j int) bool {
+		return replacements[i].start > replacements[j].start
+	})
+
+	newContent := contentStr
+	for _, rep := range replacements {
+		newContent = newContent[:rep.start] + rep.newContent + newContent[rep.end:]
+	}
+
+	return newContent, nil
+}
+
+func deduplicateStrings(items []string) []string {
+	seen := make(map[string]bool, len(items))
+	result := make([]string, 0, len(items))
+	for _, item := range items {
+		if !seen[item] {
+			seen[item] = true
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+func updateTaskMetadataLogs(projectRoot, slug, newStatus string, uniqueTaskIDs []string) {
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return
+	}
+
+	switch strings.ToLower(newStatus) {
+	case "in-progress":
+		for _, taskID := range uniqueTaskIDs {
+			meta.StartSession(taskID)
+		}
+	case "finished", "todo", "pending":
+		for _, taskID := range uniqueTaskIDs {
+			meta.EndSession(taskID)
+		}
+	}
+	_ = SaveMetadata(projectRoot, slug, meta)
+}
+
+func updateTaskBlockContent(taskBlockContent, taskID, newStatus string) (string, error) {
+	// 1. Check for checklist header in the block
+	checklistHeaderRegex := regexp.MustCompile(fmt.Sprintf(`(?m)^- \[[ xX/]?\] %s: .*$`, regexp.QuoteMeta(taskID)))
+	checklistMatch := checklistHeaderRegex.FindStringIndex(taskBlockContent)
+
+	// 2. Check for state line in the block
+	stateRegex := regexp.MustCompile(`\*\*State:\*\* (\x60?)\[(.*?)\](\x60?)`)
+	stateMatch := stateRegex.FindStringSubmatchIndex(taskBlockContent)
+
+	if checklistMatch == nil && stateMatch == nil {
+		return "", fmt.Errorf("state field or checkbox not found for task %s", taskID)
+	}
+
+	res := taskBlockContent
+	if checklistMatch != nil {
+		char := mapStatusToCheckbox(newStatus)
+		chkIdx := checklistMatch[0] + 3
+		res = res[:chkIdx] + char + res[chkIdx+1:]
+	}
+
+	stateMatch = stateRegex.FindStringSubmatchIndex(res)
+	if stateMatch != nil {
+		preTick := res[stateMatch[2]:stateMatch[3]]
+		postTick := res[stateMatch[6]:stateMatch[7]]
+		mappedStatus := mapStatus(newStatus)
+		newStateLine := fmt.Sprintf("**State:** %s[%s]%s", preTick, mappedStatus, postTick)
+
+		res = res[:stateMatch[0]] + newStateLine + res[stateMatch[1]:]
+	}
+
+	return res, nil
+}
+
+// updateTaskStatusFile updates the status of a task in tasks.md.
+func updateTaskStatusFile(projectRoot, slug, taskID, newStatus string) error {
+	return updateTaskStatusesFile(projectRoot, slug, []string{taskID}, newStatus)
 }
 
 func findTaskBlock(content, taskID string) (int, int, error) {

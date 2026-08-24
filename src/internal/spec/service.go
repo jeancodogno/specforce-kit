@@ -217,12 +217,12 @@ func (s *Service) GetStatus(ctx context.Context, projectRoot string, slug string
 }
 
 // UpdateTaskStatus handles task status updates with event hooks.
-func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug, taskID, status string) error {
+func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug string, taskIDs []string, status string) error {
 	slug = ResolveSlug(projectRoot, slug)
 
 	// 1. Only run hooks if status is "finished"
 	if strings.ToLower(status) != "finished" {
-		return updateTaskStatusFile(projectRoot, slug, taskID, status)
+		return updateTaskStatusesFile(projectRoot, slug, taskIDs, status)
 	}
 
 	// 2. Load Config
@@ -234,7 +234,7 @@ func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug, taskI
 	}
 
 	// 3. Collect Hooks
-	hooks := s.collectHooksForTask(ctx, projectRoot, slug, taskID, config)
+	hooks := s.collectHooksForBatch(ctx, projectRoot, slug, taskIDs, config)
 
 	// 4. Execute Hooks
 	if len(hooks) > 0 {
@@ -244,34 +244,40 @@ func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug, taskI
 	}
 
 	// 5. Update File
-	return updateTaskStatusFile(projectRoot, slug, taskID, status)
+	return updateTaskStatusesFile(projectRoot, slug, taskIDs, status)
 }
 
-func (s *Service) collectHooksForTask(ctx context.Context, projectRoot, slug, taskID string, config *core.ProjectConfig) []string {
-	var hooks []string
-	if config == nil {
-		return hooks
+func (s *Service) collectHooksForBatch(ctx context.Context, projectRoot, slug string, taskIDs []string, config *core.ProjectConfig) []string {
+	if config == nil || len(taskIDs) == 0 {
+		return nil
 	}
 
-	// Always add task finished hook
-	hooks = append(hooks, config.Hooks.OnTaskFinished...)
+	var rawHooks []string
+	rawHooks = append(rawHooks, config.Hooks.OnTaskFinished...)
 
-	// Use ParseTasks to determine if this is the last task in a phase or spec
 	report, err := ParseTasks(ctx, projectRoot, slug)
-	if err != nil {
-		return hooks
+	if err == nil && report != nil {
+		for _, taskID := range taskIDs {
+			isLastInPhase, isLastInSpec := s.checkTaskPosition(report, taskID)
+			if isLastInPhase {
+				rawHooks = append(rawHooks, config.Hooks.OnPhaseFinished...)
+			}
+			if isLastInSpec {
+				rawHooks = append(rawHooks, config.Hooks.OnAllTasksFinished...)
+			}
+		}
 	}
 
-	isLastInPhase, isLastInSpec := s.checkTaskPosition(report, taskID)
-
-	if isLastInPhase {
-		hooks = append(hooks, config.Hooks.OnPhaseFinished...)
+	var deduplicated []string
+	seen := make(map[string]bool, len(rawHooks))
+	for _, hook := range rawHooks {
+		if hook != "" && !seen[hook] {
+			seen[hook] = true
+			deduplicated = append(deduplicated, hook)
+		}
 	}
-	if isLastInSpec {
-		hooks = append(hooks, config.Hooks.OnAllTasksFinished...)
-	}
 
-	return hooks
+	return deduplicated
 }
 
 func (s *Service) checkTaskPosition(report *ImplementationReport, taskID string) (bool, bool) {

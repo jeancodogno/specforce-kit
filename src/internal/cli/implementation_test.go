@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -116,7 +118,7 @@ func testUpdateStatusToFinished(t *testing.T) {
 	executor := &Executor{Version: "1.0.0"}
 	ui := tui.NewUI()
 
-	err := executor.HandleImplementationUpdate(context.Background(), ui, slug, "T1.1", "finished")
+	err := executor.HandleImplementationUpdate(context.Background(), ui, slug, []string{"T1.1"}, "finished")
 	if err != nil {
 		t.Errorf("HandleImplementationUpdate failed: %v", err)
 	}
@@ -149,7 +151,7 @@ hooks:
 	executor := &Executor{Version: "1.0.0"}
 	ui := tui.NewUI()
 
-	err := executor.HandleImplementationUpdate(context.Background(), ui, slug, "T1.1", "finished")
+	err := executor.HandleImplementationUpdate(context.Background(), ui, slug, []string{"T1.1"}, "finished")
 	if err == nil {
 		t.Errorf("Expected error from HandleImplementationUpdate due to hook failure, got nil")
 	}
@@ -162,4 +164,89 @@ hooks:
 	if !strings.Contains(string(content), "**State:** [PENDING]") {
 		t.Errorf("Expected status to remain [PENDING], got:\n%s", string(content))
 	}
+}
+
+func captureStdout(t *testing.T, f func()) string {
+	t.Helper()
+	orig := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	os.Stdout = w
+
+	f()
+
+	_ = w.Close()
+	os.Stdout = orig
+
+	var buf strings.Builder
+	_, _ = io.Copy(&buf, r)
+	_ = r.Close()
+	return buf.String()
+}
+
+const batchCLITasksMD = `
+### Phase 1: Core
+#### T1.1: Task 1
+**State:** [PENDING]
+
+#### T1.2: Task 2
+**State:** [PENDING]
+
+#### T1.3: Task 3
+**State:** [PENDING]
+`
+
+func TestImplementationUpdate_Batch(t *testing.T) {
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(origDir) }()
+
+	slug := "batch-cli-test"
+	specDir := filepath.Join(".specforce", "specs", slug)
+	_ = os.MkdirAll(specDir, 0755)
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(batchCLITasksMD), 0644)
+
+	executor := &Executor{Version: "1.0.0"}
+	ui := tui.NewUI()
+
+	t.Run("batch update multiple tasks and stdout feedback", func(t *testing.T) {
+		output := captureStdout(t, func() {
+			err := executor.HandleImplementationUpdate(context.Background(), ui, slug, []string{"T1.1", "T1.2"}, "finished")
+			if err != nil {
+				t.Fatalf("HandleImplementationUpdate failed: %v", err)
+			}
+		})
+
+		expectedMsg := fmt.Sprintf("[OK] Tasks T1.1, T1.2 status updated to finished in %s\n", slug)
+		if output != expectedMsg {
+			t.Errorf("expected stdout %q, got %q", expectedMsg, output)
+		}
+
+		content, _ := os.ReadFile(filepath.Join(specDir, "tasks.md"))
+		if !strings.Contains(string(content), "#### T1.1: Task 1\n**State:** [FINISHED]") {
+			t.Errorf("T1.1 not finished")
+		}
+		if !strings.Contains(string(content), "#### T1.2: Task 2\n**State:** [FINISHED]") {
+			t.Errorf("T1.2 not finished")
+		}
+	})
+
+	t.Run("single task stdout feedback", func(t *testing.T) {
+		output := captureStdout(t, func() {
+			err := executor.HandleImplementationUpdate(context.Background(), ui, slug, []string{"T1.3"}, "finished")
+			if err != nil {
+				t.Fatalf("HandleImplementationUpdate failed: %v", err)
+			}
+		})
+
+		expectedMsg := fmt.Sprintf("[OK] Task T1.3 status updated to finished in %s\n", slug)
+		if output != expectedMsg {
+			t.Errorf("expected stdout %q, got %q", expectedMsg, output)
+		}
+	})
 }

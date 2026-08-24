@@ -35,10 +35,19 @@ content: |
   ### 2. Batch Delegation & Dynamic Worker Spawning
   For each **Batch** defined in Step 1, execute in sequence:
 
-  #### A. Claim Batch Tasks
-  Immediately mark all tasks in the current batch as `in-progress` via CLI:
+  #### Subagent Orchestration & Sizing Directives
+  - **Mandatory Subagent Usage:** Always spawn and delegate tasks to subagents whenever the environment or tooling supports subagent capabilities (such as `invoke_subagent`, subagent conversation delegation, or background worker spawning).
+  - **Subagent Sizing Guidance:**
+    - **1 Subagent:** For small, simple, or self-contained batches.
+    - **2 to 3 Subagents (Recommended Sweet Spot):** For standard complexity batches, achieving optimal balance between throughput, concurrency, and context containment.
+    - **Up to 4 Subagents:** For complex, high-concurrency tasks requiring distinct domain or layer separation.
+  - **Strict Task Boundary Safety:** Subagents are **STRICTLY FORBIDDEN** from directly editing `tasks.md` or altering task states. All task state transitions must be executed exclusively by the primary Orchestrator using `specforce implementation update`.
 
-  `specforce implementation update <slug> --task <task-id> --status in-progress`
+  #### A. Claim Batch Tasks
+  Immediately mark all tasks in the current batch as `in-progress` via CLI in a single batch command:
+
+  `specforce implementation update <slug> --task <task-ids> --status in-progress`
+  *(Example: `specforce implementation update <slug> --task T1.1,T1.2 --status in-progress`)*
 
   #### B. Persona & Model Routing Selection
   Determine the execution requirements based on batch complexity:
@@ -78,14 +87,16 @@ content: |
 
   1. **Terminal Verification:** Execute the exact verification command for each task in the batch via the terminal.
   2. **Update Status:**
-    - **On Success:** ONLY when verification returns a successful execution (exit code 0 / PASSED), mark each task as finished:
+    - **On Success:** ONLY when verification returns a successful execution (exit code 0 / PASSED), mark the batch tasks as finished in a single atomic update:
     
-    `specforce implementation update <slug> --task <task-id> --status finished`
+    `specforce implementation update <slug> --task <task-ids> --status finished`
+    *(Example: `specforce implementation update <slug> --task T1.1,T1.2 --status finished`)*
     
     - **Self-Healing:** If verification fails, read `stderr`, debug, and attempt fixing (maximum 2 attempts per batch).
     - **On Failure:** If verification still fails after attempts, set status to `failed`:
     
-    `specforce implementation update <slug> --task <task-id> --status failed`
+    `specforce implementation update <slug> --task <task-ids> --status failed`
+    *(Example: `specforce implementation update <slug> --task T1.1,T1.2 --status failed`)*
     
     STOP execution immediately and ask the user for help.
 
@@ -121,6 +132,7 @@ content: |
 
   ## Guardrails
   - **Terminal Truth:** Your file writes mean nothing if the terminal verification fails.
+  - **Task Boundary Safety:** Subagents must NEVER edit `tasks.md` directly or alter task states. All state updates belong solely to the Orchestrator via `specforce implementation update`.
   - **Scope Containment:** Edit ONLY the files specified in the active task targets during implementation.
   - **No Interactive Prompts:** Ensure terminal commands use non-interactive flags (e.g., `-y`, `--quiet`).
   - **CLI Execution:** The `specforce` CLI is globally available. Execute it directly (e.g., `specforce spec list`). DO NOT use `npx` or relative paths.

@@ -105,58 +105,75 @@ func (e *Executor) HandleImplementationStatus(ctx context.Context, ui core.UI, s
 	return tui.RenderImplementationStatus(report)
 }
 
+func (e *Executor) initSpecService(ui core.UI) error {
+	if e.SpecService != nil {
+		return nil
+	}
+	artifactsFS, err := e.GetArtifactsFS(ui)
+	if err != nil {
+		return err
+	}
+	specFS, err := fs.Sub(artifactsFS, "spec")
+	if err != nil {
+		return fmt.Errorf("failed to load spec artifacts: %w", err)
+	}
+	registry, err := spec.NewRegistry(specFS)
+	if err != nil {
+		return fmt.Errorf("failed to initialize spec registry: %w", err)
+	}
+
+	if e.ProjectService == nil {
+		kitFS, _ := e.GetKitFS(ui)
+		e.ProjectService = project.NewService(kitFS, artifactsFS, ".")
+	}
+	e.SpecService = spec.NewService(registry, e.ProjectService)
+	return nil
+}
+
+func printHookErrors(hookErr *core.HookError) {
+	fmt.Println("\n[HOOK FAILURE] The following verification hooks failed:")
+	for _, res := range hookErr.Results {
+		if !res.Success {
+			fmt.Printf("\n--- Command: %s ---\n", res.Command)
+			if res.Stdout != "" {
+				fmt.Printf("Stdout:\n%s\n", strings.TrimSpace(res.Stdout))
+			}
+			if res.Stderr != "" {
+				fmt.Printf("Stderr:\n%s\n", strings.TrimSpace(res.Stderr))
+			}
+			fmt.Printf("Exit Code: %d\n", res.ExitCode)
+		}
+	}
+	fmt.Println("\nUpdate aborted. Please fix the issues and try again.")
+}
+
 // HandleImplementationUpdate processes the 'implementation update' command.
-func (e *Executor) HandleImplementationUpdate(ctx context.Context, ui core.UI, slug, taskId, status string) error {
+func (e *Executor) HandleImplementationUpdate(ctx context.Context, ui core.UI, slug string, taskIDs []string, status string) error {
 	projectRoot, err := spec.FindProjectRoot()
 	if err != nil {
 		return err
 	}
 
-	// Initialize SpecService lazily
-	if e.SpecService == nil {
-		artifactsFS, err := e.GetArtifactsFS(ui)
-		if err != nil {
-			return err
-		}
-		specFS, err := fs.Sub(artifactsFS, "spec")
-		if err != nil {
-			return fmt.Errorf("failed to load spec artifacts: %w", err)
-		}
-		registry, err := spec.NewRegistry(specFS)
-		if err != nil {
-			return fmt.Errorf("failed to initialize spec registry: %w", err)
-		}
-
-		// Initialize ProjectService if needed to pass as ConfigProvider
-		if e.ProjectService == nil {
-			kitFS, _ := e.GetKitFS(ui)
-			e.ProjectService = project.NewService(kitFS, artifactsFS, ".")
-		}
-		e.SpecService = spec.NewService(registry, e.ProjectService)
+	if err := e.initSpecService(ui); err != nil {
+		return err
 	}
 
-	if err := e.SpecService.UpdateTaskStatus(ctx, projectRoot, slug, taskId, status); err != nil {
+	if err := e.SpecService.UpdateTaskStatus(ctx, projectRoot, slug, taskIDs, status); err != nil {
 		var hookErr *core.HookError
 		if errors.As(err, &hookErr) {
-			fmt.Println("\n[HOOK FAILURE] The following verification hooks failed:")
-			for _, res := range hookErr.Results {
-				if !res.Success {
-					fmt.Printf("\n--- Command: %s ---\n", res.Command)
-					if res.Stdout != "" {
-						fmt.Printf("Stdout:\n%s\n", strings.TrimSpace(res.Stdout))
-					}
-					if res.Stderr != "" {
-						fmt.Printf("Stderr:\n%s\n", strings.TrimSpace(res.Stderr))
-					}
-					fmt.Printf("Exit Code: %d\n", res.ExitCode)
-				}
-			}
-			fmt.Println("\nUpdate aborted. Please fix the issues and try again.")
+			printHookErrors(hookErr)
 			return fmt.Errorf("task update blocked by hook failures")
 		}
-		return fmt.Errorf("failed to update task %s for %s: %w", taskId, slug, err)
+		if len(taskIDs) == 1 {
+			return fmt.Errorf("failed to update task %s for %s: %w", taskIDs[0], slug, err)
+		}
+		return fmt.Errorf("failed to update tasks %s for %s: %w", strings.Join(taskIDs, ", "), slug, err)
 	}
 
-	fmt.Printf("[OK] Task %s status updated to %s in %s\n", taskId, status, slug)
+	if len(taskIDs) == 1 {
+		fmt.Printf("[OK] Task %s status updated to %s in %s\n", taskIDs[0], status, slug)
+	} else {
+		fmt.Printf("[OK] Tasks %s status updated to %s in %s\n", strings.Join(taskIDs, ", "), status, slug)
+	}
 	return nil
 }

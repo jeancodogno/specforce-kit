@@ -312,7 +312,7 @@ func TestUpdateTaskStatus_Success(t *testing.T) {
 	svc := NewService(nil, &mockConfigProvider{config: config})
 
 	t.Run("normal task finished", func(t *testing.T) {
-		err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, "T1.1", "finished")
+		err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.1"}, "finished")
 		if err != nil {
 			t.Fatalf("UpdateTaskStatus failed: %v", err)
 		}
@@ -323,7 +323,7 @@ func TestUpdateTaskStatus_Success(t *testing.T) {
 	})
 	
 	t.Run("update non-finished status", func(t *testing.T) {
-		err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, "T1.2", "in-progress")
+		err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.2"}, "in-progress")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -352,7 +352,7 @@ func TestUpdateTaskStatus_Hooks(t *testing.T) {
 	svc := NewService(nil, &mockConfigProvider{config: config})
 
 	t.Run("failing hook blocks update", func(t *testing.T) {
-		err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, "T1.1", "finished")
+		err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.1"}, "finished")
 		if err == nil {
 			t.Fatal("expected error from failing hook")
 		}
@@ -360,7 +360,7 @@ func TestUpdateTaskStatus_Hooks(t *testing.T) {
 	
 	t.Run("nil configProvider", func(t *testing.T) {
 		svcNil := NewService(nil, nil)
-		err := svcNil.UpdateTaskStatus(context.Background(), tmpDir, slug, "T1.1", "finished")
+		err := svcNil.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.1"}, "finished")
 		if err != nil {
 			t.Fatal(err)
 		}

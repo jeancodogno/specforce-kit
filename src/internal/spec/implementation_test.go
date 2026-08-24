@@ -3,10 +3,13 @@ package spec
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
 
 func TestCheckTriadArtifacts(t *testing.T) {
@@ -440,5 +443,156 @@ func TestParseTasks_ParallelTasks(t *testing.T) {
 	}
 	if tasks[3].State != "PENDING" {
 		t.Errorf("Expected T1.4 to be PENDING because T1.2/T1.3 are not finished, got %s", tasks[3].State)
+	}
+}
+
+func createHookScript(t *testing.T, tmpDir, name, logPath string) string {
+	t.Helper()
+	scriptPath := filepath.Join(tmpDir, name)
+	scriptContent := fmt.Sprintf("#!/bin/sh\necho %s >> %s\n", name, logPath)
+	if err := os.WriteFile(scriptPath, []byte(scriptContent), 0755); err != nil {
+		t.Fatalf("failed to write hook script: %v", err)
+	}
+	return scriptPath
+}
+
+func countLogLines(t *testing.T, logPath, match string) int {
+	t.Helper()
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0
+		}
+		t.Fatalf("failed to read log: %v", err)
+	}
+	count := 0
+	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+		if strings.TrimSpace(line) == match {
+			count++
+		}
+	}
+	return count
+}
+
+func TestService_UpdateTaskStatus_BatchHooks(t *testing.T) {
+	tmpDir := t.TempDir()
+	slug := "batch-hooks-slug"
+	tasksDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	_ = os.MkdirAll(tasksDir, 0755)
+
+	content := "### Phase 1: Core\n#### T1.1: Task 1\n**State:** [PENDING]\n#### T1.2: Task 2\n**State:** [PENDING]\n#### T1.3: Task 3\n**State:** [PENDING]"
+	_ = os.WriteFile(filepath.Join(tasksDir, "tasks.md"), []byte(content), 0644)
+
+	logPath := filepath.Join(tmpDir, "hook.log")
+	scriptPath := createHookScript(t, tmpDir, "task_finished.sh", logPath)
+
+	config := &core.ProjectConfig{
+		Hooks: core.HooksConfig{
+			OnTaskFinished: []string{scriptPath},
+		},
+	}
+	svc := NewService(nil, &mockConfigProvider{config: config})
+
+	err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.1", "T1.2"}, "finished")
+	if err != nil {
+		t.Fatalf("UpdateTaskStatus failed: %v", err)
+	}
+
+	if count := countLogLines(t, logPath, "task_finished.sh"); count != 1 {
+		t.Errorf("expected OnTaskFinished to execute 1 time, got %d", count)
+	}
+
+	updatedContent, _ := os.ReadFile(filepath.Join(tasksDir, "tasks.md"))
+	sContent := string(updatedContent)
+	if !strings.Contains(sContent, "#### T1.1: Task 1\n**State:** [FINISHED]") {
+		t.Errorf("T1.1 not marked FINISHED")
+	}
+	if !strings.Contains(sContent, "#### T1.2: Task 2\n**State:** [FINISHED]") {
+		t.Errorf("T1.2 not marked FINISHED")
+	}
+	if !strings.Contains(sContent, "#### T1.3: Task 3\n**State:** [PENDING]") {
+		t.Errorf("T1.3 should remain PENDING")
+	}
+}
+
+func TestService_UpdateTaskStatus_PhaseAndSpecHooks(t *testing.T) {
+	tmpDir := t.TempDir()
+	slug := "phase-spec-hooks-slug"
+	tasksDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	_ = os.MkdirAll(tasksDir, 0755)
+
+	content := "### Phase 1: Core\n#### T1.1: Task 1\n**State:** [PENDING]\n#### T1.2: Task 2\n**State:** [PENDING]\n### Phase 2: Polish\n#### T2.1: Task 3\n**State:** [PENDING]\n#### T2.2: Task 4\n**State:** [PENDING]"
+	_ = os.WriteFile(filepath.Join(tasksDir, "tasks.md"), []byte(content), 0644)
+
+	logPath := filepath.Join(tmpDir, "hook.log")
+	taskHook := createHookScript(t, tmpDir, "task.sh", logPath)
+	phaseHook := createHookScript(t, tmpDir, "phase.sh", logPath)
+	specHook := createHookScript(t, tmpDir, "spec.sh", logPath)
+
+	config := &core.ProjectConfig{
+		Hooks: core.HooksConfig{
+			OnTaskFinished:     []string{taskHook},
+			OnPhaseFinished:    []string{phaseHook},
+			OnAllTasksFinished: []string{specHook},
+		},
+	}
+	svc := NewService(nil, &mockConfigProvider{config: config})
+
+	// 1. Batch without last task in phase (T1.1)
+	if err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.1"}, "finished"); err != nil {
+		t.Fatalf("UpdateTaskStatus failed: %v", err)
+	}
+	if count := countLogLines(t, logPath, "task.sh"); count != 1 {
+		t.Errorf("expected 1 task.sh, got %d", count)
+	}
+	if count := countLogLines(t, logPath, "phase.sh"); count != 0 {
+		t.Errorf("expected 0 phase.sh, got %d", count)
+	}
+
+	// 2. Batch including last task in phase 1 (T1.2)
+	if err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.2"}, "finished"); err != nil {
+		t.Fatalf("UpdateTaskStatus failed: %v", err)
+	}
+	if count := countLogLines(t, logPath, "phase.sh"); count != 1 {
+		t.Errorf("expected 1 phase.sh, got %d", count)
+	}
+	if count := countLogLines(t, logPath, "spec.sh"); count != 0 {
+		t.Errorf("expected 0 spec.sh, got %d", count)
+	}
+
+	// 3. Batch including last task in phase 2 and last in spec (T2.1, T2.2)
+	if err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T2.1", "T2.2"}, "finished"); err != nil {
+		t.Fatalf("UpdateTaskStatus failed: %v", err)
+	}
+	if count := countLogLines(t, logPath, "spec.sh"); count != 1 {
+		t.Errorf("expected 1 spec.sh, got %d", count)
+	}
+}
+
+func TestService_UpdateTaskStatus_HookFailureRollback(t *testing.T) {
+	tmpDir := t.TempDir()
+	slug := "rollback-slug"
+	tasksDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	_ = os.MkdirAll(tasksDir, 0755)
+
+	content := "### Phase 1: Core\n#### T1.1: Task 1\n**State:** [PENDING]\n#### T1.2: Task 2\n**State:** [PENDING]"
+	_ = os.WriteFile(filepath.Join(tasksDir, "tasks.md"), []byte(content), 0644)
+
+	config := &core.ProjectConfig{
+		Hooks: core.HooksConfig{
+			OnTaskFinished: []string{"false"},
+		},
+	}
+	svc := NewService(nil, &mockConfigProvider{config: config})
+
+	err := svc.UpdateTaskStatus(context.Background(), tmpDir, slug, []string{"T1.1", "T1.2"}, "finished")
+	if err == nil {
+		t.Fatal("expected error from failing hook, got nil")
+	}
+
+	// Verify tasks.md was not mutated
+	updatedContent, _ := os.ReadFile(filepath.Join(tasksDir, "tasks.md"))
+	if string(updatedContent) != content {
+		t.Errorf("tasks.md was modified despite hook failure:\n%s", string(updatedContent))
 	}
 }

@@ -1,0 +1,36 @@
+slug: 20260823-2158-batch-task-update-and-subagent-orchestration
+name: 20260823-2158-batch-task-update-and-subagent-orchestration
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-08-24T01:15:33.140396189Z
+              completed_at: 2026-08-24T01:18:43.349213549Z
+    T1.2:
+        sessions:
+            - started_at: 2026-08-24T01:15:35.380361598Z
+              completed_at: 2026-08-24T01:18:47.123010102Z
+    T1.3:
+        sessions:
+            - started_at: 2026-08-24T01:18:50.052554498Z
+              completed_at: 2026-08-24T01:21:04.943321608Z
+    T1.4:
+        sessions:
+            - started_at: 2026-08-24T01:18:52.363164927Z
+              completed_at: 2026-08-24T01:21:08.544059283Z
+    T2.1:
+        sessions:
+            - started_at: 2026-08-24T01:21:11.807395354Z
+              completed_at: 2026-08-24T01:24:19.759202385Z
+    T2.2:
+        sessions:
+            - started_at: 2026-08-24T01:21:14.33437123Z
+              completed_at: 2026-08-24T01:24:25.016205221Z
+    T2.3:
+        sessions:
+            - started_at: 2026-08-24T01:24:27.778573429Z
+              completed_at: 2026-08-24T01:25:30.874111876Z
+refinement:
+    iteration_count: 0
+    last_audit_at: 2026-08-24T00:59:28.859746549Z
+    is_valid: false
