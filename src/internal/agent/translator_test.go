@@ -863,3 +863,44 @@ func TestResolveMapping_UseSubdirWithSubparts(t *testing.T) {
 		t.Errorf("expected path %s, got %s", expected, mapping.Path)
 	}
 }
+
+func TestSkillAdaptationGuardrails(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-guardrails-adapt-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	kitFS := os.DirFS("kit")
+	ctx := context.Background()
+
+	// Adapt for antigravity
+	err = AdaptArtifacts(ctx, tmpDir, kitFS, "antigravity", nil, installer.Options{})
+	if err != nil {
+		t.Fatalf("AdaptArtifacts for antigravity failed: %v", err)
+	}
+
+	skillPath := filepath.Join(tmpDir, ".agents", "skills", "spf-implement", "SKILL.md")
+	data, err := os.ReadFile(skillPath)
+	if err != nil {
+		t.Fatalf("failed to read adapted skill at %s: %v", skillPath, err)
+	}
+	content := string(data)
+
+	expectedSnippets := []string{
+		"NON-NEGOTIABLE WORKER GUARDRAILS",
+		"Uncertainty & Ambiguity",
+		"Multiple Interpretations",
+		"Flawed Approach",
+		"Scope Containment",
+		"Test Integrity & Invariance (Tests = Specification)",
+		"Mid/Post-Implementation Spec Gate",
+	}
+
+	for _, snippet := range expectedSnippets {
+		if !strings.Contains(content, snippet) {
+			t.Errorf("adapted skill missing expected snippet: %q", snippet)
+		}
+	}
+}
+

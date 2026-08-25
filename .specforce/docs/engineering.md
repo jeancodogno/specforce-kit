@@ -133,3 +133,26 @@
 - **Action Step Density:** Every individual implementation task MUST contain at least two concrete, technically directive action steps. Tasks with insufficient density are considered "vague" and MUST be rejected by the validation engine.
 - **Task Verification Standard:** Every task MUST include an `**Acceptance Check:**` section containing a specific terminal command or test scenario. This label is mandatory and methodology-agnostic, serving as the "Definition of Done" for the task. The legacy label `**Verification (TDD):**` is deprecated and will trigger a validation error.
 - **DTO Pattern for Flat Access:** Domain models that implement nested structures (like `ImplementationReport` with `Phases`) MUST provide a `Tasks()` helper method that returns a flattened slice of all tasks. This ensures backward compatibility for scanners and progress calculators that expect a sequential list.
+
+## AI Coding Constraints & Test Invariance
+
+### 1. Pre-Coding Protocol
+- If anything is uncertain or ambiguous, the AI MUST ask before proceeding.
+- If a requirement has multiple interpretations, the AI MUST NOT choose silently; it MUST present the options and ask.
+- If an approach appears flawed, the AI MUST disagree, avoid sycophancy, and challenge the design.
+
+### 2. During Coding Protocol
+- Do NOT implement unrequested features.
+- Do NOT refactor unrequested code.
+- Do NOT implement tests for impossible scenarios.
+- Do NOT remove pre-existing dead code unless requested.
+- NEVER remove tests to reduce failure count.
+- NEVER weaken existing tests to make them pass.
+- NEVER use mechanisms that skip, ignore, or bypass tests.
+- If a test is genuinely incorrect, the AI MUST halt and confirm with the user before altering it.
+- Tests are the specification: the implementation conforms to the tests, not the reverse.
+
+### 3. Post-Implementation & Change Protocol
+- Do NOT implement features or change behaviors outside the specification. If divergence is required, activate `/spf:spec` to update the specification first.
+- The AI MUST NOT remove existing comments unless explicitly replacing them with better documentation.
+

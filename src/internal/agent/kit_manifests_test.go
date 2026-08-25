@@ -2,6 +2,7 @@ package agent
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -89,3 +90,64 @@ func TestCursorMapping(t *testing.T) {
 		t.Errorf("expected DirName '.cursor/', got '%s'", cursor.DirName)
 	}
 }
+
+func TestImplementBlueprintGuardrails(t *testing.T) {
+	kitFS, err := GetKitFS()
+	if err != nil {
+		t.Fatalf("failed to get kit FS: %v", err)
+	}
+
+	// 1. Check implement.yaml
+	implData, err := os.ReadFile("kit/commands/implement.yaml")
+	if err != nil {
+		t.Fatalf("failed to read implement.yaml: %v", err)
+	}
+	implContent := string(implData)
+
+	requiredWorkerDirectives := []string{
+		"NON-NEGOTIABLE WORKER GUARDRAILS",
+		"Uncertainty & Ambiguity",
+		"Multiple Interpretations",
+		"Flawed Approach",
+		"Scope Containment",
+		"Do NOT implement features that were not requested",
+		"Do NOT refactor code that was not requested",
+		"Do NOT implement tests for impossible scenarios",
+		"Do NOT remove pre-existing dead code unless explicitly requested",
+		"Test Integrity & Invariance (Tests = Specification)",
+		"NEVER remove tests to reduce the failure count",
+		"NEVER weaken existing tests to make them pass",
+		"NEVER use mechanisms to skip, ignore, or bypass tests",
+		"If a test is genuinely wrong/broken, STOP and confirm with the user",
+		"Mid/Post-Implementation Spec Gate",
+	}
+
+	for _, directive := range requiredWorkerDirectives {
+		if !strings.Contains(implContent, directive) {
+			t.Errorf("implement.yaml missing mandatory directive: %q", directive)
+		}
+	}
+
+	// 2. Check engineering.yaml
+	engData, err := os.ReadFile("artifacts/constitution/engineering.yaml")
+	if err != nil {
+		t.Fatalf("failed to read engineering.yaml: %v", err)
+	}
+	engContent := string(engData)
+
+	requiredEngDirectives := []string{
+		"AI Coding Constraints & Test Invariance",
+		"Pre-Coding Protocol",
+		"During Coding Protocol",
+		"Post-Implementation & Change Protocol",
+		"Tests are the specification",
+	}
+
+	for _, directive := range requiredEngDirectives {
+		if !strings.Contains(engContent, directive) {
+			t.Errorf("engineering.yaml missing mandatory directive: %q", directive)
+		}
+	}
+	_ = kitFS
+}
+

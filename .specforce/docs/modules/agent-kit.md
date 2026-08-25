@@ -10,6 +10,7 @@ Manages the embedded Agent Kit blueprints (commands, skills), artifact generatio
 - `[BR-KIT-04]` Secondary workers and subagents spawned during implementation are STRICTLY FORBIDDEN from modifying `tasks.md` directly. State transitions belong exclusively to the primary orchestrator via `specforce implementation update`.
 - `[BR-KIT-05]` Implementation orchestration MUST scale subagent allocation dynamically (1 subagent for small/self-contained tasks, 2-3 subagents sweet spot for standard tasks, up to 4 for complex tasks) and mandate subagent usage whenever supported by the environment.
 - `[BR-KIT-06]` Task status updates via `specforce implementation update` support multi-task batching (comma-separated or repeated `--task`), executing verification hooks once in deduplicated sequence and updating task states and session logs atomically.
+- `[BR-KIT-07]` Implementation orchestration blueprints and Mission Brief Envelopes MUST embed non-negotiable worker guardrails (pre-coding interrogation, anti-sycophancy, scope jail, and test invariance) and an orchestrator mid/post-implementation specification gate.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -35,6 +36,13 @@ Manages the embedded Agent Kit blueprints (commands, skills), artifact generatio
   - **GIVEN** an active roadmap with batches of varying complexity
   - **WHEN** the orchestrator delegates tasks
   - **THEN** it sizes subagents between 1 and 4 (2-3 ideal), delegates code modification, and retains exclusive authority over `tasks.md` state transitions.
+
+### [US-KIT-05] Strict Worker Guardrails and Orchestrator Spec Gating
+- **Scenario:** Executing task implementation batches and handling ad-hoc change requests
+  - **GIVEN** a worker subagent executing an implementation batch
+  - **WHEN** coding and verifying tasks
+  - **THEN** the worker operates under non-negotiable guardrails (pre-coding interrogation, anti-sycophancy, scope jail, and test invariance), and the orchestrator mandates updating specifications via `/spf:spec` before applying any behavioral drift.
+
 
 ## 4. Technical Contracts & Integration Points
 - **Packages:**

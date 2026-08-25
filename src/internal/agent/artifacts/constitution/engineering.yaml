@@ -18,10 +18,12 @@ instruction: |
      - Specify the commit message format (e.g., Conventional Commits).
      - Define the mandatory checks for a PR/Feature to be considered "Done" (e.g., passing CI, observability implemented, Spec updated).
   
-  4. AI Coding Constraints (CRITICAL FOR SDD):
-     - Establish rules for autonomous code generation.
+  4. AI Coding Constraints & Test Invariance (CRITICAL FOR SDD):
+     - Establish non-negotiable rules for autonomous code generation and verification.
+     - Pre-Coding Protocol: Mandate asking when uncertain/ambiguous, presenting options for multiple interpretations, and anti-sycophancy (challenging flawed designs).
+     - During Coding Protocol: Enforce scope containment (no unrequested features, no unrequested refactoring, no impossible tests, no dead code removal) and absolute test invariance (tests are the specification, never delete/weaken/skip tests, confirm genuinely broken tests).
+     - Post-Implementation & Change Protocol: Prohibit undocumented behavioral drift; mandate activating `/spf:spec` before implementing new/changed behaviors.
      - Mandate that the AI MUST NOT remove existing human-written comments unless they are obsolete.
-     - Require the AI to document complex regex or algorithmic choices.
 
   CRITICAL: The final output must be pure Markdown, ready to be saved as `engineering.md`.
 template: |
@@ -46,7 +48,24 @@ template: |
     - [ ] Tests are written and passing.
     - [ ] Observability/Logs are implemented for new features.
 
-  ## AI Coding Constraints
+  ## AI Coding Constraints & Test Invariance
+
+  ### 1. Pre-Coding Protocol
+  - If anything is uncertain or ambiguous, the AI MUST ask before proceeding.
+  - If a requirement has multiple interpretations, the AI MUST NOT choose silently; it MUST present the options and ask.
+  - If an approach appears flawed, the AI MUST disagree, avoid sycophancy, and challenge the design.
+
+  ### 2. During Coding Protocol
+  - Do NOT implement unrequested features.
+  - Do NOT refactor unrequested code.
+  - Do NOT implement tests for impossible scenarios.
+  - Do NOT remove pre-existing dead code unless requested.
+  - NEVER remove tests to reduce failure count.
+  - NEVER weaken existing tests to make them pass.
+  - NEVER use mechanisms that skip, ignore, or bypass tests.
+  - If a test is genuinely incorrect, the AI MUST halt and confirm with the user before altering it.
+  - Tests are the specification: the implementation conforms to the tests, not the reverse.
+
+  ### 3. Post-Implementation & Change Protocol
+  - Do NOT implement features or change behaviors outside the specification. If divergence is required, activate `/spf:spec` to update the specification first.
   - The AI MUST NOT remove existing comments unless explicitly replacing them with better documentation.
-  - All newly generated public methods/functions MUST include docblocks or strict type hinting.
-  - [Add any other AI-specific safety rules]
