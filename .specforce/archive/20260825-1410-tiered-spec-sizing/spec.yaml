@@ -1,0 +1,36 @@
+slug: 20260825-1410-tiered-spec-sizing
+name: 20260825-1410-tiered-spec-sizing
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-08-25T17:35:38.121108658Z
+              completed_at: 2026-08-25T17:38:25.276494255Z
+    T1.2:
+        sessions:
+            - started_at: 2026-08-25T17:35:38.121110104Z
+              completed_at: 2026-08-25T17:38:25.276495485Z
+    T2.1:
+        sessions:
+            - started_at: 2026-08-25T17:38:29.821771251Z
+              completed_at: 2026-08-25T17:42:41.460916291Z
+    T2.2:
+        sessions:
+            - started_at: 2026-08-25T17:38:29.821772276Z
+              completed_at: 2026-08-25T17:42:41.460916965Z
+    T3.1:
+        sessions:
+            - started_at: 2026-08-25T17:42:45.465368674Z
+              completed_at: 2026-08-25T17:46:43.088184493Z
+    T3.2:
+        sessions:
+            - started_at: 2026-08-25T17:42:45.465370515Z
+              completed_at: 2026-08-25T17:46:43.088186126Z
+    T4.1:
+        sessions:
+            - started_at: 2026-08-25T17:46:46.251335484Z
+              completed_at: 2026-08-25T17:48:57.061817347Z
+    T4.2:
+        sessions:
+            - started_at: 2026-08-25T17:46:46.251336471Z
+              completed_at: 2026-08-25T17:48:57.061820408Z

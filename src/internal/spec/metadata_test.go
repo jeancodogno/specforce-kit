@@ -117,3 +117,83 @@ func TestMetadataSessionManagement(t *testing.T) {
 		t.Errorf("expected total duration >= 20ms, got %v", totalDuration)
 	}
 }
+
+func TestValidateSize(t *testing.T) {
+	tests := []struct {
+		size  SpecSize
+		valid bool
+	}{
+		{SpecSizeSmall, true},
+		{SpecSizeMedium, true},
+		{SpecSizeLarge, true},
+		{SpecSizeComplex, true},
+		{"", false},
+		{"unknown", false},
+		{"huge", false},
+	}
+
+	for _, tt := range tests {
+		if got := ValidateSize(tt.size); got != tt.valid {
+			t.Errorf("ValidateSize(%q) = %v, want %v", tt.size, got, tt.valid)
+		}
+	}
+}
+
+func TestMetadataSize(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spec-metadata-size-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	slug := "size-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0750); err != nil {
+		t.Fatalf("failed to create spec dir: %v", err)
+	}
+
+	// 1. Default size on missing file
+	missingMeta, err := LoadMetadata(tmpDir, "non-existent")
+	if err != nil {
+		t.Fatalf("expected no error loading missing metadata, got %v", err)
+	}
+	if missingMeta.Size != SpecSizeMedium {
+		t.Errorf("expected default size %q, got %q", SpecSizeMedium, missingMeta.Size)
+	}
+
+	// 2. Default size on spec.yaml without size field
+	yamlWithoutSize := []byte("slug: size-spec\nname: Size Spec\ntype: feature\n")
+	if err := os.WriteFile(filepath.Join(specDir, "spec.yaml"), yamlWithoutSize, 0600); err != nil {
+		t.Fatalf("failed to write spec.yaml: %v", err)
+	}
+	loaded, err := LoadMetadata(tmpDir, slug)
+	if err != nil {
+		t.Fatalf("failed to load metadata: %v", err)
+	}
+	if loaded.Size != SpecSizeMedium {
+		t.Errorf("expected empty size to default to %q, got %q", SpecSizeMedium, loaded.Size)
+	}
+
+	// 3. Round-trip persistence for each size
+	sizes := []SpecSize{SpecSizeSmall, SpecSizeMedium, SpecSizeLarge, SpecSizeComplex}
+	for _, sz := range sizes {
+		m := &Metadata{
+			Slug: slug,
+			Name: "Size Spec",
+			Type: "feature",
+			Size: sz,
+		}
+		if err := SaveMetadata(tmpDir, slug, m); err != nil {
+			t.Fatalf("failed to save metadata for size %q: %v", sz, err)
+		}
+
+		reloaded, err := LoadMetadata(tmpDir, slug)
+		if err != nil {
+			t.Fatalf("failed to reload metadata for size %q: %v", sz, err)
+		}
+		if reloaded.Size != sz {
+			t.Errorf("expected size %q after save/load, got %q", sz, reloaded.Size)
+		}
+	}
+}
+

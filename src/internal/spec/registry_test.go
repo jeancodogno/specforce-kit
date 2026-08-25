@@ -208,3 +208,120 @@ func TestTopologicalSort(t *testing.T) {
 		}
 	})
 }
+
+func createTestSizeRegistry(t *testing.T) *Registry {
+	t.Helper()
+	fs := fstest.MapFS{
+		"requirements.yaml": {
+			Data: []byte("description: Feature Req\ninstruction: Feature Inst\ntemplate: Feature Temp\n"),
+		},
+		"design.yaml": {
+			Data: []byte("description: Feature Design\ninstruction: Feature Design Inst\ntemplate: Feature Design Temp\ndependency: requirements\n"),
+		},
+		"tasks.yaml": {
+			Data: []byte("description: Feature Tasks\ninstruction: Feature Tasks Inst\ntemplate: Feature Tasks Temp\ndependency: design\n"),
+		},
+		"bug-requirements.yaml": {
+			Data: []byte("description: Bug Req\ninstruction: Bug Inst\ntemplate: Bug Temp\n"),
+		},
+		"bug-tasks.yaml": {
+			Data: []byte("description: Bug Tasks\ninstruction: Bug Tasks Inst\ntemplate: Bug Tasks Temp\n"),
+		},
+	}
+
+	registry, err := NewRegistry(fs)
+	if err != nil {
+		t.Fatalf("NewRegistry failed: %v", err)
+	}
+	return registry
+}
+
+type expectedArtifact struct {
+	name        string
+	description string
+}
+
+func verifyArtifacts(t *testing.T, arts []Artifact, expected []expectedArtifact) {
+	t.Helper()
+	if len(arts) != len(expected) {
+		t.Fatalf("expected %d artifacts, got %d", len(expected), len(arts))
+	}
+	for i, exp := range expected {
+		if exp.name != "" && arts[i].Name != exp.name {
+			t.Errorf("artifact[%d]: expected name %q, got %q", i, exp.name, arts[i].Name)
+		}
+		if exp.description != "" && arts[i].Description != exp.description {
+			t.Errorf("artifact[%d]: expected description %q, got %q", i, exp.description, arts[i].Description)
+		}
+	}
+}
+
+type typeAndSizeTestCase struct {
+	name     string
+	specType string
+	size     SpecSize
+	expected []expectedArtifact
+}
+
+func listForTypeAndSizeCases() []typeAndSizeTestCase {
+	return []typeAndSizeTestCase{
+		{
+			name:     "Small size feature spec",
+			specType: "feature",
+			size:     SpecSizeSmall,
+			expected: []expectedArtifact{{name: "tasks", description: "Feature Tasks"}},
+		},
+		{
+			name:     "Small size bug spec",
+			specType: "bug",
+			size:     SpecSizeSmall,
+			expected: []expectedArtifact{{name: "tasks", description: "Bug Tasks"}},
+		},
+		{
+			name:     "Medium size feature spec",
+			specType: "feature",
+			size:     SpecSizeMedium,
+			expected: []expectedArtifact{{name: "requirements"}, {name: "tasks"}},
+		},
+		{
+			name:     "Medium size bug spec",
+			specType: "bug",
+			size:     SpecSizeMedium,
+			expected: []expectedArtifact{
+				{name: "requirements", description: "Bug Req"},
+				{name: "tasks", description: "Bug Tasks"},
+			},
+		},
+		{
+			name:     "Large size feature spec",
+			specType: "feature",
+			size:     SpecSizeLarge,
+			expected: []expectedArtifact{{name: "requirements"}, {name: "design"}, {name: "tasks"}},
+		},
+		{
+			name:     "Complex size feature spec",
+			specType: "feature",
+			size:     SpecSizeComplex,
+			expected: []expectedArtifact{{name: "requirements"}, {name: "design"}, {name: "tasks"}},
+		},
+		{
+			name:     "Default/Unknown fallback size returns full matrix",
+			specType: "feature",
+			size:     "",
+			expected: []expectedArtifact{{name: "requirements"}, {name: "design"}, {name: "tasks"}},
+		},
+	}
+}
+
+func TestRegistryListForTypeAndSize(t *testing.T) {
+	registry := createTestSizeRegistry(t)
+
+	for _, tt := range listForTypeAndSizeCases() {
+		t.Run(tt.name, func(t *testing.T) {
+			arts := registry.ListForTypeAndSize(tt.specType, tt.size)
+			verifyArtifacts(t, arts, tt.expected)
+		})
+	}
+}
+
+

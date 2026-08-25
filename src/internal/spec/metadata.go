@@ -28,11 +28,32 @@ type RefinementMetadata struct {
 	Errors         []string  `json:"errors,omitempty" yaml:"errors,omitempty"`
 }
 
+// SpecSize represents the complexity/size classification of a specification.
+type SpecSize string
+
+const (
+	SpecSizeSmall   SpecSize = "small"
+	SpecSizeMedium  SpecSize = "medium"
+	SpecSizeLarge   SpecSize = "large"
+	SpecSizeComplex SpecSize = "complex"
+)
+
+// ValidateSize returns true if the given size is a valid SpecSize.
+func ValidateSize(size SpecSize) bool {
+	switch size {
+	case SpecSizeSmall, SpecSizeMedium, SpecSizeLarge, SpecSizeComplex:
+		return true
+	default:
+		return false
+	}
+}
+
 // Metadata represents the core configuration of a specification.
 type Metadata struct {
 	Slug       string                 `json:"slug" yaml:"slug"`
 	Name       string                 `json:"name" yaml:"name"`
 	Type       string                 `json:"type" yaml:"type"` // "feature" | "bug"
+	Size       SpecSize               `json:"size" yaml:"size"`
 	TimeLogs   map[string]TaskTimeLog `json:"time_logs,omitempty" yaml:"time_logs,omitempty"`
 	Refinement RefinementMetadata     `json:"refinement,omitempty" yaml:"refinement,omitempty"`
 }
@@ -46,11 +67,12 @@ func LoadMetadata(projectRoot, slug string) (*Metadata, error) {
 	data, err := os.ReadFile(metaPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Backward compatibility: default to feature
+			// Backward compatibility: default to feature and medium size
 			return &Metadata{
 				Slug: slug,
 				Name: slug,
 				Type: "feature",
+				Size: SpecSizeMedium,
 			}, nil
 		}
 		return nil, fmt.Errorf("failed to read metadata: %w", err)
@@ -66,8 +88,14 @@ func LoadMetadata(projectRoot, slug string) (*Metadata, error) {
 		meta.Type = "feature"
 	}
 
+	// Default to medium if not specified
+	if meta.Size == "" {
+		meta.Size = SpecSizeMedium
+	}
+
 	return &meta, nil
 }
+
 
 // SaveMetadata writes the metadata to spec.yaml in the specification directory.
 func SaveMetadata(projectRoot, slug string, meta *Metadata) error {

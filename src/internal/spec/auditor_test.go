@@ -96,3 +96,55 @@ Context: Use Postgres
 		t.Errorf("error 1 mismatch: %+v", errors[1])
 	}
 }
+
+func TestDeterministicCheck_SmallSpec(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spec-auditor-small-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	auditor := NewAuditor(tmpDir)
+
+	t.Run("Small spec without requirements.md produces no error", func(t *testing.T) {
+		slug := "small-no-reqs"
+		specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+		_ = os.MkdirAll(specDir, 0750)
+		_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: small\n"), 0600)
+		_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte("### Phase 1\n- [ ] T1.1: Task\n"), 0600)
+
+		errors := auditor.DeterministicCheck(context.Background(), slug)
+		if len(errors) != 0 {
+			t.Errorf("expected no errors for small spec missing requirements.md, got: %v", errors)
+		}
+	})
+
+	t.Run("Medium spec without requirements.md produces FILE_MISSING error", func(t *testing.T) {
+		slug := "medium-no-reqs"
+		specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+		_ = os.MkdirAll(specDir, 0750)
+		_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: medium\n"), 0600)
+		_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte("### Phase 1\n- [ ] T1.1: Task\n"), 0600)
+
+		errors := auditor.DeterministicCheck(context.Background(), slug)
+		if len(errors) != 1 || errors[0].Code != "FILE_MISSING" || errors[0].Artifact != "requirements" {
+			t.Errorf("expected FILE_MISSING error for requirements, got: %v", errors)
+		}
+	})
+
+	t.Run("Small spec with requirements.md still cross-references US tags", func(t *testing.T) {
+		slug := "small-with-reqs"
+		specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+		_ = os.MkdirAll(specDir, 0750)
+		_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: small\n"), 0600)
+		reqContent := "# Requirements\n### [US-1] Req 1\n### [US-2] Req 2\n"
+		_ = os.WriteFile(filepath.Join(specDir, "requirements.md"), []byte(reqContent), 0600)
+		tasksContent := "### Phase 1\n- [ ] T1.1: Task\n**Context:** [US-1]\n"
+		_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(tasksContent), 0600)
+
+		errors := auditor.DeterministicCheck(context.Background(), slug)
+		if len(errors) != 1 || errors[0].Code != "MISSING_TASK" {
+			t.Errorf("expected 1 MISSING_TASK error, got: %v", errors)
+		}
+	})
+}

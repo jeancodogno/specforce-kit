@@ -366,3 +366,49 @@ func TestUpdateTaskStatus_Hooks(t *testing.T) {
 		}
 	})
 }
+
+func TestResizeSpec(t *testing.T) {
+	tmpDir := t.TempDir()
+	slug := "resize-test"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	meta := &Metadata{
+		Slug: slug,
+		Name: slug,
+		Type: "feature",
+		Size: SpecSizeSmall,
+	}
+	if err := SaveMetadata(tmpDir, slug, meta); err != nil {
+		t.Fatal(err)
+	}
+
+	svc := NewService(nil, nil)
+	svc.SetProjectRoot(tmpDir)
+
+	t.Run("valid resize", func(t *testing.T) {
+		updated, err := svc.ResizeSpec(context.Background(), slug, SpecSizeLarge)
+		if err != nil {
+			t.Fatalf("ResizeSpec failed: %v", err)
+		}
+		if updated.Size != SpecSizeLarge {
+			t.Errorf("expected size %v, got %v", SpecSizeLarge, updated.Size)
+		}
+	})
+
+	t.Run("invalid size", func(t *testing.T) {
+		_, err := svc.ResizeSpec(context.Background(), slug, SpecSize("invalid"))
+		if err == nil {
+			t.Fatal("expected error for invalid size, got nil")
+		}
+	})
+
+	t.Run("non-existent spec", func(t *testing.T) {
+		_, err := svc.ResizeSpec(context.Background(), "non-existent", SpecSizeMedium)
+		if err == nil {
+			t.Fatal("expected error for non-existent spec, got nil")
+		}
+	})
+}

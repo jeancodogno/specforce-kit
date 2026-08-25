@@ -38,23 +38,31 @@ func NewAuditor(projectRoot string) *SpecAuditor {
 
 // DeterministicCheck performs fast, rule-based validations.
 func (a *SpecAuditor) DeterministicCheck(ctx context.Context, slug string) []CoherenceError {
-	var errors []CoherenceError
-
 	specDir := filepath.Join(a.projectRoot, ".specforce", "specs", slug)
 	reqPath := filepath.Join(specDir, "requirements.md")
 	tasksPath := filepath.Join(specDir, "tasks.md")
+
+	meta, _ := LoadMetadata(a.projectRoot, slug)
 
 	// 1. Extract US-X from requirements
 	// #nosec G304 - internal spec file
 	reqData, err := os.ReadFile(reqPath)
 	if err != nil {
-		return append(errors, CoherenceError{
+		if meta != nil && meta.Size == SpecSizeSmall {
+			return nil
+		}
+		return []CoherenceError{{
 			Artifact: "requirements",
 			Code:     "FILE_MISSING",
 			Message:  "requirements.md is missing",
-		})
+		}}
 	}
 
+	requirements := extractRequirements(reqData)
+	return crossReferenceTasks(tasksPath, requirements)
+}
+
+func extractRequirements(reqData []byte) map[string]bool {
 	usRegex := regexp.MustCompile(`\[(US-\d+)\]`)
 	matches := usRegex.FindAllStringSubmatch(string(reqData), -1)
 	requirements := make(map[string]bool)
@@ -62,7 +70,6 @@ func (a *SpecAuditor) DeterministicCheck(ctx context.Context, slug string) []Coh
 		requirements[m[1]] = true
 	}
 
-	// Identify Out of Scope (simple check for "Out of Scope" section)
 	outOfScope := false
 	lines := strings.Split(string(reqData), "\n")
 	for _, line := range lines {
@@ -78,18 +85,21 @@ func (a *SpecAuditor) DeterministicCheck(ctx context.Context, slug string) []Coh
 			}
 		}
 	}
+	return requirements
+}
 
-	// 2. Cross-reference with tasks
+func crossReferenceTasks(tasksPath string, requirements map[string]bool) []CoherenceError {
 	// #nosec G304 - internal spec file
 	tasksData, err := os.ReadFile(tasksPath)
 	if err != nil {
-		return append(errors, CoherenceError{
+		return []CoherenceError{{
 			Artifact: "tasks",
 			Code:     "FILE_MISSING",
 			Message:  "tasks.md is missing",
-		})
+		}}
 	}
 
+	var errors []CoherenceError
 	tasksContent := string(tasksData)
 	for us := range requirements {
 		if !strings.Contains(tasksContent, fmt.Sprintf("**Context:** [%s]", us)) {
@@ -101,7 +111,6 @@ func (a *SpecAuditor) DeterministicCheck(ctx context.Context, slug string) []Coh
 			})
 		}
 	}
-
 	return errors
 }
 

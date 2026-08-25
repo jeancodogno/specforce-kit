@@ -20,7 +20,7 @@ import (
 // HandleSpec dispatches to the correct spec sub-command.
 func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) error {
 	if len(args) == 0 {
-		fmt.Println("Available commands: init, list, status, artifact, audit, archive")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize")
 		return nil
 	}
 
@@ -46,27 +46,88 @@ func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) e
 		return e.handleSpecAuditCmd(ctx, ui, args, jsonMode)
 	case "archive":
 		return e.handleSpecArchiveCmd(ctx, ui, args)
+	case "resize":
+		return e.handleSpecResizeCmd(ctx, ui, args, jsonMode)
 	default:
 		fmt.Printf("Unknown spec command: %s\n", subCommand)
-		fmt.Println("Available commands: init, list, status, artifact, audit, archive")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize")
 		return nil
 	}
 }
 
 func (e *Executor) handleSpecInitCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
-	if len(args) < 2 {
-		return fmt.Errorf("missing slug for spec init. Usage: specforce spec init <slug> [--type feature|bug]")
-	}
-	
+	var positional []string
 	specType := "feature"
-	for i, arg := range args {
+	specSize := "medium"
+	for i := 1; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--json" {
+			continue
+		}
 		if arg == "--type" && i+1 < len(args) {
 			specType = args[i+1]
-			break
+			i++
+			continue
+		}
+		if strings.HasPrefix(arg, "--type=") {
+			specType = strings.TrimPrefix(arg, "--type=")
+			continue
+		}
+		if arg == "--size" && i+1 < len(args) {
+			specSize = args[i+1]
+			i++
+			continue
+		}
+		if strings.HasPrefix(arg, "--size=") {
+			specSize = strings.TrimPrefix(arg, "--size=")
+			continue
+		}
+		if !strings.HasPrefix(arg, "-") {
+			positional = append(positional, arg)
 		}
 	}
-	
-	return e.HandleSpecInit(ctx, ui, args[1], jsonMode, specType)
+
+	if len(positional) < 1 {
+		return fmt.Errorf("missing slug for spec init. Usage: specforce spec init <slug> [--type feature|bug] [--size small|medium|large|complex]")
+	}
+
+	return e.HandleSpecInit(ctx, ui, positional[0], jsonMode, specType, specSize)
+}
+
+func (e *Executor) handleSpecResizeCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
+	var positional []string
+	newSize := ""
+	for i := 1; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--json" {
+			continue
+		}
+		if arg == "--size" && i+1 < len(args) {
+			newSize = args[i+1]
+			i++
+			continue
+		}
+		if strings.HasPrefix(arg, "--size=") {
+			newSize = strings.TrimPrefix(arg, "--size=")
+			continue
+		}
+		if !strings.HasPrefix(arg, "-") {
+			positional = append(positional, arg)
+		}
+	}
+
+	if len(positional) < 1 {
+		return fmt.Errorf("missing slug for spec resize. Usage: specforce spec resize <slug> --size <small|medium|large|complex>")
+	}
+	slug := positional[0]
+	if newSize == "" && len(positional) > 1 {
+		newSize = positional[1]
+	}
+	if newSize == "" {
+		return fmt.Errorf("missing size for spec resize. Usage: specforce spec resize <slug> --size <small|medium|large|complex>")
+	}
+
+	return e.HandleSpecResize(ctx, ui, slug, newSize, jsonMode)
 }
 
 func (e *Executor) handleSpecStatusCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
@@ -154,7 +215,7 @@ func (e *Executor) handleSpecArchiveCmd(ctx context.Context, ui core.UI, args []
 }
 
 // HandleSpecInit processes the 'spec init' command.
-func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, jsonMode bool, specType string) error {
+func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, jsonMode bool, specType string, specSize string) error {
 	projectRoot, err := spec.FindProjectRoot()
 	if err != nil {
 		return err
@@ -173,6 +234,14 @@ func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, 
 		return fmt.Errorf("invalid spec type: %s. Supported: feature, bug", specType)
 	}
 
+	if specSize == "" {
+		specSize = string(spec.SpecSizeMedium)
+	}
+
+	if !spec.ValidateSize(spec.SpecSize(specSize)) {
+		return fmt.Errorf("invalid spec size: %s. Supported: small, medium, large, complex", specSize)
+	}
+
 	if err := e.ensureSpecAvailable(projectRoot, slug, jsonMode); err != nil {
 		return err
 	}
@@ -187,6 +256,7 @@ func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, 
 		Slug: slug,
 		Name: slug,
 		Type: specType,
+		Size: spec.SpecSize(specSize),
 	}
 	if err := spec.SaveMetadata(projectRoot, slug, meta); err != nil {
 		return fmt.Errorf("failed to save spec metadata: %w", err)
@@ -197,10 +267,62 @@ func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, 
 			"status":  "ok",
 			"message": fmt.Sprintf("Spec directory initialized: .specforce/specs/%s", slug),
 			"type":    specType,
+			"size":    specSize,
 		})
 	}
 
-	fmt.Printf("[OK] Spec directory initialized: .specforce/specs/%s (Type: %s)\n", slug, specType)
+	fmt.Printf("[OK] Spec directory initialized: .specforce/specs/%s (Type: %s, Size: %s)\n", slug, specType, specSize)
+	return nil
+}
+
+// HandleSpecResize processes the 'spec resize' command.
+func (e *Executor) HandleSpecResize(ctx context.Context, ui core.UI, slug string, newSize string, jsonMode bool) error {
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+
+	slug = spec.ResolveSlug(projectRoot, slug)
+
+	if !spec.ValidateSize(spec.SpecSize(newSize)) {
+		return fmt.Errorf("invalid spec size: %s. Supported: small, medium, large, complex", newSize)
+	}
+
+	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
+	if fi, err := os.Stat(specDir); err != nil || !fi.IsDir() {
+		return fmt.Errorf("specification not found: %s", slug)
+	}
+
+	meta, err := spec.LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return fmt.Errorf("failed to load spec metadata: %w", err)
+	}
+
+	previousSize := meta.Size
+	if previousSize == "" {
+		previousSize = spec.SpecSizeMedium
+	}
+
+	meta.Size = spec.SpecSize(newSize)
+	if err := spec.SaveMetadata(projectRoot, slug, meta); err != nil {
+		return fmt.Errorf("failed to save spec metadata: %w", err)
+	}
+
+	if jsonMode {
+		return e.outputJSON(map[string]string{
+			"status":        "ok",
+			"slug":          slug,
+			"previous_size": string(previousSize),
+			"size":          newSize,
+			"message":       fmt.Sprintf("Specification resized from %s to %s", previousSize, newSize),
+		})
+	}
+
+	if ui != nil {
+		ui.Success(fmt.Sprintf("Specification %s resized to %s (was %s)", slug, newSize, previousSize))
+	} else {
+		fmt.Printf("[OK] Specification %s resized to %s (was %s)\n", slug, newSize, previousSize)
+	}
 	return nil
 }
 

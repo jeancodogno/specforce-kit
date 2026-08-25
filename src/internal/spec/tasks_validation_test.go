@@ -339,3 +339,66 @@ Verify`,
 		},
 	}
 }
+
+func TestValidateTasks_SmallSpec(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-small-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	slug := "small-feature"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatalf("failed to create spec dir: %v", err)
+	}
+
+	// Set size to small in spec.yaml
+	if err := os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: small\n"), 0644); err != nil {
+		t.Fatalf("failed to write spec.yaml: %v", err)
+	}
+
+	tasksPath := filepath.Join(specDir, "tasks.md")
+
+	t.Run("Small spec allows single action step and no context", func(t *testing.T) {
+		content := `### Phase 1: Setup
+- [ ] T1.1: Quick Task
+**Target:** src/pkg/file.go
+**Action Steps:**
+- Single action step is sufficient for small
+**Acceptance Check:**
+Check files`
+		if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		errors, err := ValidateTasks(context.Background(), tmpDir, slug)
+		if err != nil {
+			t.Fatalf("ValidateTasks failed: %v", err)
+		}
+		if len(errors) != 0 {
+			t.Errorf("expected no validation errors for small spec, got: %v", errors)
+		}
+	})
+
+	t.Run("Small spec with empty action steps still fails", func(t *testing.T) {
+		content := `### Phase 1: Setup
+- [ ] T1.1: Empty Steps Task
+**Target:** src/pkg/file.go
+**Action Steps:**
+**Acceptance Check:**
+Check files`
+		if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		errors, err := ValidateTasks(context.Background(), tmpDir, slug)
+		if err != nil {
+			t.Fatalf("ValidateTasks failed: %v", err)
+		}
+		expected := []string{"Task T1.1 (line 2) is missing mandatory items under **Action Steps:**"}
+		if !reflect.DeepEqual(errors, expected) {
+			t.Errorf("got %v, want %v", errors, expected)
+		}
+	})
+}

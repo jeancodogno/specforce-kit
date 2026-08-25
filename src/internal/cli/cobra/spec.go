@@ -10,6 +10,7 @@ import (
 var jsonMode bool
 var forceArchive bool
 var specType string
+var specSize string
 
 var specCmd = &cobra.Command{
 	Use:   "spec",
@@ -27,7 +28,18 @@ var specInitCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		executor := GetExecutor()
 		appUI := tui.NewUI()
-		return executor.HandleSpecInit(cmd.Context(), appUI, args[0], jsonMode, specType)
+		return executor.HandleSpecInit(cmd.Context(), appUI, args[0], jsonMode, specType, specSize)
+	},
+}
+
+var specResizeCmd = &cobra.Command{
+	Use:   "resize [slug]",
+	Short: "Resize an existing specification",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		executor := GetExecutor()
+		appUI := tui.NewUI()
+		return executor.HandleSpecResize(cmd.Context(), appUI, args[0], specSize, jsonMode)
 	},
 }
 
@@ -124,10 +136,14 @@ var specAuditCmd = &cobra.Command{
 func init() {
 	specInitCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specInitCmd.Flags().StringVar(&specType, "type", "feature", "type of specification (feature, bug)")
+	specInitCmd.Flags().StringVar(&specSize, "size", "medium", "Specification size (small, medium, large, complex)")
 	specListCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specStatusCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specArtifactCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specArchiveCmd.Flags().BoolVar(&forceArchive, "force", false, "force archive even if pending tasks remain")
+
+	specResizeCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
+	specResizeCmd.Flags().StringVar(&specSize, "size", "medium", "Specification size (small, medium, large, complex)")
 
 	specAuditCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specAuditCmd.Flags().StringVar(&auditError, "error", "", "append a coherence error message")
@@ -141,6 +157,7 @@ func init() {
 	specCmd.AddCommand(specStatusCmd)
 	specCmd.AddCommand(specArtifactCmd)
 	specCmd.AddCommand(specArchiveCmd)
+	specCmd.AddCommand(specResizeCmd)
 	specCmd.AddCommand(specAuditCmd)
 	rootCmd.AddCommand(specCmd)
 }

@@ -205,6 +205,7 @@ func setupSpecDir(t *testing.T, tmpDir, slug string) string {
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}
+	_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: large\n"), 0644)
 	return specDir
 }
 
@@ -232,4 +233,110 @@ dependency: "requirements"
 		t.Fatalf("failed to create registry: %v", err)
 	}
 	return registry
+}
+
+func TestGetStatus_Sizing(t *testing.T) {
+	mockFS := fstest.MapFS{
+		"requirements.yaml": {
+			Data: []byte("description: Req\ninstruction: instr\ntemplate: tpl\n"),
+		},
+		"design.yaml": {
+			Data: []byte("description: Design\ninstruction: instr\ntemplate: tpl\ndependency: requirements\n"),
+		},
+		"tasks.yaml": {
+			Data: []byte("description: Tasks\ninstruction: instr\ntemplate: tpl\ndependency: design\n"),
+		},
+	}
+	registry, err := NewRegistry(mockFS)
+	if err != nil {
+		t.Fatalf("failed to create registry: %v", err)
+	}
+
+	tmpDir, err := os.MkdirTemp("", "specforce-status-sizing-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	t.Run("Small size spec returns only tasks artifact", func(t *testing.T) {
+		testSmallSpecStatus(t, tmpDir, registry)
+	})
+
+	t.Run("Medium size spec returns requirements and tasks", func(t *testing.T) {
+		testMediumSpecStatus(t, tmpDir, registry)
+	})
+
+	t.Run("Large size spec returns all artifacts", func(t *testing.T) {
+		testLargeSpecStatus(t, tmpDir, registry)
+	})
+}
+
+func testSmallSpecStatus(t *testing.T, tmpDir string, registry *Registry) {
+	slug := "small-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	_ = os.MkdirAll(specDir, 0755)
+	_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: small\n"), 0644)
+
+	status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+	if status.Total != 1 {
+		t.Errorf("expected 1 total artifact for small spec, got %d", status.Total)
+	}
+	if len(status.Artifacts) != 1 || status.Artifacts[0].Name != "feature-tasks" {
+		t.Fatalf("expected only feature-tasks artifact, got %v", status.Artifacts)
+	}
+	if status.Found != 0 {
+		t.Errorf("expected 0 found artifacts, got %d", status.Found)
+	}
+
+	// Write tasks.md
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte("### Phase 1: Test\n- [ ] T1.1: Step\n**Target:** file.go\n**Action Steps:**\n- item\n**Acceptance Check:**\n- verify\n"), 0644)
+	status, err = GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+	if status.Found != 1 {
+		t.Errorf("expected 1 found artifact, got %d", status.Found)
+	}
+	if status.Progress != 100 {
+		t.Errorf("expected 100%% progress, got %d%%", status.Progress)
+	}
+	if !status.IsValid {
+		t.Errorf("expected status to be valid, got errors: %v", status.Artifacts[0].ValidationErrors)
+	}
+}
+
+func testMediumSpecStatus(t *testing.T, tmpDir string, registry *Registry) {
+	slug := "medium-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	_ = os.MkdirAll(specDir, 0755)
+	_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: medium\n"), 0644)
+
+	status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+	if status.Total != 2 {
+		t.Errorf("expected 2 total artifacts for medium spec, got %d", status.Total)
+	}
+	if len(status.Artifacts) != 2 {
+		t.Fatalf("expected 2 artifacts, got %d", len(status.Artifacts))
+	}
+}
+
+func testLargeSpecStatus(t *testing.T, tmpDir string, registry *Registry) {
+	slug := "large-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	_ = os.MkdirAll(specDir, 0755)
+	_ = os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: large\n"), 0644)
+
+	status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+	if status.Total != 3 {
+		t.Errorf("expected 3 total artifacts for large spec, got %d", status.Total)
+	}
 }

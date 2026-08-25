@@ -49,7 +49,7 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 		return SpecStatus{}, err
 	}
 
-	artifacts := registry.ListForType(meta.Type)
+	artifacts := registry.ListForTypeAndSize(meta.Type, meta.Size)
 	status := SpecStatus{
 		Slug:      slug,
 		Type:      meta.Type,

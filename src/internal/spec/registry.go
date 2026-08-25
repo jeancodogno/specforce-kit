@@ -201,6 +201,31 @@ func (r *Registry) ListForType(typeName string) []Artifact {
 	return list
 }
 
+// ListForTypeAndSize returns artifacts resolved for a specific spec type and size,
+// filtering the artifacts matrix dynamically while preserving topological order.
+func (r *Registry) ListForTypeAndSize(specType string, size SpecSize) []Artifact {
+	all := r.ListForType(specType)
+	var allowed map[string]bool
+	switch size {
+	case SpecSizeSmall:
+		allowed = map[string]bool{"tasks": true}
+	case SpecSizeMedium:
+		allowed = map[string]bool{"requirements": true, "tasks": true}
+	case SpecSizeLarge, SpecSizeComplex:
+		return all
+	default:
+		return all
+	}
+
+	filtered := make([]Artifact, 0, len(all))
+	for _, art := range all {
+		if allowed[art.Name] {
+			filtered = append(filtered, art)
+		}
+	}
+	return filtered
+}
+
 func (r *Registry) topologicalSort() error {
 	var sorted []string
 	visited := make(map[string]bool)

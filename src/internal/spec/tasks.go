@@ -19,6 +19,7 @@ type taskValidationState struct {
 	nextTaskIdx      int
 	lastPhaseLine    int
 	taskCountInPhase int
+	isSmall          bool
 	errors           []string
 	allTasks         []*taskBlock
 }
@@ -55,8 +56,15 @@ func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, err
 		return nil, fmt.Errorf("failed to read tasks.md: %w", err)
 	}
 
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load metadata: %w", err)
+	}
+
+	isSmall := meta != nil && meta.Size == SpecSizeSmall
+
 	lines := strings.Split(string(content), "\n")
-	state := &taskValidationState{nextTaskIdx: 1}
+	state := &taskValidationState{nextTaskIdx: 1, isSmall: isSmall}
 	var currentTask *taskBlock
 
 	phaseRegex := regexp.MustCompile(`^### Phase (\d+): (.*)$`)
@@ -180,14 +188,16 @@ func (s *taskValidationState) validateLastTask(task *taskBlock) {
 	if !task.hasTarget {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Target:** field", task.id, task.line))
 	}
-	if !task.hasContext {
+	if !s.isSmall && !task.hasContext {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Context:** field", task.id, task.line))
 	}
 	if !task.hasActionHeader {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Action Steps:** header", task.id, task.line))
 	} else if !task.hasActionItems {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory items under **Action Steps:**", task.id, task.line))
-	} else if task.actionItemsCount < 2 {
+	} else if s.isSmall && task.actionItemsCount < 1 {
+		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) has insufficient action density (found %d, expected at least 1)", task.id, task.line, task.actionItemsCount))
+	} else if !s.isSmall && task.actionItemsCount < 2 {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) has insufficient action density (found %d, expected at least 2)", task.id, task.line, task.actionItemsCount))
 	}
 	if !task.hasVerify {

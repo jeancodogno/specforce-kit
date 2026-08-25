@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestKitManifests(t *testing.T) {
@@ -149,5 +151,38 @@ func TestImplementBlueprintGuardrails(t *testing.T) {
 		}
 	}
 	_ = kitFS
+}
+
+func TestSpecBlueprintTieredSizing(t *testing.T) {
+	specData, err := os.ReadFile("kit/commands/spec.yaml")
+	if err != nil {
+		t.Fatalf("failed to read spec.yaml: %v", err)
+	}
+
+	var parsed map[string]any
+	if err := yaml.Unmarshal(specData, &parsed); err != nil {
+		t.Fatalf("spec.yaml is not valid YAML: %v", err)
+	}
+
+	specContent := string(specData)
+
+	requiredDirectives := []string{
+		"Scope & Complexity Assessment (Spec Sizing)",
+		"`small`: Trivial / single component / quick fix. Skips exhaustive 5-dimension grill, conducts single-turn confirmation, generates only `tasks.md`.",
+		"`medium`: Standard scoped feature or bug fix. Focuses on business rules and edge cases, generates `requirements.md` and `tasks.md`.",
+		"`large`: Multi-component or persistent change. Standard consultative grill (3-5 dimensions), generates full triad (`requirements.md`, `design.md`, `tasks.md`).",
+		"`complex`: High architectural risk or cross-cutting redesign. Adversarial grill across all 5 dimensions + gray areas exploration, generates full triad + deep notes.",
+		"specforce spec init <slug> --type <feature|bug> --size <small|medium|large|complex>",
+		"Mid-Flight Scope Changes & Resizing Directive",
+		"specforce spec resize <slug> --size <small|medium|large|complex>",
+		"If Promoted",
+		"If Demoted",
+	}
+
+	for _, directive := range requiredDirectives {
+		if !strings.Contains(specContent, directive) {
+			t.Errorf("spec.yaml missing mandatory directive: %q", directive)
+		}
+	}
 }
 

@@ -40,6 +40,31 @@ func (s *Service) SetProjectRoot(root string) {
 	s.auditor = NewAuditor(root)
 }
 
+// ResizeSpec updates the size classification of an existing specification.
+func (s *Service) ResizeSpec(ctx context.Context, slug string, size SpecSize) (*Metadata, error) {
+	if !ValidateSize(size) {
+		return nil, fmt.Errorf("invalid spec size: %s. Supported: small, medium, large, complex", size)
+	}
+
+	slug = ResolveSlug(s.projectRoot, slug)
+	specDir := filepath.Join(s.projectRoot, ".specforce", "specs", slug)
+	if fi, err := os.Stat(specDir); err != nil || !fi.IsDir() {
+		return nil, fmt.Errorf("specification %q not found", slug)
+	}
+
+	meta, err := LoadMetadata(s.projectRoot, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load spec metadata: %w", err)
+	}
+
+	meta.Size = size
+	if err := SaveMetadata(s.projectRoot, slug, meta); err != nil {
+		return nil, fmt.Errorf("failed to save spec metadata: %w", err)
+	}
+
+	return meta, nil
+}
+
 // RefineSpec manages the automated refinement loop pass.
 func (s *Service) RefineSpec(ctx context.Context, slug string, ui core.UI) error {
 	slug = ResolveSlug(s.projectRoot, slug)
