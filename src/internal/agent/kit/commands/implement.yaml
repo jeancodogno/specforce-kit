@@ -37,6 +37,8 @@ content: |
 
   #### Subagent Orchestration & Sizing Directives
   - **Mandatory Subagent Usage:** Always spawn and delegate tasks to subagents whenever the environment or tooling supports subagent capabilities (such as `invoke_subagent`, subagent conversation delegation, or background worker spawning).
+  - **Universal Harness Compatibility:** Ensure worker subagents are invoked with explicit permissions and defined roles across all agent harnesses (Claude Code, OpenCode, Antigravity, Kimi, Kilo, Codex). Never rely on fragile implicit self-inheritance (such as `TypeName: "self"` or undeclared planners). If the harness requires pre-registration (e.g., `define_subagent`), register an explicit worker type with write tools enabled before invoking.
+  - **Worker Reuse & Feedback Loop (Anti-Churn):** If verification fails, compiler errors occur, or code is incomplete, ALWAYS return feedback to the SAME subagent session (via message/feedback loop) to adjust and fix rather than spawning a new agent. Reusing the worker preserves memory and file context.
   - **Subagent Sizing Guidance:**
     - **1 Subagent:** For small, simple, or self-contained batches.
     - **2 to 3 Subagents (Recommended Sweet Spot):** For standard complexity batches, achieving optimal balance between throughput, concurrency, and context containment.
@@ -49,10 +51,19 @@ content: |
   `specforce implementation update <slug> --task <task-ids> --status in-progress`
   *(Example: `specforce implementation update <slug> --task T1.1,T1.2 --status in-progress`)*
 
-  #### B. Persona & Model Routing Selection
-  Determine the execution requirements based on batch complexity:
-  - **Required Persona:** Define the role needed (e.g., `Senior Software Engineer`, `Database Architect`, `Frontend Specialist`).
-  - **Model Selection:** Choose or request the optimal model tier for execution (e.g., fast/lightweight model for boilerplate, high-reasoning model for complex algorithms).
+  #### B. Persona, Model & Reasoning Effort Selection
+  Determine the execution requirements based on batch complexity and architectural risk:
+  - **Required Persona:** Define the role needed (e.g., `Senior Software Engineer`, `Database Architect`, `Frontend Specialist`, `Test Engineer`).
+  - **Adaptive Model & Effort Routing:**
+    - **Low Complexity (Boilerplate, Scaffolding, Simple Tweaks):**
+      - Model Tier: Fast / Lightweight (e.g., `flash_lite`, `haiku`, fast tier).
+      - Reasoning Effort: `low` (minimal thinking overhead, high speed).
+    - **Medium Complexity (Standard Business Logic, CRUD, Component Features, Local Tests):**
+      - Model Tier: Balanced / Standard (e.g., `flash`, `sonnet`, standard tier).
+      - Reasoning Effort: `medium` (balanced reasoning for domain edge cases).
+    - **High Complexity / Critical (Core Architecture, Complex Algorithms, Concurrency, Security, Global QA):**
+      - Model Tier: High-Reasoning / Pro (e.g., `pro`, `opus`, reasoning tier).
+      - Reasoning Effort: `high` / `max` (deep multi-step reasoning, exhaustive verification).
 
   #### C. Mission Brief Envelope
   Invoke an available agent matching the persona or spawn a new worker session using the following envelope as the payload:
@@ -64,6 +75,7 @@ content: |
   ## 1. EXECUTION DIRECTIVES
   - Required Persona: {required_persona_role}
   - Recommended Model Tier: {fast_or_balanced_or_reasoning}
+  - Recommended Reasoning Effort: {low_or_medium_or_high}
   - Project Rules: {relevant_artifact_rules}
 
   ## 2. NON-NEGOTIABLE WORKER GUARDRAILS
@@ -98,7 +110,7 @@ content: |
   {end_for}
   ```
 
-  - **MANDATORY LOG:** Explicitly output `[DELEGATING BATCH {batch_id}] -> Persona: {required_persona_role} | Model Tier: {recommended_model_tier} | Task: {batch_description_summary}`
+  - **MANDATORY LOG:** Explicitly output `[DELEGATING BATCH {batch_id}] -> Persona: {required_persona_role} | Model Tier: {recommended_model_tier} | Effort: {recommended_effort} | Task: {batch_description_summary}`
 
   ---
 
@@ -112,7 +124,7 @@ content: |
     `specforce implementation update <slug> --task <task-ids> --status finished`
     *(Example: `specforce implementation update <slug> --task T1.1,T1.2 --status finished`)*
     
-    - **Self-Healing:** If verification fails, read `stderr`, debug, and attempt fixing (maximum 2 attempts per batch).
+    - **Self-Healing & Worker Iteration:** If verification fails or code is incomplete, read stderr/test failures and send them back to the SAME subagent that executed the batch to adjust (up to 2 iterations). Only escalate to user if it still fails.
     - **On Failure:** If verification still fails after attempts, set status to `failed`:
     
     `specforce implementation update <slug> --task <task-ids> --status failed`

@@ -68,6 +68,10 @@ specforce spec archive <slug>
 
 Feature successfully archived and lifecycle closed. 
 
+### Suggested Next Steps & Follow-up Specs:
+- [Next Step / Proposed Spec 1]: [Brief description of what to explore or build next based on architectural learnings]
+- [Next Step / Proposed Spec 2]: [Brief description of follow-up improvements, tech debt resolution, or related features]
+
 > The Specforce system is ready for the next feature.
 ```
 

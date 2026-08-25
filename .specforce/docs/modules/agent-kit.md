@@ -11,6 +11,9 @@ Manages the embedded Agent Kit blueprints (commands, skills), artifact generatio
 - `[BR-KIT-05]` Implementation orchestration MUST scale subagent allocation dynamically (1 subagent for small/self-contained tasks, 2-3 subagents sweet spot for standard tasks, up to 4 for complex tasks) and mandate subagent usage whenever supported by the environment.
 - `[BR-KIT-06]` Task status updates via `specforce implementation update` support multi-task batching (comma-separated or repeated `--task`), executing verification hooks once in deduplicated sequence and updating task states and session logs atomically.
 - `[BR-KIT-07]` Implementation orchestration blueprints and Mission Brief Envelopes MUST embed non-negotiable worker guardrails (pre-coding interrogation, anti-sycophancy, scope jail, and test invariance) and an orchestrator mid/post-implementation specification gate.
+- `[BR-KIT-08]` Discovery orchestration blueprints MUST guide agents to adopt a consultative stance ("Strong Opinions, Weakly Held"), proactively providing architectural opinions, trade-off comparisons with recommended picks, and edge-case mitigations.
+- `[BR-KIT-09]` Implementation orchestration blueprints MUST mandate worker continuity (returning verification feedback to the same subagent session for up to 2 iterations before escalating), universal harness compatibility (explicit worker declarations across Claude Code, OpenCode, Antigravity, etc.), and adaptive model tier / reasoning effort routing scaled to batch complexity.
+- `[BR-KIT-10]` Archival blueprints and instructions MUST append a conceptual "Suggested Next Steps & Follow-up Specs" section to feature closing summaries to maintain architectural continuity.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -42,6 +45,24 @@ Manages the embedded Agent Kit blueprints (commands, skills), artifact generatio
   - **GIVEN** a worker subagent executing an implementation batch
   - **WHEN** coding and verifying tasks
   - **THEN** the worker operates under non-negotiable guardrails (pre-coding interrogation, anti-sycophancy, scope jail, and test invariance), and the orchestrator mandates updating specifications via `/spf:spec` before applying any behavioral drift.
+
+### [US-KIT-06] Proactive Architectural Suggestions in Discovery
+- **Scenario:** Brainstorming architecture or investigating bugs during discovery
+  - **GIVEN** a developer discussing a technical design or issue
+  - **WHEN** the discovery workflow runs
+  - **THEN** the agent provides concrete opinions, suggests clean architectural patterns, recommends preferred trade-offs, and highlights edge cases.
+
+### [US-KIT-07] Worker Continuity, Poly-Harness Compatibility, and Adaptive Effort in Implementation
+- **Scenario:** Executing task batches with worker subagents across various agent harnesses
+  - **GIVEN** task batches with varying risk and complexity
+  - **WHEN** delegating and verifying implementation tasks
+  - **THEN** the orchestrator routes model tier and reasoning effort appropriately, declares explicit worker roles across harnesses, and loops verification errors back to the same worker session.
+
+### [US-KIT-08] Strategic Next Steps Handoff in Archival
+- **Scenario:** Completing feature archival
+  - **GIVEN** a completed feature whose living spec has been reconciled
+  - **WHEN** `specforce spec archive <slug>` finishes
+  - **THEN** the output includes conceptual next steps and candidate follow-up specifications.
 
 
 ## 4. Technical Contracts & Integration Points

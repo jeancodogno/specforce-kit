@@ -1,0 +1,21 @@
+slug: 20260825-1804-enhance-agent-blueprints
+name: 20260825-1804-enhance-agent-blueprints
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-08-25T21:05:52.529353255Z
+              completed_at: 2026-08-25T21:08:52.81433809Z
+    T1.2:
+        sessions:
+            - started_at: 2026-08-25T21:06:40.419117217Z
+              completed_at: 2026-08-25T21:08:52.814338683Z
+    T1.3:
+        sessions:
+            - started_at: 2026-08-25T21:06:40.41911778Z
+              completed_at: 2026-08-25T21:08:52.814338967Z
+    T1.4:
+        sessions:
+            - started_at: 2026-08-25T21:06:40.419117963Z
+              completed_at: 2026-08-25T21:08:52.81433923Z

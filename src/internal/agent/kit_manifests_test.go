@@ -186,3 +186,70 @@ func TestSpecBlueprintTieredSizing(t *testing.T) {
 	}
 }
 
+func TestEnhancedBlueprintsDirectives(t *testing.T) {
+	// 1. Discovery Blueprint assertions
+	discoveryData, err := os.ReadFile("kit/commands/discovery.yaml")
+	if err != nil {
+		t.Fatalf("failed to read discovery.yaml: %v", err)
+	}
+	discoveryContent := string(discoveryData)
+	discoveryDirectives := []string{
+		"Proactive Suggestions & Technical Opinions",
+		"Strong Opinions, Weakly Held",
+	}
+	for _, directive := range discoveryDirectives {
+		if !strings.Contains(discoveryContent, directive) {
+			t.Errorf("discovery.yaml missing mandatory directive: %q", directive)
+		}
+	}
+
+	// 2. Implement Blueprint assertions
+	implData, err := os.ReadFile("kit/commands/implement.yaml")
+	if err != nil {
+		t.Fatalf("failed to read implement.yaml: %v", err)
+	}
+	implContent := string(implData)
+	implDirectives := []string{
+		"Universal Harness Compatibility",
+		"Worker Reuse & Feedback Loop",
+		"SAME subagent",
+		"Adaptive Model & Effort Routing",
+	}
+	for _, directive := range implDirectives {
+		if !strings.Contains(implContent, directive) {
+			t.Errorf("implement.yaml missing mandatory directive: %q", directive)
+		}
+	}
+
+	// 3. Archive Blueprint assertions
+	archiveData, err := os.ReadFile("kit/commands/archive.yaml")
+	if err != nil {
+		t.Fatalf("failed to read archive.yaml: %v", err)
+	}
+	archiveContent := string(archiveData)
+	archiveDirectives := []string{
+		"Suggest Next Steps & Follow-up Specs",
+	}
+	for _, directive := range archiveDirectives {
+		if !strings.Contains(archiveContent, directive) {
+			t.Errorf("archive.yaml missing mandatory directive: %q", directive)
+		}
+	}
+
+	// 4. Archive Instructions assertions
+	archiveInstData, err := os.ReadFile("kit/instructions/archive.md")
+	if err != nil {
+		t.Fatalf("failed to read archive.md: %v", err)
+	}
+	archiveInstContent := string(archiveInstData)
+	archiveInstDirectives := []string{
+		"Suggested Next Steps & Follow-up Specs",
+	}
+	for _, directive := range archiveInstDirectives {
+		if !strings.Contains(archiveInstContent, directive) {
+			t.Errorf("archive.md missing mandatory directive: %q", directive)
+		}
+	}
+}
+
+
