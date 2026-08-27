@@ -252,4 +252,94 @@ func TestEnhancedBlueprintsDirectives(t *testing.T) {
 	}
 }
 
+func TestKitManifests_LivingSpecAndModuleReconciliation(t *testing.T) {
+	t.Run("ArchiveInstructions", testArchiveLivingSpecDirectives)
+	t.Run("ModuleTemplateAndInstructions", testModuleLivingSpecDirectives)
+}
+
+func testArchiveLivingSpecDirectives(t *testing.T) {
+	archiveData, err := os.ReadFile("kit/instructions/archive.md")
+	if err != nil {
+		t.Fatalf("failed to read archive.md: %v", err)
+	}
+	archiveContent := string(archiveData)
+
+	requiredArchiveDirectives := []string{
+		"Canonical Living Spec Reconciliation",
+		"Domain Scope",
+		"Business Rules & Invariants",
+		"[BR-",
+		"Canonical Requirements & Use Cases",
+		"GIVEN",
+		"WHEN",
+		"THEN",
+		"Public Integration Surfaces",
+		"Operational & Quality Invariants",
+		"src/",
+		"private structs",
+		"Non-Destructive Merge & Legacy Migration",
+		"opportunistically reformat",
+	}
+
+	for _, directive := range requiredArchiveDirectives {
+		if !strings.Contains(archiveContent, directive) {
+			t.Errorf("archive.md missing mandatory directive: %q", directive)
+		}
+	}
+}
+
+func testModuleLivingSpecDirectives(t *testing.T) {
+	moduleData, err := os.ReadFile("artifacts/constitution/module.yaml")
+	if err != nil {
+		t.Fatalf("failed to read module.yaml: %v", err)
+	}
+	var parsedModule struct {
+		Description string `yaml:"description"`
+		Instruction string `yaml:"instruction"`
+		Template    string `yaml:"template"`
+	}
+	if err := yaml.Unmarshal(moduleData, &parsedModule); err != nil {
+		t.Fatalf("module.yaml is not valid YAML: %v", err)
+	}
+
+	moduleContent := string(moduleData)
+	requiredModuleDirectives := []string{
+		"Domain Scope",
+		"Business Rules & Invariants",
+		"[BR-01]",
+		"Canonical Requirements & Use Cases",
+		"Public Integration Surfaces",
+		"Operational & Quality Invariants",
+		"GIVEN",
+		"WHEN",
+		"THEN",
+	}
+
+	for _, directive := range requiredModuleDirectives {
+		if !strings.Contains(moduleContent, directive) {
+			t.Errorf("module.yaml missing mandatory directive: %q", directive)
+		}
+	}
+
+	if !strings.Contains(parsedModule.Instruction, "Public Integration Surfaces") {
+		t.Errorf("module.yaml instruction missing 'Public Integration Surfaces'")
+	}
+	if !strings.Contains(parsedModule.Instruction, "src/") && !strings.Contains(parsedModule.Instruction, "internal") {
+		t.Errorf("module.yaml instruction should forbid internal code files")
+	}
+
+	sections := []string{
+		"Domain Scope",
+		"Business Rules & Invariants",
+		"Canonical Requirements & Use Cases",
+		"Public Integration Surfaces",
+		"Operational & Quality Invariants",
+	}
+	for _, section := range sections {
+		if !strings.Contains(parsedModule.Template, section) {
+			t.Errorf("module.yaml template missing section: %s", section)
+		}
+	}
+}
+
 

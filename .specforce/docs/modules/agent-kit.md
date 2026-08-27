@@ -14,6 +14,7 @@ Manages the embedded Agent Kit blueprints (commands, skills), artifact generatio
 - `[BR-KIT-08]` Discovery orchestration blueprints MUST guide agents to adopt a consultative stance ("Strong Opinions, Weakly Held"), proactively providing architectural opinions, trade-off comparisons with recommended picks, and edge-case mitigations.
 - `[BR-KIT-09]` Implementation orchestration blueprints MUST mandate worker continuity (returning verification feedback to the same subagent session for up to 2 iterations before escalating), universal harness compatibility (explicit worker declarations across Claude Code, OpenCode, Antigravity, etc.), and adaptive model tier / reasoning effort routing scaled to batch complexity.
 - `[BR-KIT-10]` Archival blueprints and instructions MUST append a conceptual "Suggested Next Steps & Follow-up Specs" section to feature closing summaries to maintain architectural continuity.
+- `[BR-KIT-11]` Archival blueprints and instructions MUST mandate that `.specforce/docs/modules/<domain>.md` living specifications are structured exclusively as 5-part behavioral specifications (Domain Scope, Invariants, BDD Scenarios, Public Integration Surfaces, Operational Invariants), omitting low-level internal code file paths and opportunistically migrating legacy module formats upon merge.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -64,17 +65,25 @@ Manages the embedded Agent Kit blueprints (commands, skills), artifact generatio
   - **WHEN** `specforce spec archive <slug>` finishes
   - **THEN** the output includes conceptual next steps and candidate follow-up specifications.
 
+### [US-KIT-09] Behavioral Living Spec Synthesis and Opportunistic Legacy Migration
+- **Scenario:** Reconciling domain living specs during archival
+  - **GIVEN** a completed feature and an existing or new domain module document
+  - **WHEN** the archival lifecycle reconciles domain behavior into `.specforce/docs/modules/<domain>.md`
+  - **THEN** it structures the document using the 5 canonical behavioral sections, omits internal code file dumps, and opportunistically upgrades legacy module formats to the new canonical standard.
 
-## 4. Technical Contracts & Integration Points
-- **Packages:**
-  - `src/internal/agent`: Embedded FS loader, translation engine, and kit manifest resolution.
-  - `src/internal/project`: Project service, bootstrap, `AGENTS.md` sync, and `legacy.go` asset detection/cleanup.
-  - `src/internal/spec`: Specification engine, batch task updates (`UpdateTaskStatus`), and deduplicated hook runner.
-  - `src/internal/cli`: Cobra CLI commands supporting multi-task slice parsing (`StringSliceVar`).
-- **CLI Commands:**
-  - `specforce init [agents...]`: Initializes or updates project tools and performs legacy cleanup checks.
-  - `specforce implementation update <slug> --task <id1,id2,...> --status <status>`: Updates one or more tasks atomically.
 
-## 5. Operational Invariants
-- All unit and integration tests must pass cleanly (`go test ./...`).
-- Embedded blueprints in `kitFS` must be valid YAML without unmapped tools.
+## 4. Public Integration Surfaces & Contracts
+- **Public CLI Commands:**
+  - `specforce init [agents...] [--non-interactive]`: Initializes or updates project agent tools and performs interactive or automated legacy asset cleanup.
+  - `specforce implementation update <slug> --task <id1,id2,...> --status <in-progress|finished|pending>`: Atomically updates one or more tasks and executes deduplicated verification hooks.
+  - `specforce implementation status <slug> [--json]`: Inspects current task execution progress and roadmap completion.
+- **Cross-Module Contracts & Dependencies:**
+  - Consumes specification metadata and task roadmaps from `spec-management`.
+  - Integrates with `constitution` for living spec template reconciliation during archival.
+  - Generates standardized prompt and command envelopes for supported harnesses (Claude Code, OpenCode, Antigravity, Cursor, Kimi, Kilo, Qwen).
+
+## 5. Operational & Quality Invariants
+- All agent blueprint definitions must be syntactically valid YAML.
+- Tool and command generation must be deterministic across all supported agent environments.
+- Multi-task status transitions must execute atomically without partial failure or corrupted task files.
+

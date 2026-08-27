@@ -35,18 +35,18 @@ specforce implementation status <slug> --json
 - If updates are needed, prompt the user for confirmation and update the relevant `.specforce/docs/*.md` file.
 
 ### 5. Canonical Living Spec Reconciliation (Mandatory As-Built Synthesis)
-- Operating as the Principal Architect, you MUST consolidate the feature's domain behavior into `.specforce/docs/modules/<domain>.md` as a Canonical Living Specification (containing domain scope, business rules, accumulated BDD use cases, and technical contracts).
+- Operating as the Principal Architect, you MUST consolidate the feature's domain behavior into `.specforce/docs/modules/<domain>.md` as a high-density Behavioral Living Specification (containing domain scope, business rules, accumulated BDD use cases, and public integration contracts).
 - **As-Built Synthesis Protocol:**
   1. **Determine the Domain:** Identify the business domain affected by this feature (e.g., `messaging`, `auth`, `billing`, `agent-kit`).
   2. **Triangulate Reality:** Compare the original `requirements.md` against the **actual implemented source code, unit tests, and interactive user refinements** made during implementation. If requirements evolved during development, extract the verified as-built reality.
-  3. **Synthesize Living Spec Sections:**
-     - **Domain Scope:** Concise definition of the module's responsibilities.
-     - **Business Rules & Invariants:** Immutable, testable domain rules (e.g., `[BR-01]`, `[BR-02]`).
-     - **Canonical Requirements & Use Cases:** Accumulated BDD scenarios (Happy Path & Edge Cases) representing what this domain currently supports.
-     - **Technical Contracts & Integration Points:** Exposed APIs, CLI commands, events, and inter-module contracts.
-     - **Operational Invariants:** SLAs, performance targets, and security rules.
-  4. **Non-Destructive Merge:**
-     - **If `.specforce/docs/modules/<domain>.md` EXISTS:** Merge new use cases and update modified rules while strictly preserving prior use cases that were not touched.
+  3. **Synthesize 5 Canonical Living Spec Sections:**
+     - **1. Domain Scope:** Concise definition of the module's boundaries, core responsibilities, and business purpose.
+     - **2. Business Rules & Invariants:** Immutable, testable domain rules and constraints labeled with `[BR-xx]` (e.g., `[BR-01]`, `[BR-02]`).
+     - **3. Canonical Requirements & Use Cases:** Accumulated functional capabilities structured as `[US-xx]` / `[UC-xx]` with explicit BDD scenarios (`GIVEN`, `WHEN`, `THEN`) covering both Happy Path and Edge Cases.
+     - **4. Public Integration Surfaces & Contracts:** Public CLI commands, exposed APIs, event schemas, and cross-module dependencies.
+     - **5. Operational & Quality Invariants:** Domain SLAs, latency/performance thresholds, data durability, and security rules.
+  4. **Non-Destructive Merge & Legacy Migration:**
+     - **If `.specforce/docs/modules/<domain>.md` EXISTS:** Merge new use cases and update modified rules while strictly preserving prior use cases that were not touched. If the existing module file uses a legacy format or contains internal code paths/low-level implementation details, you MUST opportunistically reformat and upgrade it to the 5 canonical Living Spec sections during reconciliation while preserving all accumulated domain rules and use cases.
      - **If NO module manifest exists:** Generate `.specforce/docs/modules/<domain>.md` following the template.
   5. **Infrastructure Exemption:** Marking module consolidation as `N/A` is ONLY permitted if the feature is purely cross-cutting developer tooling with zero business domain logic.
 
@@ -77,6 +77,7 @@ Feature successfully archived and lifecycle closed.
 
 ## Guardrails
 - **Mandatory Spec Archive Execution:** You MUST execute `specforce spec archive <slug>` as the final step. Ending the archival process without running `specforce spec archive <slug>` is a strict protocol violation.
+- **Living Spec Behavioral Purity (No Code Dumps):** Do NOT include internal source code file paths (`src/...`), private structs, or internal implementation details in module docs (`.specforce/docs/modules/<domain>.md`). Living specs are behavioral and domain contracts (BDD use cases, business rules, public integration surfaces), NOT code dumps.
 - **Living Spec Integrity:** Do not overwrite existing module use cases unless the feature explicitly modified or replaced that behavior.
 - **Zero Bloat:** Do not add feature-specific logic (e.g., "The auth module uses JWT") to the Global Constitution. Move domain logic to `.specforce/docs/modules/` and keep the Constitution for cross-cutting standards.
 - **Let the CLI Handle Files:** Do not delete or move the specification files manually. Let `specforce spec archive <slug>` handle the file system operations.

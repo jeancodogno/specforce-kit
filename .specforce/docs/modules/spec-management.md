@@ -35,16 +35,19 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - **WHEN** task validation and coherence audit run
   - **THEN** the validation suite passes without forcing multi-step decomposition or artificial requirement tags.
 
-## 4. Technical Contracts & Integration Points
-- **Packages:**
-  - `src/internal/spec`: Metadata model (`SpecSize`), `Registry.ListForTypeAndSize`, `GetStatus`, `ValidateTasks`, and `DeterministicCheck`.
-  - `src/internal/cli`: CLI handlers `HandleSpecInit` and `HandleSpecResize`.
-  - `src/internal/cli/cobra`: Cobra commands `specInitCmd` with `--size` and `specResizeCmd`.
-- **CLI Commands:**
-  - `specforce spec init <slug> [--type <type>] [--size <size>] [--json]`
-  - `specforce spec resize <slug> --size <size> [--json]`
-  - `specforce spec status <slug> [--json]`
+## 4. Public Integration Surfaces & Contracts
+- **Public CLI Commands:**
+  - `specforce spec init <slug> [--type <type>] [--size <size>] [--json]`: Initializes a new feature or bug specification directory with tiered sizing metadata.
+  - `specforce spec resize <slug> --size <size> [--json]`: Dynamically resizes an active specification and recalculates required artifact gates.
+  - `specforce spec status <slug> [--json]`: Evaluates completion, artifact presence, and task progress based on spec sizing.
+  - `specforce spec list [--type <type>] [--status <status>] [--json]`: Lists active or archived specifications across the workspace.
+  - `specforce spec archive <slug>`: Finalizes and transitions an active specification to `.specforce/archive/`.
+- **Cross-Module Contracts & Dependencies:**
+  - Emits specification status and task roadmap data consumed by `agent-kit` implementation workflows.
+  - Interacts with `constitution` living spec rules to validate coherence during planning and archival.
 
-## 5. Operational Invariants
+## 5. Operational & Quality Invariants
 - All specification CLI commands must return within 50ms.
 - Metadata operations must never overwrite or delete user markdown artifacts on disk.
+- Lifecycle state transitions (active -> archived) must be atomic on the filesystem.
+
