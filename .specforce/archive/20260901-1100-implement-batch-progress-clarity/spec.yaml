@@ -1,0 +1,17 @@
+slug: 20260901-1100-implement-batch-progress-clarity
+name: 20260901-1100-implement-batch-progress-clarity
+type: feature
+size: small
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-09-01T14:17:41.196585681Z
+              completed_at: 2026-09-01T14:18:59.881781978Z
+    T1.2:
+        sessions:
+            - started_at: 2026-09-01T14:17:41.1965863Z
+              completed_at: 2026-09-01T14:18:59.881782565Z
+    T2.1:
+        sessions:
+            - started_at: 2026-09-01T14:19:02.775892309Z
+              completed_at: 2026-09-01T14:19:45.810021949Z

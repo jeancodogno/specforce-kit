@@ -17,4 +17,10 @@ func TestToolPrefixes(t *testing.T) {
 	if !found {
 		t.Errorf("expected ToolPrefixes to contain %q", expected)
 	}
+
+	for _, p := range ToolPrefixes {
+		if p == ".gemini/" {
+			t.Errorf("ToolPrefixes should not contain .gemini/")
+		}
+	}
 }

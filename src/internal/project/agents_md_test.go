@@ -74,20 +74,20 @@ func TestEnsurePlatformConfigs_NoSelection(t *testing.T) {
 }
 
 func TestEnsurePlatformConfigs_Gemini(t *testing.T) {
-	t.Run("Creates configs if selected", func(t *testing.T) {
+	t.Run("Does NOT create configs if selected", func(t *testing.T) {
 		subTempDir := t.TempDir()
 		err := EnsureAgentsMD(subTempDir, nil, []string{"gemini-cli"})
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
 
-		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
-		if _, err := os.Stat(geminiPath); err != nil {
-			t.Errorf("Gemini settings.json not created: %v", err)
+		geminiDir := filepath.Join(subTempDir, ".gemini")
+		if _, err := os.Stat(geminiDir); err == nil {
+			t.Errorf("expected .gemini directory NOT to exist when gemini-cli is passed")
 		}
 	})
 
-	t.Run("Creates configs if dir exists even if not selected", func(t *testing.T) {
+	t.Run("Does NOT create settings.json even if dir exists", func(t *testing.T) {
 		subTempDir := t.TempDir()
 		if err := os.MkdirAll(filepath.Join(subTempDir, ".gemini"), 0755); err != nil {
 			t.Fatal(err)
@@ -99,8 +99,8 @@ func TestEnsurePlatformConfigs_Gemini(t *testing.T) {
 		}
 
 		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
-		if _, err := os.Stat(geminiPath); err != nil {
-			t.Errorf("Gemini settings.json should be created because directory exists")
+		if _, err := os.Stat(geminiPath); err == nil {
+			t.Errorf("expected .gemini/settings.json NOT to be created")
 		}
 	})
 }
@@ -188,6 +188,21 @@ func TestGenerateAgentsContent(t *testing.T) {
 	expectedRecoveryCmd := "npm i -g @jeancodogno/specforce-kit@" + core.Version
 	if !strings.Contains(content, expectedRecoveryCmd) {
 		t.Errorf("content does not contain the correct recovery command with version: %s", expectedRecoveryCmd)
+	}
+
+	// Pure skills assertions
+	if !strings.Contains(content, "You MUST operate exclusively through Specforce Skills.") {
+		t.Errorf("content does not contain Specforce Skills requirement in Section 1")
+	}
+	for _, skill := range []string{"spf.discovery", "spf.spec", "spf.constitution", "spf.implement", "spf.archive"} {
+		if !strings.Contains(content, skill) {
+			t.Errorf("content does not contain skill reference %s", skill)
+		}
+	}
+	for _, slashCmd := range []string{"/spf:discovery", "/spf:spec", "/spf:constitution", "/spf:implement", "/spf:archive"} {
+		if strings.Contains(content, slashCmd) {
+			t.Errorf("content contains obsolete slash command %s", slashCmd)
+		}
 	}
 }
 

@@ -4,16 +4,16 @@
 This project uses **Specforce** for Spec-Driven Development (SDD). As an AI agent, you MUST adhere to the following rules:
 
 ## 1. Spec-Driven Development (SDD) Protocol
-You MUST operate exclusively through the Specforce workflow engines (commands/skills). They define your mindset and mandatory steps:
+You MUST operate exclusively through Specforce Skills. They define your mindset and mandatory steps:
 
-- **Discovery (`/spf:discovery`):** Activate for brainstorming, research, bug investigation, or root cause analysis. Purely read-only.
-- **Planning (`/spf:spec`):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
-- **Governance (`/spf:constitution`):** Use to ensure proposals respect architecture, security, and principles.
-- **Execution (`/spf:implement`):** Activate to perform the deterministic implementation cycle following an approved roadmap.
-- **Archival (`/spf:archive`):** Activate once verified to harvest lessons, update Constitution/Modules, and clean up specs.
+- **Discovery (`spf.discovery`):** Activate for brainstorming, research, bug investigation, or root cause analysis. Purely read-only.
+- **Planning (`spf.spec`):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
+- **Governance (`spf.constitution`):** Use to ensure proposals respect architecture, security, and principles.
+- **Execution (`spf.implement`):** Activate to perform the deterministic implementation cycle following an approved roadmap.
+- **Archival (`spf.archive`):** Activate once verified to harvest lessons, update Constitution/Modules, and clean up specs.
 
 ### Proactive Mandate
-Do NOT wait for explicit slash commands. You MUST automatically activate the correct workflow based on the user's technical intent:
+Do NOT wait for explicit prompts. You MUST automatically activate the correct skill based on the user's technical intent:
 1. **Discovery Intent** (vague idea, "how to", bug report) --> Activate `spf.discovery`.
 2. **Planning Intent** (new feature, structural pivot, confirmed fix) --> Activate `spf.spec`.
 3. **Execution Intent** (approved roadmap exists, "go", "implement") --> Activate `spf.implement`.
@@ -75,6 +75,10 @@ If you encounter ambiguity, require user iteration, or need to make a critical d
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
+
+
+
 
 
 

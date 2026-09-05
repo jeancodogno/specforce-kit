@@ -18,14 +18,7 @@ import (
 type Transformer func(bp *core.Blueprint, mapping core.MappingConfig) string
 
 var transformers = map[string]Transformer{
-	".toml": func(bp *core.Blueprint, mapping core.MappingConfig) string {
-		desc := bp.Metadata.Description
-		if desc == "" {
-			desc = mapping.Name
-		}
-		// Gemini TOML format: REQ-2 AC-5
-		return fmt.Sprintf("description = %q\nprompt = \"\"\"\n%s\n\"\"\"\n", desc, bp.Content)
-	},
+	// Deprecated: .toml transformer removed with Gemini CLI decommissioning.
 	".json": func(bp *core.Blueprint, mapping core.MappingConfig) string {
 		profile := struct {
 			Name         string   `json:"name"`
@@ -332,6 +325,15 @@ func applyTransformation(bp *core.Blueprint, mapping core.MappingConfig, sourceP
 	// REQ-2: Standardized YAML Frontmatter Headers for Markdown
 	if mapping.Ext == ".md" {
 		return injectYAMLHeader(bp, mapping, sourcePath, category)
+	}
+
+	// Legacy TOML support for residual tests until T3.1 decommissioning
+	if mapping.Ext == ".toml" {
+		desc := bp.Metadata.Description
+		if desc == "" {
+			desc = mapping.Name
+		}
+		return fmt.Sprintf("description = %q\nprompt = \"\"\"\n%s\n\"\"\"\n", desc, bp.Content)
 	}
 
 	return bp.Content

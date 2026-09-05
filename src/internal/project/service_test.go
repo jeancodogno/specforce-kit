@@ -143,11 +143,11 @@ func TestService_InitializeProject_ConditionalCreation(t *testing.T) {
 	kitFS := fstest.MapFS{
 		"kit.yaml": &fstest.MapFile{Data: []byte(`
 tools:
-  gemini-cli:
-    name: "Gemini CLI"
-    target: ".gemini/"
+  claude:
+    name: "Claude"
+    target: ".claude/"
 `)},
-		"agents/gemini-cli.yaml": &fstest.MapFile{Data: []byte("content: hello")},
+		"agents/claude.yaml": &fstest.MapFile{Data: []byte("content: hello")},
 	}
 	tmpDir := t.TempDir()
 	artifactsFS := fstest.MapFS{}
@@ -157,7 +157,7 @@ tools:
 
 	config := project.InitConfig{
 		ProjectRoot:    tmpDir,
-		SelectedAgents: []string{"gemini-cli"},
+		SelectedAgents: []string{"claude"},
 	}
 
 	err := svc.InitializeProject(context.Background(), ui, config)
@@ -165,13 +165,13 @@ tools:
 		t.Fatalf("InitializeProject failed: %v", err)
 	}
 
-	// .gemini SHOULD exist
-	if _, err := os.Stat(filepath.Join(tmpDir, ".gemini")); os.IsNotExist(err) {
-		t.Errorf("expected directory .gemini to exist")
+	// .claude SHOULD exist
+	if _, err := os.Stat(filepath.Join(tmpDir, ".claude")); os.IsNotExist(err) {
+		t.Errorf("expected directory .claude to exist")
 	}
 
-	// .claude, .agent SHOULD NOT exist
-	unselected := []string{".claude", ".agent"}
+	// .cursor, .agent SHOULD NOT exist
+	unselected := []string{".cursor", ".agent"}
 	for _, dir := range unselected {
 		path := filepath.Join(tmpDir, dir)
 		if _, err := os.Stat(path); err == nil {

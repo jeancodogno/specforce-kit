@@ -31,16 +31,22 @@ var KnownToolDirs = []string{
 	".agents",
 	".cursor",
 	".claude",
-	".gemini",
 	".qwen",
 	".opencode",
 	".kilocode",
 	".codex",
+	".kimi",
 }
 
-// DetectLegacyAssets scans tool integration directories for deprecated agents and skills.
+// DetectLegacyAssets scans tool integration directories for deprecated agents, skills, workflows, commands, and gemini.
 func DetectLegacyAssets(root string) ([]string, error) {
 	var found []string
+
+	// Check root-level .gemini directory
+	geminiDir := filepath.Join(root, ".gemini")
+	if _, err := os.Stat(geminiDir); err == nil {
+		found = append(found, geminiDir)
+	}
 
 	for _, toolDir := range KnownToolDirs {
 		baseDir := filepath.Join(root, toolDir)
@@ -70,6 +76,18 @@ func DetectLegacyAssets(root string) ([]string, error) {
 				}
 				found = append(found, matches...)
 			}
+		}
+
+		// 3. Check legacy workflows directory (e.g. .agents/workflows)
+		workflowsDir := filepath.Join(baseDir, "workflows")
+		if _, err := os.Stat(workflowsDir); err == nil {
+			found = append(found, workflowsDir)
+		}
+
+		// 4. Check legacy commands directory (e.g. .claude/commands, .cursor/commands)
+		commandsDir := filepath.Join(baseDir, "commands")
+		if _, err := os.Stat(commandsDir); err == nil {
+			found = append(found, commandsDir)
 		}
 	}
 

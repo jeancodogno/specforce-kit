@@ -1,0 +1,21 @@
+slug: 20260831-1109-batch-subagent-isolation-and-progress
+name: 20260831-1109-batch-subagent-isolation-and-progress
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-08-31T14:15:30.925871576Z
+              completed_at: 2026-08-31T14:16:46.054365257Z
+    T1.2:
+        sessions:
+            - started_at: 2026-08-31T14:15:30.925874656Z
+              completed_at: 2026-08-31T14:16:46.054365891Z
+    T2.1:
+        sessions:
+            - started_at: 2026-08-31T14:16:54.157192793Z
+              completed_at: 2026-08-31T14:17:44.511816811Z
+    T2.2:
+        sessions:
+            - started_at: 2026-08-31T14:16:54.157195184Z
+              completed_at: 2026-08-31T14:17:44.511818354Z

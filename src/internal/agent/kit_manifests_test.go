@@ -2,6 +2,7 @@ package agent
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -100,7 +101,7 @@ func TestImplementBlueprintGuardrails(t *testing.T) {
 	}
 
 	// 1. Check implement.yaml
-	implData, err := os.ReadFile("kit/commands/implement.yaml")
+	implData, err := os.ReadFile("kit/skills/spf-implement/SKILL.yaml")
 	if err != nil {
 		t.Fatalf("failed to read implement.yaml: %v", err)
 	}
@@ -154,7 +155,7 @@ func TestImplementBlueprintGuardrails(t *testing.T) {
 }
 
 func TestSpecBlueprintTieredSizing(t *testing.T) {
-	specData, err := os.ReadFile("kit/commands/spec.yaml")
+	specData, err := os.ReadFile("kit/skills/spf-spec/SKILL.yaml")
 	if err != nil {
 		t.Fatalf("failed to read spec.yaml: %v", err)
 	}
@@ -188,7 +189,7 @@ func TestSpecBlueprintTieredSizing(t *testing.T) {
 
 func TestEnhancedBlueprintsDirectives(t *testing.T) {
 	// 1. Discovery Blueprint assertions
-	discoveryData, err := os.ReadFile("kit/commands/discovery.yaml")
+	discoveryData, err := os.ReadFile("kit/skills/spf-discovery/SKILL.yaml")
 	if err != nil {
 		t.Fatalf("failed to read discovery.yaml: %v", err)
 	}
@@ -204,7 +205,7 @@ func TestEnhancedBlueprintsDirectives(t *testing.T) {
 	}
 
 	// 2. Implement Blueprint assertions
-	implData, err := os.ReadFile("kit/commands/implement.yaml")
+	implData, err := os.ReadFile("kit/skills/spf-implement/SKILL.yaml")
 	if err != nil {
 		t.Fatalf("failed to read implement.yaml: %v", err)
 	}
@@ -222,7 +223,7 @@ func TestEnhancedBlueprintsDirectives(t *testing.T) {
 	}
 
 	// 3. Archive Blueprint assertions
-	archiveData, err := os.ReadFile("kit/commands/archive.yaml")
+	archiveData, err := os.ReadFile("kit/skills/spf-archive/SKILL.yaml")
 	if err != nil {
 		t.Fatalf("failed to read archive.yaml: %v", err)
 	}
@@ -342,4 +343,125 @@ func testModuleLivingSpecDirectives(t *testing.T) {
 	}
 }
 
+func TestImplementBatchSubagentIsolationAndProgress(t *testing.T) {
+	implData, err := os.ReadFile("kit/skills/spf-implement/SKILL.yaml")
+	if err != nil {
+		t.Fatalf("failed to read implement.yaml: %v", err)
+	}
+	implContent := string(implData)
+
+	requiredDirectives := []string{
+		"Fresh Subagent per Batch",
+		"Within-Batch Feedback Loop",
+		"DELEGATING BATCH",
+		"Done:",
+		"Batch:",
+		"Remaining:",
+		"completed_tasks_count",
+		"total_tasks_count",
+		"BATCH",
+		"COMPLETED",
+	}
+
+	for _, directive := range requiredDirectives {
+		if !strings.Contains(implContent, directive) {
+			t.Errorf("implement.yaml missing mandatory directive: %q", directive)
+		}
+	}
+}
+
+func TestImplementGlobalBatchBudgetAndSizing(t *testing.T) {
+	implData, err := os.ReadFile("kit/skills/spf-implement/SKILL.yaml")
+	if err != nil {
+		t.Fatalf("failed to read implement.yaml: %v", err)
+	}
+	implContent := string(implData)
+
+	requiredDirectives := []string{
+		"Global Batch Budget",
+		"2 to 3 Batches (Recommended Sweet Spot)",
+		"at most 4 Batches",
+		"1 Dedicated Subagent per Batch",
+		"Global Implementation Sizing",
+		"2 to 3 Subagents (Recommended Sweet Spot)",
+	}
+
+	for _, directive := range requiredDirectives {
+		if !strings.Contains(implContent, directive) {
+			t.Errorf("implement.yaml missing mandatory directive: %q", directive)
+		}
+	}
+}
+
+
+
+
+
+func TestPureSkillsBlueprintStructure(t *testing.T) {
+	skills := []string{
+		"spf-discovery",
+		"spf-spec",
+		"spf-constitution",
+		"spf-implement",
+		"spf-archive",
+		"consultative-grill",
+	}
+	
+	for _, skill := range skills {
+		path := filepath.Join("kit/skills", skill, "SKILL.yaml")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Errorf("expected skill manifest %s to exist: %v", path, err)
+			continue
+		}
+		
+		var parsed map[string]any
+		if err := yaml.Unmarshal(data, &parsed); err != nil {
+			t.Errorf("skill manifest %s is not valid YAML: %v", path, err)
+		} else {
+			if _, ok := parsed["name"]; !ok {
+				t.Errorf("skill manifest %s missing 'name' in frontmatter", path)
+			}
+			if _, ok := parsed["content"]; !ok {
+				t.Errorf("skill manifest %s missing 'content' in frontmatter", path)
+			}
+		}
+	}
+}
+	
+func TestActiveQAAndBlockerProtocols(t *testing.T) {
+	implData, err := os.ReadFile("kit/skills/spf-implement/SKILL.yaml")
+	if err != nil {
+		t.Fatalf("failed to read SKILL.yaml: %v", err)
+	}
+	var parsed map[string]any
+	if err := yaml.Unmarshal(implData, &parsed); err != nil {
+		t.Fatalf("SKILL.yaml is not valid YAML: %v", err)
+	}
+
+	implContent := string(implData)
+	requiredDirectives := []string{
+		"Active Smoke Testing & Execution",
+		"Multimodal UI Visual Verification",
+		"Automated Screenshot Capture",
+		"Multimodal Visual Inspection",
+		"4-Tier QA Verification Protocol",
+		"Tier 1: Global Test Suite (Automated Regression)",
+		"Tier 2: Active Black-Box & Smoke Verification (Real Artifacts / APIs)",
+		"Tier 3: Visual & E2E Verification (Multimodal Inspection & UI Flows)",
+		"Tier 4: Adversarial & Edge Case Testing",
+		"Human-in-the-Loop & Blocker Protocol",
+		"Zero Plaintext Secrets",
+		"Interactive Consultation for Ambiguities",
+		"Mandatory Spec Gating for Scope & Architectural Drift",
+		"4-Tier QA Verification Evidence",
+		"Developer Manual Walkthrough",
+	}
+
+	for _, directive := range requiredDirectives {
+		if !strings.Contains(implContent, directive) {
+			t.Errorf("SKILL.yaml missing mandatory directive: %q", directive)
+		}
+	}
+}
 

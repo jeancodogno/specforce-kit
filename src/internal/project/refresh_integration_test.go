@@ -15,9 +15,9 @@ func createMockKitFS() fstest.MapFS {
 	return fstest.MapFS{
 		"kit.yaml": &fstest.MapFile{Data: []byte(`
 tools:
-  gemini:
-    name: "Gemini"
-    target: ".gemini/"
+  claude:
+    name: "Claude"
+    target: ".claude/"
     mappings:
       agents: { path: "agents", ext: ".md" }
       skills: { path: "skills", ext: ".md" }
@@ -38,15 +38,15 @@ func TestService_UpdateTools_RefreshesAllCategories(t *testing.T) {
 	ui := &mockUI{}
 
 	// 1. Initial Installation
-	err := svc.UpdateTools(context.Background(), ui, []string{"gemini"})
+	err := svc.UpdateTools(context.Background(), ui, []string{"claude"})
 	if err != nil {
 		t.Fatalf("Initial UpdateTools failed: %v", err)
 	}
 
 	// Paths
-	agentPath := filepath.Join(tmpDir, ".gemini/agents/coder.md")
-	skillPath := filepath.Join(tmpDir, ".gemini/skills/tdd.md")
-	commandPath := filepath.Join(tmpDir, ".gemini/commands/run.md")
+	agentPath := filepath.Join(tmpDir, ".claude/agents/coder.md")
+	skillPath := filepath.Join(tmpDir, ".claude/skills/tdd.md")
+	commandPath := filepath.Join(tmpDir, ".claude/commands/run.md")
 
 	// 2. Modify files manually (simulate user customization or old version)
 	filesToModify := []string{agentPath, skillPath, commandPath}
@@ -57,7 +57,7 @@ func TestService_UpdateTools_RefreshesAllCategories(t *testing.T) {
 	}
 
 	// 3. Run Update
-	err = svc.UpdateTools(context.Background(), ui, []string{"gemini"})
+	err = svc.UpdateTools(context.Background(), ui, []string{"claude"})
 	if err != nil {
 		t.Fatalf("Second UpdateTools failed: %v", err)
 	}

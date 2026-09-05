@@ -15,16 +15,16 @@ const agentsMDTemplate = `<!-- SPECFORCE_AGENTS_START -->
 This project uses **Specforce** for Spec-Driven Development (SDD). As an AI agent, you MUST adhere to the following rules:
 
 ## 1. Spec-Driven Development (SDD) Protocol
-You MUST operate exclusively through the Specforce workflow engines (commands/skills). They define your mindset and mandatory steps:
+You MUST operate exclusively through Specforce Skills. They define your mindset and mandatory steps:
 
-- **Discovery (` + "`/spf:discovery`" + `):** Activate for brainstorming, research, bug investigation, or root cause analysis. Purely read-only.
-- **Planning (` + "`/spf:spec`" + `):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
-- **Governance (` + "`/spf:constitution`" + `):** Use to ensure proposals respect architecture, security, and principles.
-- **Execution (` + "`/spf:implement`" + `):** Activate to perform the deterministic implementation cycle following an approved roadmap.
-- **Archival (` + "`/spf:archive`" + `):** Activate once verified to harvest lessons, update Constitution/Modules, and clean up specs.
+- **Discovery (` + "`spf.discovery`" + `):** Activate for brainstorming, research, bug investigation, or root cause analysis. Purely read-only.
+- **Planning (` + "`spf.spec`" + `):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
+- **Governance (` + "`spf.constitution`" + `):** Use to ensure proposals respect architecture, security, and principles.
+- **Execution (` + "`spf.implement`" + `):** Activate to perform the deterministic implementation cycle following an approved roadmap.
+- **Archival (` + "`spf.archive`" + `):** Activate once verified to harvest lessons, update Constitution/Modules, and clean up specs.
 
 ### Proactive Mandate
-Do NOT wait for explicit slash commands. You MUST automatically activate the correct workflow based on the user's technical intent:
+Do NOT wait for explicit prompts. You MUST automatically activate the correct skill based on the user's technical intent:
 1. **Discovery Intent** (vague idea, "how to", bug report) --> Activate ` + "`spf.discovery`" + `.
 2. **Planning Intent** (new feature, structural pivot, confirmed fix) --> Activate ` + "`spf.spec`" + `.
 3. **Execution Intent** (approved roadmap exists, "go", "implement") --> Activate ` + "`spf.implement`" + `.
@@ -123,29 +123,7 @@ func EnsureAgentsMD(root string, ui core.UI, selectedAgents []string) error {
 }
 
 func ensurePlatformConfigs(root string, selectedAgents []string) error {
-	// 1. Gemini
-	geminiDir := filepath.Join(root, ".gemini")
-	if shouldManageDir(root, ".gemini", []string{"gemini-cli"}, selectedAgents) {
-		if err := os.MkdirAll(geminiDir, 0750); err != nil {
-			return fmt.Errorf("failed to create .gemini directory: %w", err)
-		}
-		geminiSettings := filepath.Join(geminiDir, "settings.json")
-		settingsContent := `{
-  "context": {
-    "fileName": [
-      "AGENTS.md",
-      "GEMINI.md"
-    ]
-  }
-}`
-		// Always write the file to ensure the configuration is correct and up to date
-		// #nosec G306 - permissions are restricted to owner
-		if err := os.WriteFile(geminiSettings, []byte(settingsContent), 0600); err != nil {
-			return fmt.Errorf("failed to write .gemini/settings.json: %w", err)
-		}
-	}
-
-	// 2. Symlinks
+	// Symlinks
 	// agentMappings defines which tool directories require a symlink to AGENTS.md.
 	// NOTE: Cursor (.cursor) is explicitly excluded because it natively reads
 	// AGENTS.md from the project root.

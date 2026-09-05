@@ -8,7 +8,6 @@
 - **Embedded Registry Pattern:** Components discovered via metadata MUST be managed by a centralized `Registry` type. This registry should be initialized once (usually with an `fs.FS`) and passed as a dependency to other services or UI components.
 - **Agent-Specific Artifact Mapping:** To support diverse AI coding agents with differing directory conventions, the framework MUST use centralized `kit.yaml` (kit-level) and `mapping.yaml` (legacy/blueprint-level) files. These files translate internal Specforce artifact paths to the native hidden directory names of each supported agent (e.g., `.kimi/`, `.claude/`).
 - **Automated Platform Configuration:** The framework MUST automatically set up environment-specific discovery rules for supported agents during project initialization or refresh. This includes:
-    - Creating `.gemini/settings.json` with the correct `fileName` context mapping.
     - Creating relative symbolic links (e.g., `.agent/rules/AGENTS.md -> ../../AGENTS.md`) to expose global project rules to agents that use standardized rules directories.
     - Ensuring all symlinks are relative to maintain project portability.
 - **Generic Wildcard Expansion:** Mapping configurations in `kit.yaml` MUST support the `*` wildcard in both `path` and `name` fields. The system MUST replace the `*` with the artifact's slug (source filename without extension).

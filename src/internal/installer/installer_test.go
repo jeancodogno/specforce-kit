@@ -11,7 +11,8 @@ func TestShouldInstall_ToolsOnly(t *testing.T) {
 		path     string
 		expected bool
 	}{
-		{".gemini/agents/spf.toml", true},
+		{".gemini/agents/spf.toml", false},
+		{".claude/skills/spf.md", true},
 		{".claude/commands/spf.md", true},
 		{".opencode/skills/tdd.md", true},
 		{".specforce/config.yaml", false},

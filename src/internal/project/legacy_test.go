@@ -128,3 +128,75 @@ func TestPromptAndCleanupLegacyAssets_Accepted(t *testing.T) {
 		t.Errorf("expected legacy asset to be deleted when user accepts")
 	}
 }
+
+func setupLegacyWfCmdGemini(t *testing.T, tmpDir string) (string, string, string) {
+	t.Helper()
+	wfDir := filepath.Join(tmpDir, ".agents", "workflows")
+	if err := os.MkdirAll(wfDir, 0755); err != nil {
+		t.Fatalf("failed to create workflows dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(wfDir, "spf-discovery.md"), []byte("# Discovery"), 0600); err != nil {
+		t.Fatalf("failed to write workflow file: %v", err)
+	}
+
+	cmdDir := filepath.Join(tmpDir, ".claude", "commands")
+	if err := os.MkdirAll(cmdDir, 0755); err != nil {
+		t.Fatalf("failed to create commands dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(cmdDir, "spf-spec.md"), []byte("# Spec"), 0600); err != nil {
+		t.Fatalf("failed to write command file: %v", err)
+	}
+
+	geminiDir := filepath.Join(tmpDir, ".gemini")
+	if err := os.MkdirAll(geminiDir, 0755); err != nil {
+		t.Fatalf("failed to create gemini dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(geminiDir, "settings.json"), []byte("{}"), 0600); err != nil {
+		t.Fatalf("failed to write gemini settings: %v", err)
+	}
+	return wfDir, cmdDir, geminiDir
+}
+
+func TestDetectLegacyAssets_WorkflowsCommandsGemini(t *testing.T) {
+	tmpDir := t.TempDir()
+	wfDir, cmdDir, geminiDir := setupLegacyWfCmdGemini(t, tmpDir)
+
+	assets, err := DetectLegacyAssets(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(assets) != 3 {
+		t.Fatalf("expected 3 legacy assets, got %d: %v", len(assets), assets)
+	}
+
+	expectedPaths := map[string]bool{
+		filepath.Clean(wfDir):     false,
+		filepath.Clean(cmdDir):    false,
+		filepath.Clean(geminiDir): false,
+	}
+	for _, a := range assets {
+		if _, ok := expectedPaths[a]; ok {
+			expectedPaths[a] = true
+		}
+	}
+	for p, found := range expectedPaths {
+		if !found {
+			t.Errorf("expected legacy asset %s to be detected", p)
+		}
+	}
+
+	ui := &legacyMockUI{confirmResult: true}
+	if err := PromptAndCleanupLegacyAssets(tmpDir, ui); err != nil {
+		t.Fatalf("PromptAndCleanupLegacyAssets failed: %v", err)
+	}
+	if !ui.confirmCalled {
+		t.Errorf("expected Confirm to be called")
+	}
+
+	for _, dir := range []string{wfDir, cmdDir, geminiDir} {
+		if _, err := os.Stat(dir); !os.IsNotExist(err) {
+			t.Errorf("expected %s to be deleted, got err: %v", dir, err)
+		}
+	}
+}
+
