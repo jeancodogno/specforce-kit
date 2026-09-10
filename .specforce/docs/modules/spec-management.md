@@ -5,9 +5,9 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
 
 ## 2. Business Rules & Invariants
 - `[BR-SPEC-01]` Every specification must have an explicit or defaulted size attribute (`small`, `medium`, `large`, `complex`). When unspecified during initialization, size defaults to `medium`.
-- `[BR-SPEC-02]` Artifact matrix dynamically adapts to spec sizing:
-  - `small`: requires only `tasks.md` (or `bug-tasks.md`).
-  - `medium`: requires `requirements.md` and `tasks.md`.
+- `[BR-SPEC-02]` Artifact matrix and readiness gates dynamically adapt to spec sizing across all commands:
+  - `small`: requires only `tasks.md` (or `bug-tasks.md`). `specforce implementation status` evaluates readiness solely based on `tasks.md`, and omitted upstream dependencies do not mark downstream artifacts as blocked.
+  - `medium`: requires `requirements.md` and `tasks.md`. Implementation readiness evaluates both documents, bypassing optional architectural design artifacts.
   - `large` & `complex`: requires the full triad (`requirements.md`, `design.md`, `tasks.md`).
 - `[BR-SPEC-03]` Dynamic Resizing (`specforce spec resize <slug> --size <size>`):
   - Promotion (`small` -> `large`): newly required upstream artifacts are marked missing (`exists: false`), blocking implementation until completed.
@@ -35,12 +35,23 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - **WHEN** task validation and coherence audit run
   - **THEN** the validation suite passes without forcing multi-step decomposition or artificial requirement tags.
 
+### [US-SPEC-04] Size-Aware Implementation Readiness and Artifact Dependency Evaluation
+- **Scenario:** Implementation readiness query evaluates missing artifacts strictly against the active sizing tier
+  - **GIVEN** a `small` specification with a valid `tasks.md`
+  - **WHEN** executing `specforce implementation status <slug> --json`
+  - **THEN** status evaluates to `ready` and `missing_artifacts` is empty, never blocking on unrequired triad artifacts.
+- **Scenario:** Spec status dependency check ignores optional upstream artifacts omitted by size tier
+  - **GIVEN** a `small` or `medium` specification where `design.md` is not required
+  - **WHEN** executing `specforce spec status <slug> --json`
+  - **THEN** `tasks.md` is not marked as blocked by missing `design.md`.
+
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
   - `specforce spec init <slug> [--type <type>] [--size <size>] [--json]`: Initializes a new feature or bug specification directory with tiered sizing metadata.
   - `specforce spec resize <slug> --size <size> [--json]`: Dynamically resizes an active specification and recalculates required artifact gates.
   - `specforce spec status <slug> [--json]`: Evaluates completion, artifact presence, and task progress based on spec sizing.
   - `specforce spec list [--type <type>] [--status <status>] [--json]`: Lists active or archived specifications across the workspace.
+  - `specforce implementation status <slug> [--json]`: Evaluates implementation readiness and missing artifacts strictly matching the active spec size.
   - `specforce spec archive <slug>`: Finalizes and transitions an active specification to `.specforce/archive/`.
 - **Cross-Module Contracts & Dependencies:**
   - Emits specification status and task roadmap data consumed by `agent-kit` implementation workflows.

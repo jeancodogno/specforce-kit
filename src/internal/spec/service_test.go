@@ -268,6 +268,139 @@ func TestGetImplementationStatus(t *testing.T) {
 	})
 }
 
+func TestGetImplementationStatus_TieredSizing(t *testing.T) {
+	mockFS := fstest.MapFS{
+		"requirements.yaml": {
+			Data: []byte("description: Requirements\ninstruction: Requirements Instruction\ntemplate: Requirements Template Content\n"),
+		},
+		"design.yaml": {
+			Data: []byte("description: Design\ninstruction: Design Instruction\ntemplate: Design Template Content\ndependency: requirements\n"),
+		},
+		"tasks.yaml": {
+			Data: []byte("description: Tasks\ninstruction: Tasks Instruction\ntemplate: Tasks Template Content\ndependency: design\n"),
+		},
+	}
+	registry, err := NewRegistry(mockFS)
+	if err != nil {
+		t.Fatalf("failed to create registry: %v", err)
+	}
+
+	svc := NewService(registry, nil)
+
+	t.Run("Small spec with only tasks.md is ready", func(t *testing.T) {
+		testSmallSpecImplementationStatus(t, svc)
+	})
+
+	t.Run("Medium spec with requirements.md and tasks.md is ready", func(t *testing.T) {
+		testMediumSpecImplementationStatus(t, svc)
+	})
+
+	t.Run("Large spec missing design.md is blocked", func(t *testing.T) {
+		testLargeSpecImplementationStatus(t, svc)
+	})
+}
+
+const testTieredTasksContent = `
+# Implementation Tasks
+### Phase 1: Core
+#### T1.1: Task 1
+**State:** [PENDING]
+`
+
+func testSmallSpecImplementationStatus(t *testing.T, svc *Service) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	slug := "small-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: small\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(testTieredTasksContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := svc.GetImplementationStatus(context.Background(), tmpDir, slug)
+	if err != nil {
+		t.Fatalf("GetImplementationStatus failed: %v", err)
+	}
+	if report.Status != "ready" {
+		t.Errorf("expected status 'ready', got %q", report.Status)
+	}
+	if len(report.MissingArtifacts) != 0 {
+		t.Errorf("expected no missing artifacts, got %v", report.MissingArtifacts)
+	}
+}
+
+func testMediumSpecImplementationStatus(t *testing.T, svc *Service) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	slug := "medium-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: medium\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "requirements.md"), []byte("# Requirements"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(testTieredTasksContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := svc.GetImplementationStatus(context.Background(), tmpDir, slug)
+	if err != nil {
+		t.Fatalf("GetImplementationStatus failed: %v", err)
+	}
+	if report.Status != "ready" {
+		t.Errorf("expected status 'ready', got %q", report.Status)
+	}
+	if len(report.MissingArtifacts) != 0 {
+		t.Errorf("expected no missing artifacts, got %v", report.MissingArtifacts)
+	}
+}
+
+func testLargeSpecImplementationStatus(t *testing.T, svc *Service) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	slug := "large-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: large\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "requirements.md"), []byte("# Requirements"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(testTieredTasksContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := svc.GetImplementationStatus(context.Background(), tmpDir, slug)
+	if err != nil {
+		t.Fatalf("GetImplementationStatus failed: %v", err)
+	}
+	if report.Status != "blocked" {
+		t.Errorf("expected status 'blocked', got %q", report.Status)
+	}
+	foundDesign := false
+	for _, missing := range report.MissingArtifacts {
+		if missing == "design.md" {
+			foundDesign = true
+			break
+		}
+	}
+	if !foundDesign {
+		t.Errorf("expected missing artifacts to contain 'design.md', got %v", report.MissingArtifacts)
+	}
+}
+
 func TestService_GetStatus(t *testing.T) {
 	tmpDir := t.TempDir()
 	slug := "test-slug"

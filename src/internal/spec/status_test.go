@@ -2,8 +2,10 @@ package spec
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"testing/fstest"
 )
@@ -340,3 +342,150 @@ func testLargeSpecStatus(t *testing.T, tmpDir string, registry *Registry) {
 		t.Errorf("expected 3 total artifacts for large spec, got %d", status.Total)
 	}
 }
+
+func TestSpecStatus_Dependency_TieredSizing(t *testing.T) {
+	mockFS := fstest.MapFS{
+		"requirements.yaml": {
+			Data: []byte("description: Req\ninstruction: instr\ntemplate: tpl\n"),
+		},
+		"design.yaml": {
+			Data: []byte("description: Design\ninstruction: instr\ntemplate: tpl\ndependency: requirements\n"),
+		},
+		"tasks.yaml": {
+			Data: []byte("description: Tasks\ninstruction: instr\ntemplate: tpl\ndependency: design\n"),
+		},
+	}
+	registry, err := NewRegistry(mockFS)
+	if err != nil {
+		t.Fatalf("failed to create registry: %v", err)
+	}
+
+	t.Run("Small spec", func(t *testing.T) {
+		testSmallSpecDependency(t, registry)
+	})
+
+	t.Run("Medium spec with requirements", func(t *testing.T) {
+		testMediumSpecWithReqsDependency(t, registry)
+	})
+
+	t.Run("Medium spec without requirements", func(t *testing.T) {
+		testMediumSpecWithoutReqsDependency(t, registry)
+	})
+
+	t.Run("Large spec without design", func(t *testing.T) {
+		testLargeSpecWithoutDesignDependency(t, registry)
+	})
+}
+
+func testSmallSpecDependency(t *testing.T, registry *Registry) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	slug := "small-spec"
+	specDir := setupTieredSpec(t, tmpDir, slug, "small")
+
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte("### Phase 1: Test\n- [ ] T1.1: Step\n**Target:** file.go\n**Action Steps:**\n- item\n**Acceptance Check:**\n- verify\n"), 0644)
+
+	status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+
+	art := findArtifactStatus(status.Artifacts, "tasks")
+	if art == nil {
+		t.Fatalf("tasks artifact not found in status: %v", status.Artifacts)
+	}
+	if art.Blocked {
+		t.Errorf("expected tasks artifact to NOT be blocked in small spec, but got Blocked=true")
+	}
+}
+
+func testMediumSpecWithReqsDependency(t *testing.T, registry *Registry) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	slug := "medium-spec"
+	specDir := setupTieredSpec(t, tmpDir, slug, "medium")
+
+	_ = os.WriteFile(filepath.Join(specDir, "requirements.md"), []byte("# Requirements"), 0644)
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte("### Phase 1: Test\n- [ ] T1.1: Step\n**Target:** file.go\n**Action Steps:**\n- item\n**Acceptance Check:**\n- verify\n"), 0644)
+
+	status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+
+	art := findArtifactStatus(status.Artifacts, "tasks")
+	if art == nil {
+		t.Fatalf("tasks artifact not found in status: %v", status.Artifacts)
+	}
+	if art.Blocked {
+		t.Errorf("expected tasks artifact to NOT be blocked in medium spec when requirements.md exists, but got Blocked=true")
+	}
+}
+
+func testMediumSpecWithoutReqsDependency(t *testing.T, registry *Registry) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	slug := "medium-spec-no-reqs"
+	specDir := setupTieredSpec(t, tmpDir, slug, "medium")
+
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte("### Phase 1: Test\n- [ ] T1.1: Step\n**Target:** file.go\n**Action Steps:**\n- item\n**Acceptance Check:**\n- verify\n"), 0644)
+
+	status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+
+	art := findArtifactStatus(status.Artifacts, "tasks")
+	if art == nil {
+		t.Fatalf("tasks artifact not found in status: %v", status.Artifacts)
+	}
+	if !art.Blocked {
+		t.Errorf("expected tasks artifact to be blocked in medium spec when requirements.md is missing, but got Blocked=false")
+	}
+}
+
+func testLargeSpecWithoutDesignDependency(t *testing.T, registry *Registry) {
+	t.Helper()
+	tmpDir := t.TempDir()
+	slug := "large-spec-no-design"
+	specDir := setupTieredSpec(t, tmpDir, slug, "large")
+
+	_ = os.WriteFile(filepath.Join(specDir, "requirements.md"), []byte("# Requirements"), 0644)
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte("### Phase 1: Test\n- [ ] T1.1: Step\n**Target:** file.go\n**Action Steps:**\n- item\n**Acceptance Check:**\n- verify\n"), 0644)
+
+	status, err := GetStatus(context.Background(), tmpDir, slug, registry)
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+
+	art := findArtifactStatus(status.Artifacts, "tasks")
+	if art == nil {
+		t.Fatalf("tasks artifact not found in status: %v", status.Artifacts)
+	}
+	if !art.Blocked {
+		t.Errorf("expected tasks artifact to be blocked in large spec when design.md is missing, but got Blocked=false")
+	}
+}
+
+func setupTieredSpec(t *testing.T, tmpDir, slug, size string) string {
+	t.Helper()
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	specYAML := fmt.Sprintf("type: feature\nsize: %s\n", size)
+	if err := os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte(specYAML), 0644); err != nil {
+		t.Fatal(err)
+	}
+	return specDir
+}
+
+func findArtifactStatus(artifacts []ArtifactStatus, baseName string) *ArtifactStatus {
+	for i := range artifacts {
+		if artifacts[i].Name == baseName || strings.HasSuffix(artifacts[i].Name, "-"+baseName) {
+			return &artifacts[i]
+		}
+	}
+	return nil
+}
+

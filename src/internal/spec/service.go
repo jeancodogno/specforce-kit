@@ -204,7 +204,29 @@ func (s *Service) GetImplementationStatus(ctx context.Context, projectRoot, slug
 	slug = ResolveSlug(projectRoot, slug)
 
 	// 1. Check artifacts
-	ok, missing := CheckTriadArtifacts(projectRoot, slug)
+	missing := []string{}
+	if s.registry != nil {
+		meta, err := LoadMetadata(projectRoot, slug)
+		if err != nil {
+			meta = &Metadata{
+				Slug: slug,
+				Name: slug,
+				Type: "feature",
+				Size: SpecSizeMedium,
+			}
+		}
+
+		specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
+		artifacts := s.registry.ListForTypeAndSize(meta.Type, meta.Size)
+		for _, art := range artifacts {
+			fileName := art.Name + ".md"
+			if _, err := os.Stat(filepath.Join(specDir, fileName)); os.IsNotExist(err) {
+				missing = append(missing, fileName)
+			}
+		}
+	} else {
+		_, missing = CheckTriadArtifacts(projectRoot, slug)
+	}
 
 	// 2. Parse tasks
 	report, err := ParseTasks(ctx, projectRoot, slug)
@@ -213,7 +235,7 @@ func (s *Service) GetImplementationStatus(ctx context.Context, projectRoot, slug
 	}
 
 	report.MissingArtifacts = missing
-	if !ok {
+	if len(missing) > 0 {
 		report.Status = "blocked"
 	}
 

@@ -72,7 +72,7 @@ func GetStatus(ctx context.Context, projectRoot string, slug string, registry *R
 		return SpecStatus{}, err
 	}
 
-	if err := processAllArtifacts(ctx, projectRoot, slug, meta.Type, artifacts, existsMap, registry, foundCount == len(artifacts), &status); err != nil {
+	if err := processAllArtifacts(ctx, projectRoot, slug, meta.Type, artifacts, existsMap, foundCount == len(artifacts), &status); err != nil {
 		return status, err
 	}
 
@@ -103,13 +103,18 @@ func detectProposal(projectRoot, specDir string, status *SpecStatus) {
 	}
 }
 
-func processAllArtifacts(ctx context.Context, projectRoot, slug, specType string, artifacts []Artifact, existsMap map[string]bool, registry *Registry, shouldValidate bool, status *SpecStatus) error {
+func processAllArtifacts(ctx context.Context, projectRoot, slug, specType string, artifacts []Artifact, existsMap map[string]bool, shouldValidate bool, status *SpecStatus) error {
+	allowed := make(map[string]bool, len(artifacts))
+	for _, art := range artifacts {
+		allowed[art.Name] = true
+	}
+
 	for _, art := range artifacts {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, specType, art, existsMap, registry, shouldValidate)
+		artStatus, err := processArtifactStatus(ctx, projectRoot, slug, specType, art, existsMap, allowed, shouldValidate)
 		if err != nil {
 			return err
 		}
@@ -142,21 +147,13 @@ func scanArtifactExistence(ctx context.Context, specDir string, artifacts []Arti
 	return existsMap, foundCount, nil
 }
 
-func processArtifactStatus(ctx context.Context, projectRoot, slug, specType string, art Artifact, existsMap map[string]bool, registry *Registry, validate bool) (ArtifactStatus, error) {
+func processArtifactStatus(ctx context.Context, projectRoot, slug, specType string, art Artifact, existsMap, allowed map[string]bool, validate bool) (ArtifactStatus, error) {
 	fileName := art.Name + ".md"
 	relPath := filepath.Join(".specforce", "specs", slug, fileName)
 	exists := existsMap[art.Name]
 
 	prefixedName := fmt.Sprintf("%s-%s", specType, art.Name)
-
-	blocked := false
-	if art.Dependency != "" {
-		if _, depInRegistry := registry.Get(art.Dependency); !depInRegistry {
-			blocked = true
-		} else if !existsMap[art.Dependency] {
-			blocked = true
-		}
-	}
+	blocked := isArtifactBlocked(art.Dependency, allowed, existsMap)
 
 	var validationErrors []string
 	var validationGuide string
@@ -183,3 +180,17 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug, specType stri
 		ValidationGuide:  validationGuide,
 	}, nil
 }
+
+func isArtifactBlocked(dep string, allowed, existsMap map[string]bool) bool {
+	if dep == "" {
+		return false
+	}
+	if allowed[dep] {
+		return !existsMap[dep]
+	}
+	if dep == "design" && allowed["requirements"] {
+		return !existsMap["requirements"]
+	}
+	return false
+}
+
