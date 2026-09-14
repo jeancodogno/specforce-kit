@@ -46,6 +46,10 @@ jobs:
           TAG_ARG=""
           if [[ "${{ github.ref_name }}" == *"alpha"* ]]; then
             TAG_ARG="--tag alpha"
+          elif [[ "${{ github.ref_name }}" == *"beta"* ]]; then
+            TAG_ARG="--tag beta"
+          elif [[ "${{ github.ref_name }}" == *"rc"* ]]; then
+            TAG_ARG="--tag rc"
           fi
           for dir in npm/*; do
             echo "Publishing $dir with $TAG_ARG..."
@@ -61,6 +65,10 @@ jobs:
           TAG_ARG=""
           if [[ "${{ github.ref_name }}" == *"alpha"* ]]; then
             TAG_ARG="--tag alpha"
+          elif [[ "${{ github.ref_name }}" == *"beta"* ]]; then
+            TAG_ARG="--tag beta"
+          elif [[ "${{ github.ref_name }}" == *"rc"* ]]; then
+            TAG_ARG="--tag rc"
           fi
           npm publish --access public $TAG_ARG
         env:
