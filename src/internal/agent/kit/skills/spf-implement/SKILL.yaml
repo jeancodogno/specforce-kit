@@ -117,7 +117,12 @@ content: |
   {end_for}
   ```
 
-  - **MANDATORY LOG:** Explicitly output `[DELEGATING BATCH {batch_index}/{total_batches}] [Done: {completed_tasks_count}/{total_tasks_count} ({progress_pct}%) | Batch: {batch_task_count} tasks ({task_ids_list}) | Remaining: {remaining_tasks_count}] -> Persona: {required_persona_role} | Model Tier: {recommended_model_tier} | Effort: {recommended_effort} | Tasks: {task_ids_list}`
+  - **MANDATORY LOG:** Explicitly output a natural and informative update explaining what will be done in the batch:
+    ```markdown
+    🚀 **Iniciando Lote {batch_index}/{total_batches}** ({completed_tasks_count}/{total_tasks_count} concluídas · {progress_pct}%)
+    {short_conversational_scope_summary_of_tasks}
+    Delegando para perfil de *{required_persona_role}* (tier {recommended_model_tier}, esforço {recommended_effort}).
+    ```
 
   ---
 

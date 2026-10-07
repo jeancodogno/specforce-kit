@@ -353,10 +353,9 @@ func TestImplementBatchSubagentIsolationAndProgress(t *testing.T) {
 	requiredDirectives := []string{
 		"Fresh Subagent per Batch",
 		"Within-Batch Feedback Loop",
-		"DELEGATING BATCH",
-		"Done:",
-		"Batch:",
-		"Remaining:",
+		"Iniciando Lote",
+		"concluídas",
+		"Delegando para perfil de",
 		"completed_tasks_count",
 		"total_tasks_count",
 		"BATCH",
