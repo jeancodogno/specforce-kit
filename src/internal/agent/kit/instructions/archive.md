@@ -69,8 +69,10 @@ specforce spec archive <slug>
 Feature successfully archived and lifecycle closed. 
 
 ### Suggested Next Steps & Follow-up Specs:
-- [Next Step / Proposed Spec 1]: [Brief description of what to explore or build next based on architectural learnings]
-- [Next Step / Proposed Spec 2]: [Brief description of follow-up improvements, tech debt resolution, or related features]
+- [Next Step 1, from: <finding or unverifiable criterion>]: <ready-to-use /spf:discovery or /spf:spec request>
+- [Next Step 2, from: <finding or unverifiable criterion>]: <ready-to-use /spf:discovery or /spf:spec request>
+
+At most 3 steps; if no findings were reported, state that and base the steps on the completed work.
 
 > The Specforce system is ready for the next feature.
 ```

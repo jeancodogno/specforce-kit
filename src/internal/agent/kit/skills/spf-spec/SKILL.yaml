@@ -129,7 +129,7 @@ content: |
 
   All artifacts created! Ready for implementation.
 
-  > Run `/implement` to start implementing.
+  > Run `/spf:implement` to start implementing.
   ```
 
   ## Guardrails

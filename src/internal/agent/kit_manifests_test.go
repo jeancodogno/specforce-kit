@@ -353,18 +353,24 @@ func TestImplementBatchSubagentIsolationAndProgress(t *testing.T) {
 	requiredDirectives := []string{
 		"Fresh Subagent per Batch",
 		"Within-Batch Feedback Loop",
-		"Iniciando Lote",
-		"concluídas",
-		"Delegando para perfil de",
+		"Free-Form Batch Narration",
 		"completed_tasks_count",
 		"total_tasks_count",
-		"BATCH",
-		"COMPLETED",
 	}
 
 	for _, directive := range requiredDirectives {
 		if !strings.Contains(implContent, directive) {
 			t.Errorf("implement.yaml missing mandatory directive: %q", directive)
+		}
+	}
+
+	forbiddenTemplates := []string{
+		"Iniciando Lote",
+		"Delegando para perfil de",
+	}
+	for _, token := range forbiddenTemplates {
+		if strings.Contains(implContent, token) {
+			t.Errorf("implement.yaml must not contain fixed log template token: %q", token)
 		}
 	}
 }
@@ -455,6 +461,11 @@ func TestActiveQAAndBlockerProtocols(t *testing.T) {
 		"Mandatory Spec Gating for Scope & Architectural Drift",
 		"4-Tier QA Verification Evidence",
 		"Developer Manual Walkthrough",
+		"Traceability Matrix",
+		"NOT-VERIFIABLE",
+		"Correction Cycle",
+		"BLOCKED",
+		"Out-of-Scope Findings",
 	}
 
 	for _, directive := range requiredDirectives {
@@ -464,3 +475,58 @@ func TestActiveQAAndBlockerProtocols(t *testing.T) {
 	}
 }
 
+func TestImplementRoleChartersAndResume(t *testing.T) {
+	implData, err := os.ReadFile("kit/skills/spf-implement/SKILL.yaml")
+	if err != nil {
+		t.Fatalf("failed to read SKILL.yaml: %v", err)
+	}
+	implContent := string(implData)
+
+	requiredDirectives := []string{
+		"Role Charters",
+		"implementer",
+		"qa-tester",
+		"reviewer",
+		"Resume Handling",
+	}
+	for _, directive := range requiredDirectives {
+		if !strings.Contains(implContent, directive) {
+			t.Errorf("SKILL.yaml missing mandatory directive: %q", directive)
+		}
+	}
+
+	const maxLines = 222
+	if lines := strings.Count(implContent, "\n") + 1; lines > maxLines {
+		t.Errorf("SKILL.yaml has %d lines, exceeding the %d-line budget", lines, maxLines)
+	}
+}
+
+func TestLifecycleCommandNaming(t *testing.T) {
+	cases := []struct {
+		path     string
+		required string
+	}{
+		{"kit/skills/spf-implement/SKILL.yaml", "/spf:archive"},
+		{"kit/skills/spf-spec/SKILL.yaml", "/spf:implement"},
+		{"kit/skills/spf-archive/SKILL.yaml", "/spf:discovery"},
+		{"kit/instructions/archive.md", "/spf:discovery"},
+	}
+	forbidden := []string{"`/archive`", "`/implement`"}
+
+	for _, tc := range cases {
+		data, err := os.ReadFile(tc.path)
+		if err != nil {
+			t.Errorf("failed to read %s: %v", tc.path, err)
+			continue
+		}
+		content := string(data)
+		if !strings.Contains(content, tc.required) {
+			t.Errorf("%s missing lifecycle command %q", tc.path, tc.required)
+		}
+		for _, token := range forbidden {
+			if strings.Contains(content, token) {
+				t.Errorf("%s contains unprefixed lifecycle command %s", tc.path, token)
+			}
+		}
+	}
+}

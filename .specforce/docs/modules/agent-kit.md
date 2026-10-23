@@ -8,16 +8,18 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - `[BR-KIT-02]` `requirements.md` MUST adhere to the Strict Zero-Technical-Specification Policy: containing exclusively business rules, end-user personas, and BDD acceptance criteria ("What" and "Why"). Technical implementation details ("How") belong strictly in `design.md`.
 - `[BR-KIT-03]` Project initialization and update flows (`specforce init`, `UpdateTools`) MUST detect legacy Specforce assets and prompt the user before performing any destructive cleanup.
 - `[BR-KIT-04]` Secondary workers and subagents spawned during implementation are STRICTLY FORBIDDEN from modifying `tasks.md` directly. State transitions belong exclusively to the primary orchestrator via `specforce implementation update`.
-- `[BR-KIT-05]` Implementation orchestration MUST partition the roadmap into a global budget of 2 to 3 Batches (recommended sweet spot) and at most 4 Batches for the entire implementation roadmap (or 1 batch for 1-3 task roadmaps), assigning exactly 1 dedicated worker subagent per batch plus 1 final QA specialist.
+- `[BR-KIT-05]` Implementation orchestration MUST partition the roadmap into a global budget of 2 to 3 Batches (recommended sweet spot) and at most 4 Batches for the entire implementation roadmap (or 1 batch for 1-3 task roadmaps), assigning exactly 1 dedicated worker subagent per batch. The final verification worker MUST be an independent qa-tester that did not implement any task of the roadmap.
 - `[BR-KIT-06]` Task status updates via `specforce implementation update` support multi-task batching (comma-separated or repeated `--task`), executing verification hooks once in deduplicated sequence and updating task states and session logs atomically.
 - `[BR-KIT-07]` Implementation orchestration blueprints and Mission Brief Envelopes MUST embed non-negotiable worker guardrails (pre-coding interrogation, anti-sycophancy, scope jail, and test invariance) and an orchestrator mid/post-implementation specification gate.
 - `[BR-KIT-08]` Discovery orchestration blueprints MUST guide agents to adopt a consultative stance ("Strong Opinions, Weakly Held"), proactively providing architectural opinions, trade-off comparisons with recommended picks, and edge-case mitigations.
-- `[BR-KIT-09]` Implementation orchestration blueprints MUST mandate fresh subagent worker sessions per batch (isolation), confine message-based feedback loops strictly to within-batch verification adjustments (up to 2 iterations), and emit natural conversational batch updates explaining the batch scope (`🚀 **Iniciando Lote X/Y** (C/Z concluídas · P%)` followed by a concise task scope explanation and worker persona/tier delegation summary) alongside structured completion metrics (`[BATCH X/Y COMPLETED] [Done: C/Z (P%) | Remaining: R]`).
+- `[BR-KIT-09]` Implementation orchestration blueprints MUST mandate fresh subagent worker sessions per batch (isolation) and confine message-based feedback loops strictly to within-batch verification adjustments (up to 2 iterations). Progress visibility follows a free-form post-dispatch narration standard: after dispatching a batch, the orchestrator narrates in the user's language with a progress prefix (batches and tasks completed), the batch scope and the worker role (only when relevant to the developer), and closes each batch with a brief completion summary. No literal banner or completion-tag formats are mandated.
 - `[BR-KIT-10]` Archival blueprints and instructions MUST append a conceptual "Suggested Next Steps & Follow-up Specs" section to feature closing summaries to maintain architectural continuity.
 - `[BR-KIT-11]` Archival blueprints and instructions MUST mandate that `.specforce/docs/modules/<domain>.md` living specifications are structured exclusively as 5-part behavioral specifications (Domain Scope, Invariants, BDD Scenarios, Public Integration Surfaces, Operational Invariants), omitting low-level internal code file paths and opportunistically migrating legacy module formats upon merge.
-- `[BR-KIT-12]` Implementation and QA orchestration blueprints MUST enforce a 4-Tier active QA verification protocol (Tier 1: Global Test Suite, Tier 2: Active Black-Box & Smoke Verification on real compiled artifacts/APIs, Tier 3: Visual & E2E UI Verification, Tier 4: Adversarial & Edge Case Testing), prohibiting completion sign-off based exclusively on unit tests when runtime artifacts or interfaces exist.
+- `[BR-KIT-12]` Implementation and QA orchestration blueprints MUST enforce a 4-Tier active QA verification protocol (Tier 1: Global Test Suite, Tier 2: Active Black-Box & Smoke Verification on real compiled artifacts/APIs, Tier 3: Visual & E2E UI Verification, Tier 4: Adversarial & Edge Case Testing), prohibiting completion sign-off based exclusively on unit tests when runtime artifacts or interfaces exist. The protocol is governed by a criterion traceability matrix mapping every acceptance criterion to a verdict (`PASSED`, `FAILED`, or `NOT-VERIFIABLE`). The qa-tester is read-only with respect to the codebase, and failed criteria trigger at most 2 correction cycles before escalation.
 - `[BR-KIT-13]` Worker blueprints MUST enforce multimodal visual verification for user interface tasks, requiring workers to run local dev servers/previews, capture headless screenshots across responsive states via automated browser tools (e.g., Playwright, Puppeteer, or scripts), and visually inspect rendered output against design and UI/UX standards.
-- `[BR-KIT-14]` Agent blueprints MUST enforce a strict Human-in-the-Loop Blocker Protocol: prohibiting plaintext secrets in conversations and requiring `.env` updates, mandating interactive consultation tools for minor ambiguities with structured trade-offs, and enforcing mandatory specification gates (`/spf:spec`) before coding any architectural or scope drift.
+- `[BR-KIT-14]` Agent blueprints MUST enforce a strict Human-in-the-Loop Blocker Protocol: prohibiting plaintext secrets in conversations and requiring `.env` updates, mandating interactive consultation tools for minor ambiguities with structured trade-offs, and enforcing mandatory specification gates (`/spf:spec`) before coding any architectural or scope drift. Workers that cannot proceed without a decision MUST stop and return a BLOCKED report stating the question, the available options and a recommendation; only the orchestrator consults the user and relays the answer.
+- `[BR-KIT-15]` Named role charters (for example implementer and qa-tester) MUST be defined inside the skill blueprints themselves as instructions given at delegation time; the kit MUST NOT require registering per-tool agent definitions for them.
+- `[BR-KIT-16]` Workers MUST report observations outside their task scope as out-of-scope findings without acting on them, and the orchestrator MUST surface them in the final summary. When an implementation is resumed after an interruption, the orchestrator MUST inspect the current repository and task state and continue safely without redoing finished work or discarding uncommitted changes.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -60,7 +62,7 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - **Scenario:** Executing task batches with worker subagents across various agent harnesses
   - **GIVEN** task batches with varying risk and complexity
   - **WHEN** delegating and verifying implementation tasks
-  - **THEN** the orchestrator spawns a fresh subagent for each batch, outputs natural conversational updates explaining the batch scope and worker persona alongside progress indicators, and restricts message feedback loops strictly to the active subagent for fixing verification failures.
+  - **THEN** the orchestrator spawns a fresh subagent for each batch, narrates each dispatched batch in free-form language (progress, scope and, when relevant, the worker role) with a brief completion summary, and restricts message feedback loops strictly to the active subagent for fixing verification failures.
 
 ### [US-KIT-08] Strategic Next Steps Handoff in Archival
 - **Scenario:** Completing feature archival
@@ -83,8 +85,8 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 ### [US-KIT-11] Active Black-Box and UI Verification in QA
 - **Scenario:** Conducting final quality assurance verification after implementation batches
   - **GIVEN** all batch tasks in an implementation roadmap have completed
-  - **WHEN** the QA specialist executes the 4-tier verification protocol
-  - **THEN** it executes automated regression tests, performs active black-box execution against real compiled artifacts/APIs, verifies UI rendering and adversarial edge cases, and generates a structured QA report with a manual developer walkthrough.
+  - **WHEN** the independent qa-tester executes the 4-tier verification protocol
+  - **THEN** it builds a criterion traceability matrix, executes automated regression tests, performs active black-box execution against real compiled artifacts/APIs, verifies UI rendering and adversarial edge cases without modifying the codebase, and generates a structured QA report with a manual developer walkthrough.
 
 ### [US-KIT-12] Multimodal Screenshot Inspection in UI Tasks
 - **Scenario:** Implementing or modifying user interface components
@@ -97,6 +99,18 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - **GIVEN** an orchestrator or worker facing blockers during task implementation
   - **WHEN** resolving the condition
   - **THEN** it guides secret placement into `.env` without echoing values, uses interactive consultation tools to present structured trade-offs for ambiguities, and halts for formal spec updates via `/spf:spec` when scope or architecture diverges.
+
+### [US-KIT-14] Bounded Correction Cycle After Failed QA
+- **Scenario:** The qa-tester reports failed acceptance criteria
+  - **GIVEN** the traceability matrix contains criteria with a failed verdict
+  - **WHEN** the orchestrator handles the failures
+  - **THEN** it delegates fixes to an implementer and re-runs a fresh qa-tester for at most 2 correction cycles, and escalates to the user if criteria still fail afterwards.
+
+### [US-KIT-15] BLOCKED Escalation from Workers
+- **Scenario:** A worker cannot proceed without a decision
+  - **GIVEN** a worker facing an ambiguity or conflict it cannot resolve within its scope
+  - **WHEN** it stops work
+  - **THEN** it returns a BLOCKED report with the question, the options and a recommendation, and the orchestrator consults the user and relays the answer before work continues.
 
 
 ## 4. Public Integration Surfaces & Contracts
