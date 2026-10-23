@@ -58,7 +58,7 @@ content: |
     first to understand the established rules before making changes.
 
 
-    **B. Dynamic Skill & Persona Adoption:**
+    **B. Dynamic Skill & Role Adoption:**
 
     - Analyze the `description` and `instruction` fields from the JSON payload. Based
     on the domain, search your available skills/sub-agents and adopt the posture of
@@ -113,7 +113,8 @@ content: |
 
     Constitution aligned and ready.
 
-    > Run `/spec` to start planning a new feature.```
+    > Run `/spf:spec` to start planning a new feature.
+    ```
 
     ## Guardrails
 

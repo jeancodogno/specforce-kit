@@ -511,7 +511,7 @@ func TestLifecycleCommandNaming(t *testing.T) {
 		{"kit/skills/spf-archive/SKILL.yaml", "/spf:discovery"},
 		{"kit/instructions/archive.md", "/spf:discovery"},
 	}
-	forbidden := []string{"`/archive`", "`/implement`"}
+	forbidden := []string{"`/spec`", "`/archive`", "`/implement`", "`/discovery`", "`/constitution`"}
 
 	for _, tc := range cases {
 		data, err := os.ReadFile(tc.path)
@@ -523,9 +523,29 @@ func TestLifecycleCommandNaming(t *testing.T) {
 		if !strings.Contains(content, tc.required) {
 			t.Errorf("%s missing lifecycle command %q", tc.path, tc.required)
 		}
+	}
+
+	var files []string
+	for _, pattern := range []string{"kit/skills/*/SKILL.yaml", "kit/instructions/*.md"} {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			t.Fatalf("glob %s: %v", pattern, err)
+		}
+		if len(matches) == 0 {
+			t.Fatalf("glob %s matched no files", pattern)
+		}
+		files = append(files, matches...)
+	}
+	for _, path := range files {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Errorf("failed to read %s: %v", path, err)
+			continue
+		}
+		content := string(data)
 		for _, token := range forbidden {
 			if strings.Contains(content, token) {
-				t.Errorf("%s contains unprefixed lifecycle command %s", tc.path, token)
+				t.Errorf("%s contains unprefixed lifecycle command %s", path, token)
 			}
 		}
 	}

@@ -36,12 +36,12 @@ content: |
 
   #### Subagent Orchestration & Sizing Directives
   - **Mandatory Subagent Usage:** Always spawn and delegate tasks to subagents whenever the environment supports subagent capabilities (such as `invoke_subagent`, subagent conversation delegation, or background worker spawning).
-  - **Universal Harness Compatibility:** Invoke workers with explicit permissions and a declared role across all agent harnesses (Claude Code, OpenCode, Antigravity, Kimi, Kilo, Codex). Never rely on fragile implicit self-inheritance (such as `TypeName: "self"` or undeclared planners). If the harness requires pre-registration (e.g., `define_subagent`), register an explicit worker type with write tools enabled before invoking.
+  - **Universal Harness Compatibility:** Invoke workers with explicit permissions and a declared role across all agent harnesses (Claude Code, OpenCode, Antigravity, Kimi, Kilo, Codex). Never rely on fragile implicit self-inheritance (such as `TypeName: "self"` or undeclared planners).
   - **Fresh Subagent per Batch (Isolation):** Each Batch MUST spawn a NEW / FRESH subagent session. Never reuse a subagent from a previous batch.
   - **Within-Batch Feedback Loop (Worker Reuse & Feedback Loop / Anti-Churn):** If verification fails, compiler errors occur, or code is incomplete, ALWAYS send feedback to the SAME subagent session that authored the active batch rather than spawning a new agent, preserving its memory and file context.
   - **Subagent Sizing Guidance:**
     - **1 Dedicated Subagent per Batch:** Each mapped batch is executed by exactly 1 fresh `implementer` subagent.
-    - **Global Implementation Sizing (Entire Lifecycle):** 1 Subagent for small roadmaps; **2 to 3 Subagents (Recommended Sweet Spot)** for standard complexity; up to 4 for complex multi-phase work; plus 1 fresh `qa-tester` in Step 4.
+    - **Global Implementation Sizing (Entire Lifecycle):** 1 Subagent for small roadmaps; **2 to 3 Subagents (Recommended Sweet Spot)** for standard complexity; up to 4 for complex multi-phase work; plus 1 fresh `qa-tester` in Step 4 (and up to 2 extra correction implementers and qa-testers after `FAILED` verdicts).
   - **Strict Task Boundary Safety:** Subagents are **STRICTLY FORBIDDEN** from editing `tasks.md` or altering task states. All state transitions belong exclusively to the Orchestrator via `specforce implementation update`.
 
   #### A. Claim Batch Tasks

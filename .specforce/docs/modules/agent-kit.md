@@ -132,7 +132,7 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
-  - `specforce init [agents...] [--non-interactive]`: Initializes or updates project agent tools and performs interactive or automated legacy asset cleanup.
+  - `specforce init [agents...]`: Initializes or updates project agent tools and performs interactive or automated legacy asset cleanup.
   - `specforce implementation update <slug> --task <id1,id2,...> --status <in-progress|finished|pending>`: Atomically updates one or more tasks and executes deduplicated verification hooks.
   - `specforce implementation status <slug> [--json]`: Inspects current task execution progress and roadmap completion.
 - **Cross-Module Contracts & Dependencies:**
