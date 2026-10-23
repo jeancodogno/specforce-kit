@@ -611,3 +611,76 @@ func assertFileContains(t *testing.T, path string, directives []string) {
 		}
 	}
 }
+
+func TestKitManifests_ExecutableCriteriaAndArchivePreflight(t *testing.T) {
+	t.Run("Spec", testSpecSkillExecutableCriteria)
+
+	t.Run("TaskBlueprint", func(t *testing.T) {
+		assertFileContains(t, "artifacts/spec/tasks.yaml", []string{
+			"non-interactive",
+			"Black-box Verification",
+			"`large`",
+			"fails before the fix",
+		})
+	})
+
+	t.Run("BugBlueprint", func(t *testing.T) {
+		assertFileContains(t, "artifacts/spec/bug-requirements.yaml", []string{
+			"root cause",
+			"RED",
+			"halt",
+		})
+	})
+
+	t.Run("Archive", testArchivePreflightDirectives)
+
+	t.Run("ArchiveSkill", func(t *testing.T) {
+		assertFileContains(t, "kit/skills/spf-archive/SKILL.yaml", []string{
+			"Suggest Next Steps & Follow-up Specs",
+			"/spf:discovery",
+		})
+	})
+}
+
+func testSpecSkillExecutableCriteria(t *testing.T) {
+	path := "kit/skills/spf-spec/SKILL.yaml"
+	assertFileContains(t, path, []string{
+		"read-only",
+		"restated for a single confirmation",
+		"approve all recommendations",
+		"never carries",
+		"one-line justification",
+	})
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read %s: %v", path, err)
+	}
+	content := string(data)
+	if strings.Contains(content, "`A definir`, `Dúvidas`, `N/A`") {
+		t.Errorf("%s must not contain the legacy placeholder list", path)
+	}
+	if lines := strings.Count(content, "\n") + 1; lines > 155 {
+		t.Errorf("%s has %d lines, expected <= 155", path, lines)
+	}
+}
+
+func testArchivePreflightDirectives(t *testing.T) {
+	path := "kit/instructions/archive.md"
+	assertFileContains(t, path, []string{
+		"pending task",
+		"even if the user asks",
+		"Suggested Commit Message",
+		"never run",
+		".specforce/archive/",
+	})
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read %s: %v", path, err)
+	}
+	content := string(data)
+	refusal := strings.Index(content, "you MUST stop")
+	discovery := strings.Index(content, "Dynamic Agent & Skill Discovery")
+	if refusal < 0 || discovery < 0 || refusal >= discovery {
+		t.Errorf("%s: completion refusal (%d) must precede Dynamic Agent & Skill Discovery (%d)", path, refusal, discovery)
+	}
+}

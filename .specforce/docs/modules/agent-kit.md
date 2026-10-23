@@ -27,6 +27,12 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - `[BR-KIT-17]` Planning blueprints MUST direct `medium`, `large` and `complex` specifications to write one delta document per affected module after requirements (and design when required) and before the task roadmap, to seal it, to make the roadmap cover every delta item, and to list the delta in the hand-off summary; when no module changes, the blueprint MUST direct declaring `delta.impact: none` instead and not sealing.
 - `[BR-KIT-18]` Archival blueprints and instructions MUST direct the agent to correct each delta to the as-built result, allocate final identifiers only in the module (the delta keeps its provisional key and the mapping is recorded in the specification metadata), apply the delta so module blocks equal delta blocks, rewrite the scope, public surface and operational sections as-built where the delta changes them, stop without touching the module on a base conflict, lazily migrate a prefix-less target module after the user confirms a proposed prefix, and require `specforce spec delta check <slug>` to report `applied` (or `none`/`exempt`) before archiving.
 - `[BR-KIT-19]` The independent qa-tester's traceability matrix MUST contain one additional row per delta item (operation plus identifier or provisional key) using the existing verdicts; specifications without a delta or with `delta.impact: none` add no rows, and a removal row fails when the block is still present.
+- `[BR-KIT-20]` Planning blueprints MUST direct every task acceptance check to be a single non-interactive command or test scenario with an observable expected result, rewriting or explicitly flagging criteria that need human judgment as not verifiable by a tester; `large` and `complex` roadmaps MUST end with a black-box verification phase whose scenarios trace to requirements and are runnable by the independent qa-tester.
+- `[BR-KIT-21]` Bug specification blueprints MUST require concrete reproduction steps and an established root cause (halting to ask or recommend discovery when unknown), and the roadmap MUST start with a regression test task that fails before the fix, with no fix task preceding it.
+- `[BR-KIT-22]` Planning blueprints MUST restate decisions already taken in a proposal for a single confirmation and ask only open questions and newly found gaps; questions go in waves of at most four, each with a recommendation, and an approval of all recommendations confirms that wave only and never carries over; the hard gate before writing artifacts is preserved.
+- `[BR-KIT-23]` Planning blueprints MAY delegate strictly read-only exploration to helpers during grounding of `large` and `complex` specifications, while interview, decisions and artifact writing remain in the primary session; unresolved markers (`TBD`, `TODO`, bare `N/A`) stay forbidden, and a section that does not apply is omitted or kept with a one-line justification.
+- `[BR-KIT-24]` Archival instructions MUST refuse, before any retrospective, Constitution or module change, to archive a specification whose progress is below complete, listing each pending task with identifier, title and state and pointing to the implementation flow, even when the user asks to archive anyway.
+- `[BR-KIT-25]` Archival summaries MUST list the archived artifacts and changed module documents as clickable links to their archived or current location and MUST suggest, never execute, one conventional commit message.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -128,6 +134,62 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - **GIVEN** a delta whose target block was changed by another specification
   - **WHEN** `/spf:archive` runs
   - **THEN** the module is left untouched and the developer is told to redo the delta and seal it again.
+
+### [US-KIT-17] Executable Acceptance Checks and Black-box Verification
+- **Scenario:** Planning a large specification
+  - **GIVEN** a `large` or `complex` specification being planned
+  - **WHEN** the roadmap is produced
+  - **THEN** every task has a non-interactive acceptance check and the final phase holds black-box scenarios traced to requirements.
+- **Scenario:** Criterion needing human judgment
+  - **GIVEN** a task whose outcome cannot be scripted
+  - **WHEN** its acceptance check is written
+  - **THEN** it is rewritten into an observable check or flagged as not verifiable by a tester.
+
+### [US-KIT-18] Bug Specification Starts From a Failing Test
+- **Scenario:** Planning a bug fix
+  - **GIVEN** a bug specification
+  - **WHEN** requirements and roadmap are produced
+  - **THEN** reproduction and root cause are documented and the first task creates a regression test that fails before the fix.
+- **Scenario:** Unknown root cause
+  - **GIVEN** a bug whose root cause is not established
+  - **WHEN** the planner reaches the root cause
+  - **THEN** it halts to ask the user or recommends discovery instead of guessing.
+
+### [US-KIT-19] Planning Interview in Waves
+- **Scenario:** Proposal with decisions taken
+  - **GIVEN** a proposal listing taken decisions and open questions
+  - **WHEN** the interview starts
+  - **THEN** taken decisions are restated for one confirmation and only open questions are asked, in waves with recommendations.
+- **Scenario:** Approval does not carry over
+  - **GIVEN** the user approved all recommendations of one wave
+  - **WHEN** the next wave starts
+  - **THEN** the next wave still requires its own confirmation.
+
+### [US-KIT-20] Read-only Grounding Helpers
+- **Scenario:** Grounding a large specification
+  - **GIVEN** a `large` or `complex` specification
+  - **WHEN** the planner grounds itself in the codebase
+  - **THEN** it may delegate read-only exploration while interview, decisions and writing stay in the primary session.
+- **Scenario:** Section that does not apply
+  - **GIVEN** a template section that does not apply
+  - **WHEN** the artifact is drafted
+  - **THEN** the section is omitted or justified in one line, and unresolved markers are rejected.
+
+### [US-KIT-21] Archive Refuses Incomplete Work
+- **Scenario:** Incomplete implementation
+  - **GIVEN** a specification with progress below complete
+  - **WHEN** `/spf:archive` runs
+  - **THEN** it stops before any change, lists each pending task and points to `/spf:implement`, even if the user asks to archive anyway.
+
+### [US-KIT-22] Archive Summary With Links and Commit Suggestion
+- **Scenario:** Successful archival
+  - **GIVEN** a completed and archived specification
+  - **WHEN** the final summary is produced
+  - **THEN** it links archived artifacts and changed modules and suggests one conventional commit message without running it.
+- **Scenario:** No module changes
+  - **GIVEN** a specification with no module impact
+  - **WHEN** the final summary is produced
+  - **THEN** it states no module changed and still suggests the commit message.
 
 
 ## 4. Public Integration Surfaces & Contracts

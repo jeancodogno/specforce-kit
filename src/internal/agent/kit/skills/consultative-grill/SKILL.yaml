@@ -35,8 +35,8 @@ content: |
 
   ## Interview Rules
   - **Mandatory Tool Usage:** When asking questions, you MUST use your environment's native interaction tool (`ask_user`, `ask`, etc.) to ensure the user is prompted for input.
-  - **Single-Threaded Precision:** Ask one question at a time. Each question must include a **Proactive Recommendation** and a **Counter-Argument** (to prevent confirmation bias).
-  - **Decision Persistence:** Every confirmed decision must be immediately reflected in the corresponding artifact (Requirements, Design, or Constitution). No "shadow decisions" in the chat only.
+  - **Wave Precision:** Ask questions in waves of at most 4 related questions (one at a time in Adversarial Mode). Each question must include a **Proactive Recommendation** (listed first) and a **Counter-Argument** (to prevent confirmation bias). An approval of all recommendations confirms only the current wave.
+  - **Decision Persistence:** Every confirmed decision must be reflected in the corresponding artifact (Requirements, Design, or Constitution) as soon as the artifact is written, never before the planning gate is confirmed. No "shadow decisions" in the chat only.
   - **Hardened Definitions:** You are STRICTLY PROHIBITED from using placeholders, TBDs, or vague qualifiers. Every sentence in a spec must be a verifiable technical or business invariant.
   - **Empirical Proof:** If a design decision deviates from the current codebase pattern, the user MUST provide a technical justification that outweighs the "Consistency Tax".
 

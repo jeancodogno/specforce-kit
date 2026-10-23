@@ -7,7 +7,7 @@ instruction: |
 
   1. **Directive Logic:** Action steps MUST be technical directives (e.g., "Add if guard", "Implement interface X"). Passive descriptions (e.g., "Check logic") are forbidden.
   2. **Action Density Mandate:** Every task MUST have at least 3 concrete action steps that describe the technical implementation within the target file.
-  3. **TDD-First Verification:** Every task MUST include a specific terminal command or test scenario that objectively proves the task is finished.
+  3. **TDD-First Verification:** Every task MUST include a specific terminal command or test scenario that objectively proves the task is finished. Every Acceptance Check MUST be a single non-interactive command or test scenario with an observable expected result, runnable in under 2 minutes, with no prompts, manual clicks or pasted secrets. A criterion needing human judgment MUST be rewritten into a scriptable check or marked in the task as not verifiable by a tester.
   4. **Strategic Parallelism:** Tasks are sequential by default. However, you MAY mark independent tasks as parallel within the same phase if they can be implemented simultaneously.
      - **Syntax:** Use `**Parallel With: T{Phase}.{Task}**` to declare relationships.
      - **File Isolation Rule:** Parallel tasks MUST NEVER share the same `**Target:**` or have conflicting implementation paths. If multiple tasks target the same file, they MUST be sequential.
@@ -17,6 +17,8 @@ instruction: |
      - The checkbox state indicates progress (`- [ ]` for pending).
      - You may also include a `**State:** [PENDING]` tag if more formal tracking is required.
   8. **Target Precision:** Set the `**Target:**` to the exact file path or CLI command.
+  9. **Black-box Verification Phase:** For `large` and `complex` specs the last phase MUST be `### Phase {N}: Black-box Verification`, with one task per scenario tracing to `[US-x]`, each stating the command and the expected observable result. `small` and `medium` specs omit it.
+  10. **Bug-First Regression:** For `bug` specs, task T1.1 creates the regression test and states that it fails before the fix; no fix task precedes it.
 template: |
   ---
   slug: {FEATURE_SLUG}
@@ -67,6 +69,21 @@ template: |
 
   **Acceptance Check:**
   [Explicit test scenario or CLI command]
+
+  ### Phase {N}: Black-box Verification
+  *(Render this phase ONLY for `large` and `complex` specs, as the last phase; omit otherwise).*
+
+  - [ ] T{N}.1: [VERIFY] {Scenario title}
+  **Target:** `{CLI Command | Global Scope}`
+  **Context:** [US-X]
+
+  **Action Steps:**
+  - [Step 1: Run the command]
+  - [Step 2: Compare against the expected observable result]
+  - [Step 3: Record the evidence]
+
+  **Acceptance Check:**
+  [Single non-interactive command and its expected observable result]
 
   ## 3. Pre-emptive Mitigations
   *(Render this section ONLY if there are high-impact execution risks, otherwise omit).*

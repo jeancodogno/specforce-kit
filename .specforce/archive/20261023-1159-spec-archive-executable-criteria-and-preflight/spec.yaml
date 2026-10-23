@@ -1,0 +1,60 @@
+slug: 20261023-1159-spec-archive-executable-criteria-and-preflight
+name: 20261023-1159-spec-archive-executable-criteria-and-preflight
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-10-23T20:21:09.217581398Z
+              completed_at: 2026-10-23T20:22:26.819359392Z
+            - started_at: 2026-10-23T20:22:26.819359506Z
+              completed_at: 2026-10-23T20:24:02.321606895Z
+    T2.1:
+        sessions:
+            - started_at: 2026-10-23T20:21:57.248217697Z
+              completed_at: 2026-10-23T20:24:02.321607112Z
+    T2.2:
+        sessions:
+            - started_at: 2026-10-23T20:21:57.248217938Z
+              completed_at: 2026-10-23T20:24:02.321607212Z
+    T2.3:
+        sessions:
+            - started_at: 2026-10-23T20:21:57.248218017Z
+              completed_at: 2026-10-23T20:24:02.321607321Z
+    T2.4:
+        sessions:
+            - started_at: 2026-10-23T20:21:57.248218093Z
+              completed_at: 2026-10-23T20:24:02.321607429Z
+    T2.5:
+        sessions:
+            - started_at: 2026-10-23T20:21:57.248218157Z
+              completed_at: 2026-10-23T20:24:02.321607514Z
+    T3.1:
+        sessions:
+            - started_at: 2026-10-23T20:24:07.460039199Z
+              completed_at: 2026-10-23T20:24:12.503268806Z
+    T3.2:
+        sessions:
+            - started_at: 2026-10-23T20:24:07.460039448Z
+              completed_at: 2026-10-23T20:24:12.503269053Z
+    T3.3:
+        sessions:
+            - started_at: 2026-10-23T20:24:07.460039524Z
+              completed_at: 2026-10-23T20:24:12.503269126Z
+delta:
+    impact: modules
+    modules:
+        - module: agent-kit
+          id_map:
+            "NEW:exec-criteria": BR-KIT-20
+            "NEW:bug-red-first": BR-KIT-21
+            "NEW:grill-waves": BR-KIT-22
+            "NEW:readonly-explore": BR-KIT-23
+            "NEW:archive-preflight": BR-KIT-24
+            "NEW:archive-closing": BR-KIT-25
+            "NEW:us-exec-criteria": US-KIT-17
+            "NEW:us-bug-red-first": US-KIT-18
+            "NEW:us-grill-waves": US-KIT-19
+            "NEW:us-readonly-explore": US-KIT-20
+            "NEW:us-archive-preflight": US-KIT-21
+            "NEW:us-archive-closing": US-KIT-22
