@@ -73,7 +73,19 @@ Reports on the completeness and validation status of a specific feature's artifa
 Retrieves the instructions and templates associated with a specific spec artifact (e.g., `requirements`, `design`, `tasks`). Used by agents to ensure they follow formatting rules and business logic constraints.
 
 ### `specforce spec archive <slug>`
-Finalizes and archives a completed feature specification. It moves the spec folder into `.specforce/archive/` and closes the iteration loop.
+Finaliza e arquiva uma especificação de funcionalidade concluída. Move a pasta da spec para `.specforce/archive/` e fecha o ciclo da iteração. Specs de tamanho `medium` ou maior exigem um delta aplicado (veja `specforce spec delta check`) ou `delta.impact: none` nos metadados. O `--force` nunca ignora essa verificação.
+
+### `specforce spec delta check <slug> [--json]`
+Informa se o delta da spec (as mudanças propostas para as living specs dos módulos) foi aplicado. Somente leitura. O estado do relatório é um de:
+- `none`: a spec declara `delta.impact: none` (sem impacto em módulos).
+- `exempt`: uma spec `small` sem delta; não precisa de nenhum.
+- `missing`: um delta é necessário, mas não foi escrito.
+- `pending`: o delta existe, mas suas mudanças ainda não estão refletidas nos módulos.
+- `applied`: os módulos já correspondem ao delta.
+- `invalid`: o delta está malformado ou conflita com os módulos atuais.
+
+### `specforce spec delta seal <slug> [--json]`
+Sela o delta da spec registrando as impressões digitais dos blocos de módulo em que ele se baseia, de modo que edições manuais posteriores nesses blocos sejam detectadas como conflitos de base.
 
 ---
 

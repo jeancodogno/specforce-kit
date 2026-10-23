@@ -20,7 +20,7 @@ import (
 // HandleSpec dispatches to the correct spec sub-command.
 func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) error {
 	if len(args) == 0 {
-		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize, delta")
 		return nil
 	}
 
@@ -48,9 +48,11 @@ func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) e
 		return e.handleSpecArchiveCmd(ctx, ui, args)
 	case "resize":
 		return e.handleSpecResizeCmd(ctx, ui, args, jsonMode)
+	case "delta":
+		return e.handleSpecDeltaCmd(ctx, ui, args, jsonMode)
 	default:
 		fmt.Printf("Unknown spec command: %s\n", subCommand)
-		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize, delta")
 		return nil
 	}
 }
@@ -597,11 +599,156 @@ func (e *Executor) HandleSpecArchive(ctx context.Context, ui core.UI, slug strin
 		}
 	}
 
+	// [US-7] Delta gate: never bypassed by --force.
+	if err := e.enforceDeltaGate(ctx, ui, projectRoot, slug); err != nil {
+		return err
+	}
+
 	if err := spec.ArchiveSpec(ctx, projectRoot, slug); err != nil {
 		ui.Error(fmt.Sprintf("Archive failed: %v\n", err))
 		return err
 	}
 
 	ui.Success(fmt.Sprintf("Spec successfully archived: %s\n", slug))
+	return nil
+}
+
+// enforceDeltaGate refuses archiving unless the delta status is none, exempt or applied.
+func (e *Executor) enforceDeltaGate(ctx context.Context, ui core.UI, projectRoot, slug string) error {
+	report, err := spec.CheckDelta(ctx, projectRoot, slug)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Delta verification failed: %v\n", err))
+		return err
+	}
+	if report.Allowed() {
+		return nil
+	}
+	ui.Error(fmt.Sprintf("Cannot archive '%s': delta status is %s.\n", slug, report.Status))
+	for _, problem := range report.Problems {
+		ui.Error("  - " + problem + "\n")
+	}
+	for _, mod := range report.Modules {
+		for _, item := range mod.Items {
+			ui.Error(fmt.Sprintf("  - %s\n", formatDeltaItem(mod.Module, item)))
+		}
+	}
+	ui.Error(deltaNextStep(report, slug) + "\n")
+	return report.Err()
+}
+
+// formatDeltaItem renders one delta item as "<module>: <op> <ref>: <state> <message>".
+func formatDeltaItem(module string, item spec.DeltaItemReport) string {
+	ref := item.ID
+	if ref == "" {
+		ref = item.Key
+	}
+	return fmt.Sprintf("%s: %s %s: %s %s", module, item.Op, ref, item.State, item.Message)
+}
+
+func deltaNextStep(report *spec.DeltaReport, slug string) string {
+	switch report.Status {
+	case spec.DeltaStatusInvalid:
+		return fmt.Sprintf("Next step: fix the problems above, then run `specforce spec delta check %s`.", slug)
+	case spec.DeltaStatusMissing:
+		return fmt.Sprintf("Next step: add deltas under the spec's deltas/ folder (then run `specforce spec delta seal %s`) or declare delta impact none, then run `specforce spec delta check %s`.", slug, slug)
+	default:
+		return fmt.Sprintf("Next step: run `specforce spec delta seal %s` if items are unsealed, apply the delta to the modules, then verify with `specforce spec delta check %s`.", slug, slug)
+	}
+}
+
+func (e *Executor) handleSpecDeltaCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
+	usage := "Usage: specforce spec delta <check|seal> <slug> [--json]"
+	if len(args) < 2 {
+		return fmt.Errorf("missing delta sub-command. %s", usage)
+	}
+	var positional []string
+	for _, arg := range args[2:] {
+		if arg != "--json" {
+			positional = append(positional, arg)
+		}
+	}
+	if len(positional) < 1 {
+		return fmt.Errorf("missing slug for spec delta %s. %s", args[1], usage)
+	}
+	switch args[1] {
+	case "check":
+		return e.HandleSpecDeltaCheck(ctx, ui, positional[0], jsonMode)
+	case "seal":
+		return e.HandleSpecDeltaSeal(ctx, ui, positional[0], jsonMode)
+	default:
+		return fmt.Errorf("unknown delta sub-command %q. %s", args[1], usage)
+	}
+}
+
+// HandleSpecDeltaCheck processes 'spec delta check'. It is read-only and fails only for status invalid.
+func (e *Executor) HandleSpecDeltaCheck(ctx context.Context, ui core.UI, slug string, jsonMode bool) error {
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+	slug = spec.ResolveSlug(projectRoot, slug)
+
+	report, err := spec.CheckDelta(ctx, projectRoot, slug)
+	if err != nil {
+		return err
+	}
+	if err := e.renderDeltaReport(ui, report, jsonMode); err != nil {
+		return err
+	}
+	if report.Status == spec.DeltaStatusInvalid {
+		return report.Err()
+	}
+	return nil
+}
+
+// HandleSpecDeltaSeal processes 'spec delta seal'. It writes only spec.yaml.
+func (e *Executor) HandleSpecDeltaSeal(ctx context.Context, ui core.UI, slug string, jsonMode bool) error {
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+	slug = spec.ResolveSlug(projectRoot, slug)
+
+	report, err := spec.SealDelta(ctx, projectRoot, slug)
+	if report != nil {
+		if rerr := e.renderDeltaReport(ui, report, jsonMode); rerr != nil {
+			return rerr
+		}
+	}
+	if err != nil {
+		return err
+	}
+	if !jsonMode {
+		ui.Success(fmt.Sprintf("Delta sealed for %s\n", slug))
+	}
+	return nil
+}
+
+func (e *Executor) renderDeltaReport(ui core.UI, report *spec.DeltaReport, jsonMode bool) error {
+	if jsonMode {
+		return e.outputJSON(report)
+	}
+	line := fmt.Sprintf("Delta status for %s: %s\n", report.Slug, report.Status)
+	switch report.Status {
+	case spec.DeltaStatusInvalid:
+		ui.Error(line)
+	case spec.DeltaStatusMissing, spec.DeltaStatusPending:
+		ui.Warn(line)
+	default:
+		ui.Success(line)
+	}
+	for _, mod := range report.Modules {
+		ui.Log(fmt.Sprintf("Module %s (prefix %s, next BR %s, next US %s)\n", mod.Module, mod.Prefix, mod.NextFree["BR"], mod.NextFree["US"]))
+		for _, item := range mod.Items {
+			ref := item.ID
+			if ref == "" {
+				ref = item.Key
+			}
+			ui.Log(fmt.Sprintf("  %s %s: %s %s\n", item.Op, ref, item.State, item.Message))
+		}
+	}
+	for _, problem := range report.Problems {
+		ui.Error("  - " + problem + "\n")
+	}
 	return nil
 }

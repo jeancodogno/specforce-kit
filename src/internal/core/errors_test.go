@@ -37,6 +37,18 @@ func TestDomainErrors_Is(t *testing.T) {
 		}
 	})
 
+	t.Run("delta errors wrap correctly", func(t *testing.T) {
+		if !errors.Is(fmt.Errorf("check: %w", core.ErrDeltaInvalid), core.ErrDeltaInvalid) {
+			t.Errorf("expected errors.Is to identify ErrDeltaInvalid through wrapping")
+		}
+		if !errors.Is(fmt.Errorf("gate: %w", core.ErrDeltaNotApplied), core.ErrDeltaNotApplied) {
+			t.Errorf("expected errors.Is to identify ErrDeltaNotApplied through wrapping")
+		}
+		if errors.Is(core.ErrDeltaInvalid, core.ErrDeltaNotApplied) {
+			t.Errorf("delta errors must be distinct")
+		}
+	})
+
 	t.Run("domain errors do not match each other", func(t *testing.T) {
 		if errors.Is(core.ErrAgentNotFound, core.ErrProjectAlreadyInitialized) {
 			t.Errorf("distinct domain errors should not match each other")

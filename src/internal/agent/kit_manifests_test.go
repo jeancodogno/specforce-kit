@@ -530,3 +530,64 @@ func TestLifecycleCommandNaming(t *testing.T) {
 		}
 	}
 }
+
+func TestKitManifests_DeltaLivingSpecs(t *testing.T) {
+	t.Run("Spec", func(t *testing.T) {
+		assertFileContains(t, "kit/skills/spf-spec/SKILL.yaml", []string{
+			"specforce spec delta seal",
+			"deltas/<module>.md",
+			"impact: none",
+			"NEW:",
+			"before `tasks.md`",
+			"every delta item",
+			"only run `specforce spec delta seal` when delta documents were written",
+			"do NOT run `specforce spec delta seal`",
+		})
+	})
+	t.Run("Archive", func(t *testing.T) {
+		assertFileContains(t, "kit/instructions/archive.md", []string{
+			"specforce spec delta check",
+			"NEW:",
+			"id_map",
+			"next_free",
+			"as-built",
+			"no `prefix`",
+			"interactive question tool",
+			"`applied`",
+			"before `specforce spec archive",
+			"ONLY in the module",
+			"delta file keeps the `[NEW:<key>]` key",
+		})
+	})
+	t.Run("Implement", func(t *testing.T) {
+		assertFileContains(t, "kit/skills/spf-implement/SKILL.yaml", []string{
+			"one row per delta item",
+			"deltas/<module>.md",
+			"`delta.impact: none`",
+			"REMOVED",
+			"still present",
+		})
+	})
+	t.Run("ModuleTemplate", func(t *testing.T) {
+		assertFileContains(t, "artifacts/constitution/module.yaml", []string{
+			"prefix: {{MODULE_PREFIX}}",
+			"[BR-{{MODULE_PREFIX}}-01]",
+			"### [US-{{MODULE_PREFIX}}-01]",
+			"self-contained block",
+		})
+	})
+}
+
+func assertFileContains(t *testing.T, path string, directives []string) {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read %s: %v", path, err)
+	}
+	content := string(data)
+	for _, directive := range directives {
+		if !strings.Contains(content, directive) {
+			t.Errorf("%s missing mandatory directive: %q", path, directive)
+		}
+	}
+}

@@ -92,6 +92,38 @@ var specArchiveCmd = &cobra.Command{
 	},
 }
 
+var specDeltaCmd = &cobra.Command{
+	Use:   "delta",
+	Short: "Inspect and seal the module delta of a specification",
+	Long:  `Inspect (check) or seal the module delta of a specification. Archiving requires the delta to be applied, none or exempt.`,
+}
+
+var specDeltaCheckCmd = &cobra.Command{
+	Use:   "check [slug]",
+	Short: "Read-only inspection of a specification's delta",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runSpecDelta("check"),
+}
+
+var specDeltaSealCmd = &cobra.Command{
+	Use:   "seal [slug]",
+	Short: "Record the base fingerprints of the delta in spec.yaml",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runSpecDelta("seal"),
+}
+
+func runSpecDelta(sub string) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		executor := GetExecutor()
+		appUI := tui.NewUI()
+		cliArgs := []string{"delta", sub, args[0]}
+		if jsonMode {
+			cliArgs = append(cliArgs, "--json")
+		}
+		return executor.HandleSpec(cmd.Context(), appUI, cliArgs...)
+	}
+}
+
 var auditError string
 var auditClear bool
 var auditIteration int
@@ -140,7 +172,7 @@ func init() {
 	specListCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specStatusCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specArtifactCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
-	specArchiveCmd.Flags().BoolVar(&forceArchive, "force", false, "force archive even if pending tasks remain")
+	specArchiveCmd.Flags().BoolVar(&forceArchive, "force", false, "override only the pending-tasks check; never bypasses delta verification")
 
 	specResizeCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	specResizeCmd.Flags().StringVar(&specSize, "size", "medium", "Specification size (small, medium, large, complex)")
@@ -159,5 +191,11 @@ func init() {
 	specCmd.AddCommand(specArchiveCmd)
 	specCmd.AddCommand(specResizeCmd)
 	specCmd.AddCommand(specAuditCmd)
+
+	specDeltaCheckCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
+	specDeltaSealCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
+	specDeltaCmd.AddCommand(specDeltaCheckCmd)
+	specDeltaCmd.AddCommand(specDeltaSealCmd)
+	specCmd.AddCommand(specDeltaCmd)
 	rootCmd.AddCommand(specCmd)
 }

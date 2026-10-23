@@ -3,6 +3,7 @@ package spec
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -197,3 +198,56 @@ func TestMetadataSize(t *testing.T) {
 	}
 }
 
+
+func TestMetadataDeltaRoundTrip(t *testing.T) {
+	tmpDir := t.TempDir()
+	slug := "delta-spec"
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".specforce", "specs", slug), 0750); err != nil {
+		t.Fatal(err)
+	}
+	specPath := filepath.Join(tmpDir, ".specforce", "specs", slug, "spec.yaml")
+
+	// A spec.yaml without delta loads and saves without introducing a delta key.
+	legacy := "slug: delta-spec\nname: Delta Spec\ntype: feature\nsize: medium\n"
+	if err := os.WriteFile(specPath, []byte(legacy), 0600); err != nil {
+		t.Fatal(err)
+	}
+	meta, err := LoadMetadata(tmpDir, slug)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if meta.Delta != nil {
+		t.Fatalf("expected nil Delta, got %+v", meta.Delta)
+	}
+	if err := SaveMetadata(tmpDir, slug, meta); err != nil {
+		t.Fatal(err)
+	}
+	saved, _ := os.ReadFile(specPath)
+	if strings.Contains(string(saved), "delta:") {
+		t.Errorf("no delta key expected, got:\n%s", saved)
+	}
+
+	// A delta block round-trips unchanged.
+	meta.Delta = &DeltaMetadata{
+		Impact: "modules",
+		Modules: []DeltaModuleMetadata{{
+			Module:     "spec-management",
+			BaseHashes: map[string]string{"BR-SPEC-03": "abc", "BR-SPEC-07": "def"},
+			IDMap:      map[string]string{"NEW:delta-check": "BR-SPEC-05"},
+		}},
+	}
+	if err := SaveMetadata(tmpDir, slug, meta); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := LoadMetadata(tmpDir, slug)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.Delta == nil || loaded.Delta.Impact != "modules" || len(loaded.Delta.Modules) != 1 {
+		t.Fatalf("delta lost: %+v", loaded.Delta)
+	}
+	m := loaded.Delta.Modules[0]
+	if m.Module != "spec-management" || m.BaseHashes["BR-SPEC-03"] != "abc" || m.BaseHashes["BR-SPEC-07"] != "def" || m.IDMap["NEW:delta-check"] != "BR-SPEC-05" {
+		t.Errorf("delta round-trip mismatch: %+v", m)
+	}
+}

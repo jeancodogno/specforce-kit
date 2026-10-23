@@ -56,7 +56,7 @@ content: |
   | Role | Mission | Allowed | Forbidden | Inputs | Output |
   |---|---|---|---|---|---|
   | `implementer` | Deliver the batch tasks | Edit batch target files, run tests and builds | Editing `tasks.md`, scope creep, asking the user | Mission Brief, specs, constitution | Changes, verification output, Out-of-Scope Findings |
-  | `qa-tester` | Independently prove acceptance criteria | Run anything; add verification-only tests/scripts | Editing production behavior, reading worker reports | `requirements.md`, `design.md`, `tasks.md`, diff | Traceability Matrix, 4-tier evidence, Out-of-Scope Findings |
+  | `qa-tester` | Independently prove acceptance criteria | Run anything; add verification-only tests/scripts | Editing production behavior, reading worker reports | `requirements.md`, `design.md`, `tasks.md`, `deltas/<module>.md`, diff | Traceability Matrix, 4-tier evidence, Out-of-Scope Findings |
   | `reviewer` (optional, read-only) | Review high-complexity batches before QA | Read code, run tests | Any edit | Diff, `design.md`, constitution | Findings list with severity |
 
   **Adaptive Model & Effort Routing** (pick role and tier by kind of work):
@@ -160,7 +160,7 @@ content: |
   3. **Tier 3: Visual & E2E Verification (Multimodal Inspection & UI Flows)** - For visual features: run the preview server, execute end-to-end journeys, and inspect screenshots across breakpoints and error states.
   4. **Tier 4: Adversarial & Edge Case Testing** - Feed invalid inputs, boundary values, missing environment flags and malformed payloads; confirm graceful errors and no panics or crashes.
 
-  **Traceability Matrix:** Every acceptance criterion gets one row: criterion, scenario, evidence, verdict `PASSED | FAILED | NOT-VERIFIABLE`. Every `NOT-VERIFIABLE` row MUST state a reason and is never reported as passed. The orchestrator MUST re-execute only the key verifications needed to confirm the matrix (never the full set) before accepting it. Out-of-Scope Findings are deduplicated and included in the final summary and the validation-failure report.
+  **Traceability Matrix:** Every acceptance criterion gets one row: criterion, scenario, evidence, verdict `PASSED | FAILED | NOT-VERIFIABLE`. When the spec has a delta (`deltas/<module>.md`), also add one row per delta item (operation plus identifier or provisional key) with the same verdicts; a REMOVED row is `FAILED` when the block is still present in the module after application. No delta rows exist for specs without a delta or with `delta.impact: none`. Every `NOT-VERIFIABLE` row MUST state a reason and is never reported as passed. The orchestrator MUST re-execute only the key verifications needed to confirm the matrix (never the full set) before accepting it. Out-of-Scope Findings are deduplicated and included in the final summary and the validation-failure report.
 
   **Correction Cycle:** On any `FAILED` verdict, spawn a fresh correction `implementer` with the failed criteria and evidence, then a fresh `qa-tester`. Maximum 2 cycles; then escalate to the user with evidence. If a fix requires a behavior or architecture change, HALT and require `/spf:spec`.
 

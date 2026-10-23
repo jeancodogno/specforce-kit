@@ -48,7 +48,13 @@ specforce implementation status <slug> --json
   4. **Non-Destructive Merge & Legacy Migration:**
      - **If `.specforce/docs/modules/<domain>.md` EXISTS:** Merge new use cases and update modified rules while strictly preserving prior use cases that were not touched. If the existing module file uses a legacy format or contains internal code paths/low-level implementation details, you MUST opportunistically reformat and upgrade it to the 5 canonical Living Spec sections during reconciliation while preserving all accumulated domain rules and use cases.
      - **If NO module manifest exists:** Generate `.specforce/docs/modules/<domain>.md` following the template.
-  5. **Infrastructure Exemption:** Marking module consolidation as `N/A` is ONLY permitted if the feature is purely cross-cutting developer tooling with zero business domain logic.
+  5. **Delta Protocol (specs with `deltas/<module>.md`):**
+     - Correct each delta to the as-built result, then run `specforce spec delta check <slug> --json` and read `next_free` per module. Replace each provisional `[NEW:<key>]` with the next free identifier in order of appearance (rules and use cases numbered independently) ONLY in the module (the final identifier lives there); the delta file keeps the `[NEW:<key>]` key (editing a delta to use a final identifier makes it invalid). Record the mapping under `delta.modules[].id_map` in `spec.yaml`.
+     - Apply the delta so module blocks equal delta blocks: never renumber untouched rules, never reuse removed identifiers. Rewrite sections 1, 4 and 5 as-built when the delta changes what they describe. `delta.impact: none` skips module changes.
+     - If a base conflict is reported, stop without touching the module, redo the delta against the current module and run `specforce spec delta seal <slug>`.
+     - If the target module has no `prefix`, propose one, confirm it with the user through the interactive question tool, then normalize the module to the block convention (`[BR-<PREFIX>-NN]`, `### [US-<PREFIX>-NN]`) preserving every rule and scenario verbatim.
+     - Run `specforce spec delta check <slug>` and require `applied` (or `none`/`exempt`) before `specforce spec archive <slug>`.
+  6. **Infrastructure Exemption:** Marking module consolidation as `N/A` is ONLY permitted if the feature is purely cross-cutting developer tooling with zero business domain logic.
 
 ### 6. Archival Execution
 - You MUST execute the command below to formally alter the specification state from `active` to `archived` in `.specforce/archive/`:
@@ -65,6 +71,7 @@ specforce spec archive <slug>
 **Archived:** [{FEATURE_NAME}]
 **Constitution Updates:** [Briefly list what was added to the Constitution artifacts, or write "None required"]
 **Module Living Specs Consolidated:** [Yes/No/NA - List updated or created module files in .specforce/docs/modules/]
+(For each module updated by a delta, list it as a Markdown link with its added/modified/removed counts.)
 
 Feature successfully archived and lifecycle closed. 
 

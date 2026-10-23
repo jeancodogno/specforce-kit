@@ -48,6 +48,21 @@ func ValidateSize(size SpecSize) bool {
 	}
 }
 
+// DeltaModuleMetadata records the delta bookkeeping for a single module.
+// BaseHashes is written by `spec delta seal`; IDMap is written by the agent at archive.
+type DeltaModuleMetadata struct {
+	Module     string            `json:"module" yaml:"module"`
+	BaseHashes map[string]string `json:"base_hashes,omitempty" yaml:"base_hashes,omitempty"`
+	IDMap      map[string]string `json:"id_map,omitempty" yaml:"id_map,omitempty"`
+}
+
+// DeltaMetadata declares the module impact of a specification.
+// Impact is "modules" or "none"; empty means "not declared".
+type DeltaMetadata struct {
+	Impact  string                `json:"impact,omitempty" yaml:"impact,omitempty"`
+	Modules []DeltaModuleMetadata `json:"modules,omitempty" yaml:"modules,omitempty"`
+}
+
 // Metadata represents the core configuration of a specification.
 type Metadata struct {
 	Slug       string                 `json:"slug" yaml:"slug"`
@@ -56,6 +71,7 @@ type Metadata struct {
 	Size       SpecSize               `json:"size" yaml:"size"`
 	TimeLogs   map[string]TaskTimeLog `json:"time_logs,omitempty" yaml:"time_logs,omitempty"`
 	Refinement RefinementMetadata     `json:"refinement,omitempty" yaml:"refinement,omitempty"`
+	Delta      *DeltaMetadata         `json:"delta,omitempty" yaml:"delta,omitempty"`
 }
 
 // LoadMetadata reads the spec.yaml from the specification directory.

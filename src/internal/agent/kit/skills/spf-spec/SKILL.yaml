@@ -89,6 +89,8 @@ content: |
 
     e. **Repeat Loop** until all required artifacts are complete.
 
+    f. **Module Delta (`medium`, `large`, `complex` only; `small` skips):** After requirements (and design when required) and before `tasks.md`, write one `.specforce/specs/<slug>/deltas/<module>.md` per affected module (lowercase hyphenated module name), with `## ADDED` (provisional `[NEW:<key>]` per item plus full text), `## MODIFIED` (existing identifier plus the COMPLETE replacement block, including every scenario of a use case) and `## REMOVED` (identifiers only) sections. Keep delta text behavioral. If no module behavior changes, set `delta.impact: none` in `spec.yaml`, write NO delta documents, and do NOT run `specforce spec delta seal` (it fails without delta documents); verify with `specforce spec delta check <slug>` (expect `none`). Otherwise, only run `specforce spec delta seal` when delta documents were written: run `specforce spec delta seal <slug>`. Then make `tasks.md` cover every delta item, and list each delta (module, added/modified/removed counts) or "no module impact" in the final summary.
+
   ---
 
   ### Step 3: In-Session Quality Gate (Coherence Audit)

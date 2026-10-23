@@ -1,0 +1,96 @@
+slug: 20261023-1159-delta-living-specs
+name: 20261023-1159-delta-living-specs
+type: feature
+size: complex
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-10-23T18:43:23.941659079Z
+              completed_at: 2026-10-23T18:51:53.379255789Z
+    T1.2:
+        sessions:
+            - started_at: 2026-10-23T18:43:23.941659557Z
+              completed_at: 2026-10-23T18:51:53.379255985Z
+    T2.1:
+        sessions:
+            - started_at: 2026-10-23T18:43:23.94165967Z
+              completed_at: 2026-10-23T18:51:53.379256066Z
+    T2.2:
+        sessions:
+            - started_at: 2026-10-23T18:43:23.941659751Z
+              completed_at: 2026-10-23T18:51:53.379256144Z
+    T2.3:
+        sessions:
+            - started_at: 2026-10-23T18:43:23.941659854Z
+              completed_at: 2026-10-23T18:51:53.379256232Z
+    T3.1:
+        sessions:
+            - started_at: 2026-10-23T18:51:53.38833336Z
+              completed_at: 2026-10-23T18:54:05.429936494Z
+    T3.2:
+        sessions:
+            - started_at: 2026-10-23T18:51:53.38833357Z
+              completed_at: 2026-10-23T18:54:05.429937795Z
+    T3.3:
+        sessions:
+            - started_at: 2026-10-23T18:51:53.388333638Z
+              completed_at: 2026-10-23T18:54:05.429937969Z
+    T4.1:
+        sessions:
+            - started_at: 2026-10-23T18:54:05.440250206Z
+              completed_at: 2026-10-23T18:55:27.55738705Z
+    T4.2:
+        sessions:
+            - started_at: 2026-10-23T18:54:05.440251683Z
+              completed_at: 2026-10-23T18:55:27.557387199Z
+    T4.3:
+        sessions:
+            - started_at: 2026-10-23T18:54:05.440251891Z
+              completed_at: 2026-10-23T18:55:27.557387265Z
+    T4.4:
+        sessions:
+            - started_at: 2026-10-23T18:54:05.440252084Z
+              completed_at: 2026-10-23T18:55:27.557387332Z
+    T4.5:
+        sessions:
+            - started_at: 2026-10-23T18:54:05.440252281Z
+              completed_at: 2026-10-23T18:55:27.557387432Z
+    T5.1:
+        sessions:
+            - started_at: 2026-10-23T18:55:27.566805734Z
+              completed_at: 2026-10-23T18:57:21.141853195Z
+    T5.2:
+        sessions:
+            - started_at: 2026-10-23T18:55:27.566806119Z
+              completed_at: 2026-10-23T18:57:21.141853356Z
+    T5.3:
+        sessions:
+            - started_at: 2026-10-23T18:55:27.566807188Z
+              completed_at: 2026-10-23T18:57:21.14185345Z
+    T5.4:
+        sessions:
+            - started_at: 2026-10-23T18:55:27.566807343Z
+              completed_at: 2026-10-23T18:57:21.141853545Z
+delta:
+    impact: modules
+    modules:
+        - module: agent-kit
+          base_hashes:
+            BR-KIT-11: 22fbdde48a936fee7f160f32055d8be846cbfe71e1141a3b741798cdbf56ea0e
+          id_map:
+            "NEW:delta-plan": BR-KIT-17
+            "NEW:delta-archive": BR-KIT-18
+            "NEW:delta-qa": BR-KIT-19
+            "NEW:us-delta-archive": US-KIT-16
+        - module: constitution
+          id_map:
+            "NEW:module-prefix": BR-CONST-05
+            "NEW:us-module-blocks": US-CONST-03
+        - module: spec-management
+          id_map:
+            "NEW:delta-required": BR-SPEC-05
+            "NEW:delta-seal": BR-SPEC-06
+            "NEW:delta-gate": BR-SPEC-07
+            "NEW:delta-ids": BR-SPEC-08
+            "NEW:us-delta-declare": US-SPEC-05
+            "NEW:us-delta-gate": US-SPEC-06

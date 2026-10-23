@@ -1,3 +1,7 @@
+---
+prefix: KIT
+---
+
 # Module: Agent Kit & Project Integration
 
 ## 1. Domain Scope
@@ -14,12 +18,15 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - `[BR-KIT-08]` Discovery orchestration blueprints MUST guide agents to adopt a consultative stance ("Strong Opinions, Weakly Held"), proactively providing architectural opinions, trade-off comparisons with recommended picks, and edge-case mitigations.
 - `[BR-KIT-09]` Implementation orchestration blueprints MUST mandate fresh subagent worker sessions per batch (isolation) and confine message-based feedback loops strictly to within-batch verification adjustments (up to 2 iterations). Progress visibility follows a free-form post-dispatch narration standard: after dispatching a batch, the orchestrator narrates in the user's language with a progress prefix (batches and tasks completed), the batch scope and the worker role (only when relevant to the developer), and closes each batch with a brief completion summary. No literal banner or completion-tag formats are mandated.
 - `[BR-KIT-10]` Archival blueprints and instructions MUST append a conceptual "Suggested Next Steps & Follow-up Specs" section to feature closing summaries to maintain architectural continuity.
-- `[BR-KIT-11]` Archival blueprints and instructions MUST mandate that `.specforce/docs/modules/<domain>.md` living specifications are structured exclusively as 5-part behavioral specifications (Domain Scope, Invariants, BDD Scenarios, Public Integration Surfaces, Operational Invariants), omitting low-level internal code file paths and opportunistically migrating legacy module formats upon merge.
+- `[BR-KIT-11]` Archival blueprints and instructions MUST mandate that `.specforce/docs/modules/<domain>.md` living specifications are structured exclusively as 5-part behavioral specifications (Domain Scope, Invariants, BDD Scenarios, Public Integration Surfaces, Operational Invariants), omitting low-level internal code file paths and opportunistically migrating legacy module formats upon merge, with every module declaring a unique `prefix` in its frontmatter and expressing each rule and use case as a uniformly structured block identified as `BR-<PREFIX>-<NN>` or `US-<PREFIX>-<NN>`.
 - `[BR-KIT-12]` Implementation and QA orchestration blueprints MUST enforce a 4-Tier active QA verification protocol (Tier 1: Global Test Suite, Tier 2: Active Black-Box & Smoke Verification on real compiled artifacts/APIs, Tier 3: Visual & E2E UI Verification, Tier 4: Adversarial & Edge Case Testing), prohibiting completion sign-off based exclusively on unit tests when runtime artifacts or interfaces exist. The protocol is governed by a criterion traceability matrix mapping every acceptance criterion to a verdict (`PASSED`, `FAILED`, or `NOT-VERIFIABLE`). The qa-tester is read-only with respect to the codebase, and failed criteria trigger at most 2 correction cycles before escalation.
 - `[BR-KIT-13]` Worker blueprints MUST enforce multimodal visual verification for user interface tasks, requiring workers to run local dev servers/previews, capture headless screenshots across responsive states via automated browser tools (e.g., Playwright, Puppeteer, or scripts), and visually inspect rendered output against design and UI/UX standards.
 - `[BR-KIT-14]` Agent blueprints MUST enforce a strict Human-in-the-Loop Blocker Protocol: prohibiting plaintext secrets in conversations and requiring `.env` updates, mandating interactive consultation tools for minor ambiguities with structured trade-offs, and enforcing mandatory specification gates (`/spf:spec`) before coding any architectural or scope drift. Workers that cannot proceed without a decision MUST stop and return a BLOCKED report stating the question, the available options and a recommendation; only the orchestrator consults the user and relays the answer.
 - `[BR-KIT-15]` Named role charters (for example implementer and qa-tester) MUST be defined inside the skill blueprints themselves as instructions given at delegation time; the kit MUST NOT require registering per-tool agent definitions for them.
 - `[BR-KIT-16]` Workers MUST report observations outside their task scope as out-of-scope findings without acting on them, and the orchestrator MUST surface them in the final summary. When an implementation is resumed after an interruption, the orchestrator MUST inspect the current repository and task state and continue safely without redoing finished work or discarding uncommitted changes.
+- `[BR-KIT-17]` Planning blueprints MUST direct `medium`, `large` and `complex` specifications to write one delta document per affected module after requirements (and design when required) and before the task roadmap, to seal it, to make the roadmap cover every delta item, and to list the delta in the hand-off summary; when no module changes, the blueprint MUST direct declaring `delta.impact: none` instead and not sealing.
+- `[BR-KIT-18]` Archival blueprints and instructions MUST direct the agent to correct each delta to the as-built result, allocate final identifiers only in the module (the delta keeps its provisional key and the mapping is recorded in the specification metadata), apply the delta so module blocks equal delta blocks, rewrite the scope, public surface and operational sections as-built where the delta changes them, stop without touching the module on a base conflict, lazily migrate a prefix-less target module after the user confirms a proposed prefix, and require `specforce spec delta check <slug>` to report `applied` (or `none`/`exempt`) before archiving.
+- `[BR-KIT-19]` The independent qa-tester's traceability matrix MUST contain one additional row per delta item (operation plus identifier or provisional key) using the existing verdicts; specifications without a delta or with `delta.impact: none` add no rows, and a removal row fails when the block is still present.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -112,6 +119,16 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - **WHEN** it stops work
   - **THEN** it returns a BLOCKED report with the question, the options and a recommendation, and the orchestrator consults the user and relays the answer before work continues.
 
+### [US-KIT-16] Delta-Driven Archive Reconciliation
+- **Scenario:** Archiving a specification with a delta
+  - **GIVEN** a finished `medium` or larger specification with a sealed delta
+  - **WHEN** `/spf:archive` runs
+  - **THEN** the agent corrects the delta to the as-built result, allocates final identifiers, applies the delta to the module, refreshes the scope, public surface and operational sections where affected, and archives only after the delta check reports applied.
+- **Scenario:** Base conflict detected at archive
+  - **GIVEN** a delta whose target block was changed by another specification
+  - **WHEN** `/spf:archive` runs
+  - **THEN** the module is left untouched and the developer is told to redo the delta and seal it again.
+
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
@@ -119,7 +136,7 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - `specforce implementation update <slug> --task <id1,id2,...> --status <in-progress|finished|pending>`: Atomically updates one or more tasks and executes deduplicated verification hooks.
   - `specforce implementation status <slug> [--json]`: Inspects current task execution progress and roadmap completion.
 - **Cross-Module Contracts & Dependencies:**
-  - Consumes specification metadata and task roadmaps from `spec-management`.
+  - Consumes specification metadata and task roadmaps from `spec-management`, including the module delta and its check states used by planning, archival and the independent QA matrix.
   - Integrates with `constitution` for living spec template reconciliation during archival.
   - Generates native skill structures for supported harnesses (Claude Code, OpenCode, Antigravity, Cursor, Kimi, Kilo, Qwen, Codex).
 

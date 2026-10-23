@@ -4,13 +4,18 @@ instruction: |
 
   Adhere to the following rules:
   1. Domain Scope: Explicitly define the boundaries and business responsibility of this domain.
-  2. Business Rules & Invariants: Capture immutable, non-negotiable business rules that the system must enforce at all times (e.g., `[BR-01]`).
+  2. Business Rules & Invariants: Capture immutable, non-negotiable business rules that the system must enforce at all times (e.g., `[BR-<PREFIX>-01]`; legacy `[BR-01]` identifiers are migrated when the module first receives a delta).
   3. Canonical Requirements & Use Cases: Document the domain's accumulated features and BDD scenarios with GIVEN/WHEN/THEN (Happy Path & Edge Cases). This represents the "as-built" behavioral reality of the module.
   4. Public Integration Surfaces & Contracts: Specify exposed public APIs, CLI interfaces, events, and cross-module dependencies. Strictly prohibit internal source code file paths (`src/...`), private structs, and implementation details.
   5. Operational & Quality Invariants: Define SLAs, performance thresholds, and security requirements specific to this module.
+  6. Identity & Blocks: Start the file with frontmatter declaring a unique uppercase `prefix` per module. Each business rule `[BR-<PREFIX>-NN]` and each use case `### [US-<PREFIX>-NN]` is one self-contained block (a rule with its sub-points, or a use case with all its scenarios) that deltas reference by identifier.
 
   CRITICAL: The final output must be high-density Markdown ready to be saved as `.specforce/docs/modules/<slug>.md`. Do NOT dump internal code files or private implementation details.
 template: |
+  ---
+  prefix: {{MODULE_PREFIX}}
+  ---
+
   # Module: {{MODULE_NAME}}
 
   ## 1. Domain Scope
@@ -18,13 +23,13 @@ template: |
 
   ## 2. Business Rules & Invariants
   > Core business rules that are unique to this domain and must never be violated.
-  - **[BR-01]** [Rule description: e.g., "All user actions must be audited before state transition"]
-  - **[BR-02]** [Rule description: e.g., "State cannot transition from FINISHED to PENDING"]
+  - **[BR-{{MODULE_PREFIX}}-01]** [Rule description: e.g., "All user actions must be audited before state transition"]
+  - **[BR-{{MODULE_PREFIX}}-02]** [Rule description: e.g., "State cannot transition from FINISHED to PENDING"]
 
   ## 3. Canonical Requirements & Use Cases
   > Accumulated functional capabilities and BDD scenarios for this domain.
 
-  ### [US-01] / [UC-01]: [Use Case Title / Core Capability]
+  ### [US-{{MODULE_PREFIX}}-01] [Use Case Title / Core Capability]
   - **Context:** [When and why this flow executes]
   - **Scenario (Happy Path):**
     - **GIVEN** [Initial system state / precondition]
