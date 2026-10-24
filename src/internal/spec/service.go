@@ -239,6 +239,13 @@ func (s *Service) GetImplementationStatus(ctx context.Context, projectRoot, slug
 		report.Status = "blocked"
 	}
 
+	// 2b. QA summary (never fails the call)
+	if qaMeta, qerr := LoadMetadata(projectRoot, slug); qerr != nil {
+		report.QAError = qerr.Error()
+	} else {
+		report.QA = SummarizeQA(qaMeta.QA)
+	}
+
 	// 3. Get context files
 	contextFiles, err := GetContextFiles(projectRoot, slug)
 	if err == nil {
@@ -264,12 +271,20 @@ func (s *Service) GetStatus(ctx context.Context, projectRoot string, slug string
 }
 
 // UpdateTaskStatus handles task status updates with event hooks.
+// It discards the list of skipped hooks; see UpdateTaskStatusDetailed.
 func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug string, taskIDs []string, status string) error {
+	_, err := s.UpdateTaskStatusDetailed(ctx, projectRoot, slug, taskIDs, status)
+	return err
+}
+
+// UpdateTaskStatusDetailed updates task statuses and returns the per-task hooks
+// skipped because every task in the batch is a [RED] task.
+func (s *Service) UpdateTaskStatusDetailed(ctx context.Context, projectRoot, slug string, taskIDs []string, status string) ([]string, error) {
 	slug = ResolveSlug(projectRoot, slug)
 
 	// 1. Only run hooks if status is "finished"
 	if strings.ToLower(status) != "finished" {
-		return updateTaskStatusesFile(projectRoot, slug, taskIDs, status)
+		return nil, updateTaskStatusesFile(projectRoot, slug, taskIDs, status)
 	}
 
 	// 2. Load Config
@@ -281,28 +296,36 @@ func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug string
 	}
 
 	// 3. Collect Hooks
-	hooks := s.collectHooksForBatch(ctx, projectRoot, slug, taskIDs, config)
+	hooks, skipped := s.collectHooksForBatch(ctx, projectRoot, slug, taskIDs, config)
 
 	// 4. Execute Hooks
 	if len(hooks) > 0 {
 		if _, err := core.ExecuteHooks(ctx, hooks); err != nil {
-			return fmt.Errorf("hooks failed: %w", err)
+			return nil, fmt.Errorf("hooks failed: %w", err)
 		}
 	}
 
 	// 5. Update File
-	return updateTaskStatusesFile(projectRoot, slug, taskIDs, status)
+	if err := updateTaskStatusesFile(projectRoot, slug, taskIDs, status); err != nil {
+		return nil, err
+	}
+	return skipped, nil
 }
 
-func (s *Service) collectHooksForBatch(ctx context.Context, projectRoot, slug string, taskIDs []string, config *core.ProjectConfig) []string {
+func (s *Service) collectHooksForBatch(ctx context.Context, projectRoot, slug string, taskIDs []string, config *core.ProjectConfig) ([]string, []string) {
 	if config == nil || len(taskIDs) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	var rawHooks []string
-	rawHooks = append(rawHooks, config.Hooks.OnTaskFinished...)
-
 	report, err := ParseTasks(ctx, projectRoot, slug)
+
+	var rawHooks, skipped []string
+	if err == nil && report != nil && allRedTasks(report, taskIDs) {
+		skipped = dedupeHooks(config.Hooks.OnTaskFinished)
+	} else {
+		rawHooks = append(rawHooks, config.Hooks.OnTaskFinished...)
+	}
+
 	if err == nil && report != nil {
 		for _, taskID := range taskIDs {
 			isLastInPhase, isLastInSpec := s.checkTaskPosition(report, taskID)
@@ -315,6 +338,10 @@ func (s *Service) collectHooksForBatch(ctx context.Context, projectRoot, slug st
 		}
 	}
 
+	return dedupeHooks(rawHooks), skipped
+}
+
+func dedupeHooks(rawHooks []string) []string {
 	var deduplicated []string
 	seen := make(map[string]bool, len(rawHooks))
 	for _, hook := range rawHooks {
@@ -323,8 +350,25 @@ func (s *Service) collectHooksForBatch(ctx context.Context, projectRoot, slug st
 			deduplicated = append(deduplicated, hook)
 		}
 	}
-
 	return deduplicated
+}
+
+// allRedTasks reports whether every task id in the batch exists and has a [RED] title.
+func allRedTasks(report *ImplementationReport, taskIDs []string) bool {
+	if len(taskIDs) == 0 {
+		return false
+	}
+	titles := make(map[string]string)
+	for _, t := range report.Tasks() {
+		titles[t.ID] = t.Title
+	}
+	for _, id := range taskIDs {
+		title, ok := titles[id]
+		if !ok || !IsRedTask(title) {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Service) checkTaskPosition(report *ImplementationReport, taskID string) (bool, bool) {

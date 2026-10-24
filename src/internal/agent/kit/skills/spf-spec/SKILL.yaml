@@ -74,7 +74,7 @@ content: |
     b. **Consuming Artifact Payload Fields:**
         - **`dependency`**: Identifies the required upstream artifact (e.g., `"design"`). Read the completed upstream file from disk before drafting (e.g., read `.specforce/specs/<slug>/design.md`).
         - **`template`**: Use this exact Markdown structure as the scaffold/skeleton for your output. Fill in frontmatter variables (e.g., `{FEATURE_SLUG}`, `{FEATURE_NAME}`) and populate all defined sections.
-        - **`instruction`**: Treat the contents of this field as **mandatory generation rules and directives** (e.g., TDD cycles, action step density, directive logic). Apply them as strict constraints while drafting. Task acceptance checks must be non-interactive commands; `bug` specs follow their artifact blueprint.
+        - **`instruction`**: Treat the contents of this field as **mandatory generation rules and directives** (e.g., TDD cycles, action step density, directive logic). Apply them as strict constraints while drafting. Task acceptance checks must be non-interactive commands; RED tasks carry the `[RED]` token in their title; `bug` specs follow their artifact blueprint.
         - **`description`**: Use as contextual grounding for the specific purpose and scope of the artifact.
         - **CRITICAL (NO PROMPT LEAKAGE)**: The `instruction` field contains guidelines for YOU—do NOT copy raw instruction text or rule blocks into the output Markdown file.
 

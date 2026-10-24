@@ -53,3 +53,50 @@ func TestArchiveSpec(t *testing.T) {
 		t.Errorf("expected 'archive already exists' error, got %v", err)
 	}
 }
+
+func TestCheckQAGate(t *testing.T) {
+	write := func(t *testing.T, yamlBody string) (string, string) {
+		t.Helper()
+		root := t.TempDir()
+		slug := "gate-slug"
+		dir := filepath.Join(root, ".specforce", "specs", slug)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "spec.yaml"), []byte(yamlBody), 0600); err != nil {
+			t.Fatal(err)
+		}
+		return root, slug
+	}
+
+	t.Run("Missing", func(t *testing.T) {
+		root, slug := write(t, "slug: gate-slug\nname: n\ntype: feature\nsize: medium\n")
+		res, err := CheckQAGate(root, slug)
+		if err != nil || res.State != QAGateMissing {
+			t.Fatalf("expected missing, got %+v err=%v", res, err)
+		}
+	})
+	t.Run("Passed", func(t *testing.T) {
+		root, slug := write(t, "slug: gate-slug\nqa:\n  status: PASSED\n  run: 1\n  criteria:\n    - {id: US-1, scenario: s, evidence: e, verdict: PASSED}\n")
+		res, err := CheckQAGate(root, slug)
+		if err != nil || res.State != QAGatePassed || len(res.Failed) != 0 {
+			t.Fatalf("expected passed, got %+v err=%v", res, err)
+		}
+	})
+	t.Run("Failed", func(t *testing.T) {
+		root, slug := write(t, "slug: gate-slug\nqa:\n  status: FAILED\n  run: 1\n  criteria:\n    - {id: US-1, scenario: s1, evidence: e, verdict: FAILED}\n    - {id: US-2, scenario: s2, evidence: e, verdict: PASSED}\n")
+		res, err := CheckQAGate(root, slug)
+		if err != nil || res.State != QAGateFailed {
+			t.Fatalf("expected failed, got %+v err=%v", res, err)
+		}
+		if len(res.Failed) != 1 || res.Failed[0].ID != "US-1" || res.Failed[0].Scenario != "s1" {
+			t.Errorf("bad failed list: %+v", res.Failed)
+		}
+	})
+	t.Run("Unreadable", func(t *testing.T) {
+		root, slug := write(t, "slug: gate-slug\nqa: [not, a, mapping]\n")
+		if _, err := CheckQAGate(root, slug); err == nil {
+			t.Fatal("expected error for malformed qa block")
+		}
+	})
+}

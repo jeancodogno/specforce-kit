@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -450,7 +451,7 @@ func (e *Executor) renderSpecStatusTUI(slug string, status spec.SpecStatus) {
 	}
 
 	fmt.Println("\n" + tui.HeaderStyle.Render("SPEC COMPLETENESS REPORT: "+strings.ToUpper(slug)))
-	fmt.Println(tui.SubtitleStyle.Render("Target: .specforce/specs/"+slug+"/"))
+	fmt.Println(tui.SubtitleStyle.Render("Target: .specforce/specs/" + slug + "/"))
 	fmt.Println()
 
 	fmt.Print(tui.RenderSpecStatus(status))
@@ -520,9 +521,9 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 
 	e.renderSpecArtifactTUI(art)
 	return nil
-	}
+}
 
-	func (e *Executor) renderSpecArtifactTUI(art *spec.Artifact) {
+func (e *Executor) renderSpecArtifactTUI(art *spec.Artifact) {
 	if tui.IsTTY() {
 		tui.PrintBranding()
 	}
@@ -545,8 +546,7 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 	if tui.IsTTY() {
 		tui.PrintFooter(e.Version)
 	}
-	}
-
+}
 
 // ListSpecArtifacts lists all available spec artifacts.
 func (e *Executor) ListSpecArtifacts(ui core.UI, registry *spec.Registry, jsonMode bool) error {
@@ -601,6 +601,11 @@ func (e *Executor) HandleSpecArchive(ctx context.Context, ui core.UI, slug strin
 
 	// [US-7] Delta gate: never bypassed by --force.
 	if err := e.enforceDeltaGate(ctx, ui, projectRoot, slug); err != nil {
+		return err
+	}
+
+	// QA gate: never bypassed by --force.
+	if err := e.enforceQAGate(ctx, ui, projectRoot, slug); err != nil {
 		return err
 	}
 
@@ -749,6 +754,30 @@ func (e *Executor) renderDeltaReport(ui core.UI, report *spec.DeltaReport, jsonM
 	}
 	for _, problem := range report.Problems {
 		ui.Error("  - " + problem + "\n")
+	}
+	return nil
+}
+
+// enforceQAGate refuses archiving when the stored QA report is FAILED and warns when none exists.
+func (e *Executor) enforceQAGate(_ context.Context, ui core.UI, projectRoot, slug string) error {
+	res, err := spec.CheckQAGate(projectRoot, slug)
+	if err != nil {
+		ui.Error(fmt.Sprintf("QA verification failed: %v\n", err))
+		return err
+	}
+	switch res.State {
+	case spec.QAGateFailed:
+		var b strings.Builder
+		fmt.Fprintf(&b, "cannot archive '%s': the stored QA report is FAILED.", slug)
+		for _, c := range res.Failed {
+			fmt.Fprintf(&b, "\n  - %s - %s", c.ID, c.Scenario)
+		}
+		fmt.Fprintf(&b, "\nNext step: fix the work, run the QA tester again and re-record with specforce implementation qa record %s", slug)
+		err := errors.New(b.String())
+		ui.Error(err.Error() + "\n")
+		return err
+	case spec.QAGateMissing:
+		ui.Warn(fmt.Sprintf("no QA report recorded for %s; archiving without QA evidence", slug))
 	}
 	return nil
 }

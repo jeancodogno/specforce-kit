@@ -49,3 +49,38 @@ func ArchiveSpec(ctx context.Context, basePath, slug string) error {
 
 	return nil
 }
+
+// QA gate states.
+const (
+	QAGateMissing = "missing"
+	QAGatePassed  = "passed"
+	QAGateFailed  = "failed"
+)
+
+// QAGateResult is the outcome of the archive QA check.
+type QAGateResult struct {
+	State  string
+	Failed []QACriterion
+}
+
+// CheckQAGate reads the stored QA report and classifies it for archival.
+func CheckQAGate(projectRoot, slug string) (QAGateResult, error) {
+	slug = ResolveSlug(projectRoot, slug)
+	meta, err := LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return QAGateResult{}, fmt.Errorf("failed to read QA report: %w", err)
+	}
+	if meta.QA == nil {
+		return QAGateResult{State: QAGateMissing}, nil
+	}
+	if meta.QA.Status == QAStatusFailed {
+		res := QAGateResult{State: QAGateFailed}
+		for _, c := range meta.QA.Criteria {
+			if c.Verdict == VerdictFailed {
+				res.Failed = append(res.Failed, c)
+			}
+		}
+		return res, nil
+	}
+	return QAGateResult{State: QAGatePassed}, nil
+}

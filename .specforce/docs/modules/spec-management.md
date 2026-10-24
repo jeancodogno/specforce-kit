@@ -23,6 +23,10 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
 - `[BR-SPEC-06]` Sealing a delta (`specforce spec delta seal <slug>`) records a fingerprint of the current text of every module block that the delta modifies or removes, so that parallel specifications changing the same block are detected: a block matching the recorded fingerprint is pending, a block matching the delta text is applied, and any other text is a conflict that requires redoing the delta against the current module. A modified use case may not lose scenarios, and unknown delta sections are reported as problems.
 - `[BR-SPEC-07]` `specforce spec archive <slug>` refuses to archive a `medium`, `large` or `complex` specification unless its delta status is `applied` or `none`; `small` specifications report `exempt`. The override flag for pending tasks never bypasses this check, and a refusal leaves the filesystem untouched.
 - `[BR-SPEC-08]` Final identifiers for added blocks are allocated at archive time as the next free number per kind (rules and use cases numbered independently) and recorded in the specification metadata as a key-to-identifier mapping; identifiers of untouched or modified blocks are never renumbered and removed identifiers are never reused.
+- `[BR-SPEC-09]` A specification stores at most one QA report in its metadata: criteria with scenario, evidence and verdict (PASSED, FAILED or NOT-VERIFIABLE), out-of-scope findings, a run counter and a recording time. The overall status is derived by the system (FAILED when any criterion FAILED, otherwise PASSED); invalid input is refused without altering the stored report, and recording replaces the previous report atomically while preserving all other metadata.
+- `[BR-SPEC-10]` The implementation status exposes the stored QA state (status, verdict counts, failed and not-verifiable criteria, findings) and omits it when no report exists; an unreadable QA block is reported as an error without hiding task data.
+- `[BR-SPEC-11]` Archiving refuses a specification whose stored QA status is FAILED, listing the failed criteria; the override for pending tasks never bypasses this refusal. A specification without a stored report archives with a visible warning.
+- `[BR-SPEC-12]` Finishing a batch in which every task is marked RED in its title skips only the per-task verification hooks and prints a notice naming each skipped hook; phase-level and all-tasks hooks still run, and any batch containing an unmarked task runs all hooks as before.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-SPEC-01] Tiered Sizing at Initialization
@@ -76,6 +80,45 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - **GIVEN** a specification whose delta status is applied, none or exempt
   - **WHEN** archiving is requested
   - **THEN** the specification moves to the archive.
+### [US-SPEC-07] Record and Expose the QA Report
+- **Scenario:** Recording a valid report
+  - **GIVEN** a QA matrix with valid verdicts for an active specification
+  - **WHEN** the orchestrator records it
+  - **THEN** the metadata stores criteria, findings, derived status, run counter and time, and other metadata is unchanged.
+- **Scenario:** Recording an invalid report
+  - **GIVEN** a report with an unknown verdict or no criteria
+  - **WHEN** recording is attempted
+  - **THEN** it is refused naming the problem and the stored report stays untouched.
+- **Scenario:** Re-recording after a correction
+  - **GIVEN** a stored report
+  - **WHEN** a new report is recorded
+  - **THEN** it replaces the previous one and the run counter increases.
+- **Scenario:** Reading status
+  - **GIVEN** a specification with and without a stored report
+  - **WHEN** implementation status is requested
+  - **THEN** the stored one shows its QA state and the other shows none.
+### [US-SPEC-08] Archive Gate on QA State
+- **Scenario:** FAILED report blocks archival
+  - **GIVEN** a stored FAILED report
+  - **WHEN** archiving is requested, with or without the override for pending tasks
+  - **THEN** archiving is refused, failed criteria are listed and the specification stays active.
+- **Scenario:** Missing report warns
+  - **GIVEN** no stored report
+  - **WHEN** archiving is requested
+  - **THEN** a warning is shown and archiving continues.
+### [US-SPEC-09] Scoped Hook Relaxation for RED Tasks
+- **Scenario:** Finishing a RED task
+  - **GIVEN** a task marked RED in its title and configured per-task hooks
+  - **WHEN** the task is finished
+  - **THEN** per-task hooks are skipped with a notice naming them and the task is finished.
+- **Scenario:** Finishing a GREEN or unmarked task
+  - **GIVEN** a task not marked RED
+  - **WHEN** it is finished
+  - **THEN** all configured hooks run and a failure blocks it.
+- **Scenario:** RED task closing a phase
+  - **GIVEN** a RED task that is the last in its phase
+  - **WHEN** it is finished
+  - **THEN** the phase-level hooks still run.
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
@@ -83,8 +126,10 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - `specforce spec resize <slug> --size <size> [--json]`: Dynamically resizes an active specification and recalculates required artifact gates.
   - `specforce spec status <slug> [--json]`: Evaluates completion, artifact presence, and task progress based on spec sizing.
   - `specforce spec list [--type <type>] [--status <status>] [--json]`: Lists active or archived specifications across the workspace.
-  - `specforce implementation status <slug> [--json]`: Evaluates implementation readiness and missing artifacts strictly matching the active spec size.
-  - `specforce spec archive <slug> [--force]`: Finalizes and transitions an active specification to `.specforce/archive/`. For `medium`, `large` and `complex` specifications it requires a delta status of `applied` or `none`; `--force` only overrides the pending-tasks check, never the delta check.
+  - `specforce implementation status <slug> [--json]`: Evaluates implementation readiness and missing artifacts strictly matching the active spec size. Includes the stored QA state (status, counts, failed and not-verifiable criteria, findings) when a report exists.
+  - `specforce implementation qa record <slug>`: Reads a QA report as JSON on standard input, validates it, derives the overall status (FAILED if any criterion FAILED, otherwise PASSED) and replaces the stored report atomically; refuses unknown, archived or out-of-directory specifications without writing.
+  - `specforce implementation update <slug> --task <ids> --status finished`: Tasks whose title carries the RED token skip only the per-task hooks and print a notice naming them.
+  - `specforce spec archive <slug> [--force]`: Finalizes and transitions an active specification to `.specforce/archive/`. For `medium`, `large` and `complex` specifications it requires a delta status of `applied` or `none`; `--force` only overrides the pending-tasks check, never the delta check. It also refuses a specification whose stored QA status is FAILED (never bypassed by `--force`) and warns when no QA report exists.
   - `specforce spec delta check <slug> [--json]`: Read-only inspection of the module delta. Reports the overall status (`none`, `exempt`, `missing`, `pending`, `applied`, `invalid`), every item with its state, every problem at once, and the next free identifiers per module. Fails only for `invalid`.
   - `specforce spec delta seal <slug> [--json]`: Records the fingerprints of the module blocks that the delta modifies or removes in the specification metadata; refuses invalid deltas and writes nothing else.
 - **Cross-Module Contracts & Dependencies:**
@@ -97,4 +142,4 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
 - Lifecycle state transitions (active -> archived) must be atomic on the filesystem.
 - Delta commands and the archive gate must complete within 50ms and never modify module documents; `delta check` writes nothing and `delta seal` writes only the specification metadata (owner-only permissions).
 - Module names in deltas are restricted to lowercase hyphenated names confined to the project's module collection; symbolic links for module or delta files are rejected.
-
+- The QA report is bounded (at most 200 criteria, 2000 characters per text field, 1 MiB of input), recorded in under 50ms, and written atomically with owner-only permissions while preserving all other metadata.

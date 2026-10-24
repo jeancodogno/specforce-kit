@@ -684,3 +684,34 @@ func testArchivePreflightDirectives(t *testing.T) {
 		t.Errorf("%s: completion refusal (%d) must precede Dynamic Agent & Skill Discovery (%d)", path, refusal, discovery)
 	}
 }
+
+func TestKitManifests_QAPersistenceAndRedMarker(t *testing.T) {
+	t.Run("Implement", func(t *testing.T) {
+		assertFileContains(t, "kit/skills/spf-implement/SKILL.yaml", []string{
+			"specforce implementation qa record",
+			"never writes the report",
+			"after every correction cycle",
+		})
+	})
+	t.Run("Archive", func(t *testing.T) {
+		assertFileContains(t, "kit/instructions/archive.md", []string{
+			"implementation status",
+			"FAILED",
+			"no QA report",
+		})
+	})
+	t.Run("ArchiveSkill", func(t *testing.T) {
+		path := "kit/skills/spf-archive/SKILL.yaml"
+		assertFileContains(t, path, []string{"persisted"})
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("failed to read %s: %v", path, err)
+		}
+		if strings.Contains(string(data), "present in the conversation") {
+			t.Errorf("%s must not derive suggestions from the conversation", path)
+		}
+	})
+	t.Run("Spec", func(t *testing.T) {
+		assertFileContains(t, "kit/skills/spf-spec/SKILL.yaml", []string{"[RED]"})
+	})
+}

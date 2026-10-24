@@ -33,6 +33,9 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - `[BR-KIT-23]` Planning blueprints MAY delegate strictly read-only exploration to helpers during grounding of `large` and `complex` specifications, while interview, decisions and artifact writing remain in the primary session; unresolved markers (`TBD`, `TODO`, bare `N/A`) stay forbidden, and a section that does not apply is omitted or kept with a one-line justification.
 - `[BR-KIT-24]` Archival instructions MUST refuse, before any retrospective, Constitution or module change, to archive a specification whose progress is below complete, listing each pending task with identifier, title and state and pointing to the implementation flow, even when the user asks to archive anyway.
 - `[BR-KIT-25]` Archival summaries MUST list the archived artifacts and changed module documents as clickable links to their archived or current location and MUST suggest, never execute, one conventional commit message.
+- `[BR-KIT-26]` Implementation orchestration blueprints MUST direct the orchestrator, never the independent qa-tester, to persist the QA verdict through the specification metadata after the QA step and again after every correction cycle, before declaring validation complete.
+- `[BR-KIT-27]` Archival blueprints and instructions MUST read the persisted QA state, refuse to archive when it is FAILED, warn visibly when it is absent, and derive next-step suggestions from the persisted findings and NOT-VERIFIABLE criteria instead of the conversation.
+- `[BR-KIT-28]` Planning blueprints MUST direct test-first roadmaps to mark RED tasks with the RED token in the task title so the scoped hook relaxation applies, and finishing a RED task MUST be announced with a notice naming the skipped per-task hooks.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -190,13 +193,40 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - **GIVEN** a specification with no module impact
   - **WHEN** the final summary is produced
   - **THEN** it states no module changed and still suggests the commit message.
-
+### [US-KIT-23] Orchestrator Persists the QA Verdict
+- **Scenario:** QA step completed
+  - **GIVEN** the independent qa-tester returned its traceability matrix and findings
+  - **WHEN** the orchestrator closes validation
+  - **THEN** it records the report before declaring validation complete and records again after each correction cycle.
+- **Scenario:** Tester attempts to persist
+  - **GIVEN** the qa-tester role charter
+  - **WHEN** the tester reports its results
+  - **THEN** it only returns them to the orchestrator and writes nothing.
+### [US-KIT-24] Archival Reads Persisted QA
+- **Scenario:** Archival in a fresh session
+  - **GIVEN** a specification with a persisted PASSED report that has findings
+  - **WHEN** archival produces its next-step suggestions
+  - **THEN** the suggestions cite the persisted findings and NOT-VERIFIABLE criteria.
+- **Scenario:** Persisted report is FAILED
+  - **GIVEN** a specification whose persisted report is FAILED
+  - **WHEN** archival starts
+  - **THEN** it stops before any change, lists the failed criteria and points to fixing and re-recording.
+- **Scenario:** No persisted report
+  - **GIVEN** a specification without a persisted report
+  - **WHEN** archival starts
+  - **THEN** it warns that no QA evidence exists and continues.
+### [US-KIT-25] RED Tasks Are Marked in Planning
+- **Scenario:** Planning a test-first pair
+  - **GIVEN** a roadmap with RED and GREEN task pairs
+  - **WHEN** the roadmap is written
+  - **THEN** every RED task carries the RED token in its title.
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
   - `specforce init [agents...]`: Initializes or updates project agent tools and performs interactive or automated legacy asset cleanup.
   - `specforce implementation update <slug> --task <id1,id2,...> --status <in-progress|finished|pending>`: Atomically updates one or more tasks and executes deduplicated verification hooks.
   - `specforce implementation status <slug> [--json]`: Inspects current task execution progress and roadmap completion.
+  - `specforce implementation qa record <slug>`: Persists the independent QA report (criteria with verdicts and out-of-scope findings, supplied as JSON on standard input) in the specification metadata; only the orchestrator calls it, never the qa-tester.
 - **Cross-Module Contracts & Dependencies:**
   - Consumes specification metadata and task roadmaps from `spec-management`, including the module delta and its check states used by planning, archival and the independent QA matrix.
   - Integrates with `constitution` for living spec template reconciliation during archival.

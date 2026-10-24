@@ -250,3 +250,120 @@ func TestImplementationUpdate_Batch(t *testing.T) {
 		}
 	})
 }
+
+const qaValidJSON = `{"criteria":[{"id":"US-1.1","scenario":"s","evidence":"e","verdict":"PASSED"},{"id":"US-1.2","scenario":"s2","evidence":"e2","verdict":"NOT-VERIFIABLE"}],"findings":[{"title":"f"}]}`
+
+func qaProject(t *testing.T, slug string) string {
+	t.Helper()
+	root := t.TempDir()
+	cwd, _ := os.Getwd()
+	t.Cleanup(func() { _ = os.Chdir(cwd) })
+	if err := os.MkdirAll(filepath.Join(root, ".specforce", "specs", slug), 0750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+func TestHandleImplementationQARecord(t *testing.T) {
+	slug := "qa-demo"
+	e := &Executor{Version: "1.0.0"}
+
+	t.Run("records and prints success line", func(t *testing.T) {
+		root := qaProject(t, slug)
+		var err error
+		out := captureStdout(t, func() {
+			err = e.HandleImplementationQARecord(context.Background(), tui.NewUI(), slug, strings.NewReader(qaValidJSON))
+		})
+		if err != nil {
+			t.Fatalf("record failed: %v", err)
+		}
+		want := "[OK] QA report recorded for qa-demo: PASSED (1 passed, 0 failed, 1 not-verifiable, 1 findings, run 1)"
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in %q", want, out)
+		}
+		data, _ := os.ReadFile(filepath.Join(root, ".specforce", "specs", slug, "spec.yaml"))
+		if !strings.Contains(string(data), "qa:") || !strings.Contains(string(data), "US-1.1") {
+			t.Errorf("spec.yaml missing qa block: %s", data)
+		}
+	})
+
+	t.Run("invalid inputs are refused and stored report survives", func(t *testing.T) {
+		root := qaProject(t, slug)
+		if err := e.HandleImplementationQARecord(context.Background(), tui.NewUI(), slug, strings.NewReader(qaValidJSON)); err != nil {
+			t.Fatal(err)
+		}
+		path := filepath.Join(root, ".specforce", "specs", slug, "spec.yaml")
+		before, _ := os.ReadFile(path)
+		bad := map[string]string{
+			"empty":   "",
+			"badjson": "{",
+			"verdict": `{"criteria":[{"id":"US-9","scenario":"s","evidence":"e","verdict":"MAYBE"}]}`,
+			"zero":    `{"criteria":[]}`,
+			"unknown": `{"criteria":[{"id":"a","scenario":"s","evidence":"e","verdict":"PASSED"}],"x":1}`,
+		}
+		for name, in := range bad {
+			err := e.HandleImplementationQARecord(context.Background(), tui.NewUI(), slug, strings.NewReader(in))
+			if err == nil {
+				t.Errorf("%s: expected error", name)
+				continue
+			}
+			if name == "verdict" && !strings.Contains(err.Error(), "US-9") {
+				t.Errorf("verdict error must name the criterion: %v", err)
+			}
+		}
+		after, _ := os.ReadFile(path)
+		if string(before) != string(after) {
+			t.Error("invalid call changed the stored report")
+		}
+	})
+
+	t.Run("unknown slug", func(t *testing.T) {
+		qaProject(t, slug)
+		if err := e.HandleImplementationQARecord(context.Background(), tui.NewUI(), "nope", strings.NewReader(qaValidJSON)); err == nil {
+			t.Error("expected error for unknown slug")
+		}
+	})
+}
+
+func TestHandleImplementationUpdate_RedNotice(t *testing.T) {
+	slug := "red-notice"
+	setup := func(t *testing.T) {
+		root := qaProject(t, slug)
+		tasks := "### T1.1: [RED] tests\n**State:** [PENDING]\n\n### T1.2: [GREEN] code\n**State:** [PENDING]\n"
+		writeCLIFile(t, filepath.Join(root, ".specforce", "specs", slug, "tasks.md"), tasks)
+		writeCLIFile(t, filepath.Join(root, ".specforce", "config.yaml"), "hooks:\n  on_task_finished:\n    - \"true\"\n")
+	}
+	e := &Executor{Version: "1.0.0"}
+
+	t.Run("RED only emits warning before OK", func(t *testing.T) {
+		setup(t)
+		ui := &archiveMockUI{}
+		var err error
+		out := captureStdout(t, func() {
+			err = e.HandleImplementationUpdate(context.Background(), ui, slug, []string{"T1.1"}, "finished")
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(strings.Join(ui.warns, ""), "RED task: skipped per-task hooks: true") {
+			t.Errorf("expected RED warning, got %v", ui.warns)
+		}
+		if !strings.Contains(out, "[OK] Task T1.1") {
+			t.Errorf("expected OK line, got %q", out)
+		}
+	})
+
+	t.Run("GREEN emits no warning", func(t *testing.T) {
+		setup(t)
+		ui := &archiveMockUI{}
+		if err := e.HandleImplementationUpdate(context.Background(), ui, slug, []string{"T1.2"}, "finished"); err != nil {
+			t.Fatal(err)
+		}
+		if len(ui.warns) != 0 {
+			t.Errorf("unexpected warnings: %v", ui.warns)
+		}
+	})
+}

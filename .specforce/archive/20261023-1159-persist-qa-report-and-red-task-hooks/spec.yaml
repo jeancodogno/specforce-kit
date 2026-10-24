@@ -1,0 +1,98 @@
+slug: 20261023-1159-persist-qa-report-and-red-task-hooks
+name: 20261023-1159-persist-qa-report-and-red-task-hooks
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-10-24T18:08:15.199345318Z
+              completed_at: 2026-10-24T18:11:26.648336461Z
+    T1.2:
+        sessions:
+            - started_at: 2026-10-24T18:08:15.199345599Z
+              completed_at: 2026-10-24T18:11:26.648336624Z
+    T2.1:
+        sessions:
+            - started_at: 2026-10-24T18:08:15.19934571Z
+              completed_at: 2026-10-24T18:11:26.648336699Z
+    T2.2:
+        sessions:
+            - started_at: 2026-10-24T18:08:15.199345779Z
+              completed_at: 2026-10-24T18:11:26.648336777Z
+    T2.3:
+        sessions:
+            - started_at: 2026-10-24T18:08:15.199345846Z
+              completed_at: 2026-10-24T18:11:26.648336853Z
+    T3.1:
+        sessions:
+            - started_at: 2026-10-24T18:08:15.199350431Z
+              completed_at: 2026-10-24T18:11:26.648336922Z
+    T3.2:
+        sessions:
+            - started_at: 2026-10-24T18:08:15.199350568Z
+              completed_at: 2026-10-24T18:11:26.648337004Z
+    T4.1:
+        sessions:
+            - started_at: 2026-10-24T18:11:26.661635676Z
+              completed_at: 2026-10-24T18:13:47.490765508Z
+    T4.2:
+        sessions:
+            - started_at: 2026-10-24T18:11:26.661635886Z
+              completed_at: 2026-10-24T18:13:47.490765726Z
+    T4.3:
+        sessions:
+            - started_at: 2026-10-24T18:11:26.661637852Z
+              completed_at: 2026-10-24T18:13:47.490765831Z
+    T4.4:
+        sessions:
+            - started_at: 2026-10-24T18:11:26.661637961Z
+              completed_at: 2026-10-24T18:13:47.490765925Z
+    T5.1:
+        sessions:
+            - started_at: 2026-10-24T18:11:26.661638043Z
+              completed_at: 2026-10-24T18:13:47.49076599Z
+    T5.2:
+        sessions:
+            - started_at: 2026-10-24T18:11:26.66163811Z
+              completed_at: 2026-10-24T18:13:47.490766059Z
+    T5.3:
+        sessions:
+            - started_at: 2026-10-24T18:11:26.661638178Z
+              completed_at: 2026-10-24T18:13:47.490766128Z
+refinement:
+    iteration_count: 0
+    last_audit_at: 2026-10-24T18:05:53.879730362Z
+    is_valid: false
+delta:
+    impact: modules
+    modules:
+        - module: agent-kit
+          id_map:
+            NEW:qa-record-flow: BR-KIT-26
+            NEW:archive-uses-qa: BR-KIT-27
+            NEW:red-title-marker: BR-KIT-28
+            NEW:us-qa-record-flow: US-KIT-23
+            NEW:us-archive-uses-qa: US-KIT-24
+            NEW:us-red-title-marker: US-KIT-25
+        - module: spec-management
+          id_map:
+            NEW:qa-persist: BR-SPEC-09
+            NEW:qa-status-exposed: BR-SPEC-10
+            NEW:qa-archive-gate: BR-SPEC-11
+            NEW:red-hook-scope: BR-SPEC-12
+            NEW:us-qa-persist: US-SPEC-07
+            NEW:us-qa-archive-gate: US-SPEC-08
+            NEW:us-red-hook-scope: US-SPEC-09
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-10-24T21:46:17Z
+    criteria:
+        - id: US-1..US-5
+          scenario: all acceptance scenarios and delta items
+          evidence: fresh qa-tester matrix after correction cycle 1; go test 559 passed; binary black-box T6.1-T6.5
+          verdict: PASSED
+    findings:
+        - title: --force help text omits the QA gate
+        - title: Archive gate trusts stored qa.status
+        - title: No skip notice when a RED finish is blocked by a phase hook

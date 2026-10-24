@@ -545,3 +545,203 @@ func TestResizeSpec(t *testing.T) {
 		}
 	})
 }
+
+func setupQAStatus(t *testing.T, specYAML string) (string, string) {
+	t.Helper()
+	root := t.TempDir()
+	slug := "qa-status"
+	dir := filepath.Join(root, ".specforce", "specs", slug)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	tasks := "### Phase 1\n#### T1.1: Init\n**State:** [PENDING]\n"
+	if err := os.WriteFile(filepath.Join(dir, "tasks.md"), []byte(tasks), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if specYAML != "" {
+		if err := os.WriteFile(filepath.Join(dir, "spec.yaml"), []byte(specYAML), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root, slug
+}
+
+func TestGetImplementationStatus_QA(t *testing.T) {
+	svc := NewService(nil, nil)
+	ctx := context.Background()
+
+	t.Run("stored report", func(t *testing.T) {
+		root, slug := setupQAStatus(t, `slug: qa-status
+qa:
+  status: FAILED
+  run: 2
+  recorded_at: 2026-10-24T10:00:00Z
+  criteria:
+    - {id: US-1.1, scenario: a, evidence: e, verdict: FAILED}
+    - {id: US-2.3, scenario: b, evidence: e, verdict: NOT-VERIFIABLE}
+    - {id: US-3.1, scenario: c, evidence: e, verdict: PASSED}
+  findings:
+    - {title: T, detail: D}
+`)
+		rep, err := svc.GetImplementationStatus(ctx, root, slug)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rep.QA == nil || rep.QAError != "" {
+			t.Fatalf("expected QA summary, got %+v / %q", rep.QA, rep.QAError)
+		}
+		if rep.QA.Status != "FAILED" || rep.QA.Run != 2 || rep.QA.Counts.Passed != 1 || rep.QA.Counts.Failed != 1 || rep.QA.Counts.NotVerifiable != 1 {
+			t.Errorf("bad summary: %+v", rep.QA)
+		}
+		if len(rep.QA.FailedCriteria) != 1 || len(rep.QA.NotVerifiableCriteria) != 1 || len(rep.QA.Findings) != 1 {
+			t.Errorf("bad lists: %+v", rep.QA)
+		}
+	})
+	t.Run("none stored", func(t *testing.T) {
+		root, slug := setupQAStatus(t, "slug: qa-status\n")
+		rep, err := svc.GetImplementationStatus(ctx, root, slug)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rep.QA != nil || rep.QAError != "" {
+			t.Errorf("expected no QA info, got %+v / %q", rep.QA, rep.QAError)
+		}
+	})
+}
+
+func TestGetImplementationStatus_QAMalformed(t *testing.T) {
+	svc := NewService(nil, nil)
+	ctx := context.Background()
+	t.Run("malformed block", func(t *testing.T) {
+		root, slug := setupQAStatus(t, "slug: qa-status\nqa: [broken]\n")
+		rep, err := svc.GetImplementationStatus(ctx, root, slug)
+		if err != nil {
+			t.Fatalf("status must not fail: %v", err)
+		}
+		if rep.QA != nil || rep.QAError == "" {
+			t.Errorf("expected QAError, got %+v / %q", rep.QA, rep.QAError)
+		}
+		if len(rep.Tasks()) != 1 {
+			t.Errorf("tasks must still be returned")
+		}
+	})
+}
+
+func TestIsRedTask(t *testing.T) {
+	cases := map[string]bool{
+		"[RED] Add tests": true,
+		"Add tests [RED]": true,
+		"[red] x":         false,
+		"[GREEN] x":       false,
+		"":                false,
+	}
+	for title, want := range cases {
+		if got := IsRedTask(title); got != want {
+			t.Errorf("IsRedTask(%q) = %v, want %v", title, got, want)
+		}
+	}
+}
+
+func setupRedHooks(t *testing.T, hooks core.HooksConfig) (*Service, string, string) {
+	t.Helper()
+	root := t.TempDir()
+	slug := "red-hooks"
+	dir := filepath.Join(root, ".specforce", "specs", slug)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	content := "### Phase 1\n#### T1.1: [RED] Tests\n**State:** [PENDING]\n#### T1.2: [GREEN] Code\n**State:** [PENDING]\n### Phase 2\n#### T2.1: [RED] More tests\n**State:** [PENDING]\n#### T2.2: Plain\n**State:** [PENDING]\n"
+	if err := os.WriteFile(filepath.Join(dir, "tasks.md"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	return NewService(nil, &mockConfigProvider{config: &core.ProjectConfig{Hooks: hooks}}), root, slug
+}
+
+func TestUpdateTaskStatusDetailed_RedHooks(t *testing.T) {
+	ctx := context.Background()
+	failTask := core.HooksConfig{OnTaskFinished: []string{"false"}}
+
+	t.Run("RED only skips and returns hooks", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, failTask)
+		skipped, err := svc.UpdateTaskStatusDetailed(ctx, root, slug, []string{"T1.1"}, "finished")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(skipped) != 1 || skipped[0] != "false" {
+			t.Errorf("expected [false], got %v", skipped)
+		}
+		b, _ := os.ReadFile(filepath.Join(root, ".specforce", "specs", slug, "tasks.md"))
+		if !strings.Contains(string(b), "T1.1: [RED] Tests\n**State:** [FINISHED]") {
+			t.Errorf("task not finished:\n%s", b)
+		}
+	})
+	t.Run("GREEN runs hooks", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, failTask)
+		skipped, err := svc.UpdateTaskStatusDetailed(ctx, root, slug, []string{"T1.2"}, "finished")
+		if err == nil || len(skipped) != 0 {
+			t.Errorf("expected hook failure, got skipped=%v err=%v", skipped, err)
+		}
+	})
+	t.Run("mixed batch runs hooks", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, failTask)
+		skipped, err := svc.UpdateTaskStatusDetailed(ctx, root, slug, []string{"T1.1", "T1.2"}, "finished")
+		if err == nil || len(skipped) != 0 {
+			t.Errorf("expected hook failure, got skipped=%v err=%v", skipped, err)
+		}
+	})
+	t.Run("RED without task hooks returns empty", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, core.HooksConfig{})
+		skipped, err := svc.UpdateTaskStatusDetailed(ctx, root, slug, []string{"T1.1"}, "finished")
+		if err != nil || len(skipped) != 0 {
+			t.Errorf("expected empty, got %v err=%v", skipped, err)
+		}
+	})
+	t.Run("RED moved to in-progress runs no hooks", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, failTask)
+		skipped, err := svc.UpdateTaskStatusDetailed(ctx, root, slug, []string{"T1.1"}, "in-progress")
+		if err != nil || len(skipped) != 0 {
+			t.Errorf("expected no hooks, got %v err=%v", skipped, err)
+		}
+	})
+	t.Run("UpdateTaskStatus wrapper behaves like detailed", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, failTask)
+		if err := svc.UpdateTaskStatus(ctx, root, slug, []string{"T1.1"}, "finished"); err != nil {
+			t.Errorf("RED finish should succeed: %v", err)
+		}
+		if err := svc.UpdateTaskStatus(ctx, root, slug, []string{"T1.2"}, "finished"); err == nil {
+			t.Error("GREEN finish should be blocked")
+		}
+	})
+}
+
+func TestUpdateTaskStatusDetailed_RedHooksLastTask(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("RED last in phase still runs phase hook", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, core.HooksConfig{
+			OnTaskFinished:  []string{"true"},
+			OnPhaseFinished: []string{"false"},
+		})
+		// Use a roadmap where the RED task is the last of its phase.
+		dir := filepath.Join(root, ".specforce", "specs", slug)
+		content := "### Phase 1\n#### T1.1: [GREEN] Code\n**State:** [PENDING]\n#### T1.2: [RED] Tests\n**State:** [PENDING]\n"
+		if err := os.WriteFile(filepath.Join(dir, "tasks.md"), []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+		skipped, err := svc.UpdateTaskStatusDetailed(ctx, root, slug, []string{"T1.2"}, "finished")
+		if err == nil {
+			t.Errorf("expected phase hook to block, skipped=%v", skipped)
+		}
+	})
+	t.Run("RED last in spec still runs all-tasks hook", func(t *testing.T) {
+		svc, root, slug := setupRedHooks(t, core.HooksConfig{OnAllTasksFinished: []string{"false"}})
+		dir := filepath.Join(root, ".specforce", "specs", slug)
+		content := "### Phase 1\n#### T1.1: [RED] Tests\n**State:** [PENDING]\n"
+		if err := os.WriteFile(filepath.Join(dir, "tasks.md"), []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := svc.UpdateTaskStatusDetailed(ctx, root, slug, []string{"T1.1"}, "finished"); err == nil {
+			t.Error("expected all-tasks hook to block")
+		}
+	})
+}

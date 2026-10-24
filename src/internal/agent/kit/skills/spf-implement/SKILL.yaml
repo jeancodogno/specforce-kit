@@ -162,6 +162,8 @@ content: |
 
   **Traceability Matrix:** Every acceptance criterion gets one row: criterion, scenario, evidence, verdict `PASSED | FAILED | NOT-VERIFIABLE`. When the spec has a delta (`deltas/<module>.md`), also add one row per delta item (operation plus identifier or provisional key) with the same verdicts; a REMOVED row is `FAILED` when the block is still present in the module after application. No delta rows exist for specs without a delta or with `delta.impact: none`. Every `NOT-VERIFIABLE` row MUST state a reason and is never reported as passed. The orchestrator MUST re-execute only the key verifications needed to confirm the matrix (never the full set) before accepting it. Out-of-Scope Findings are deduplicated and included in the final summary and the validation-failure report.
 
+  **Persist the Report:** The qa-tester never writes the report. Before declaring validation complete, the orchestrator pipes the Traceability Matrix and Out-of-Scope Findings as JSON (`{"criteria":[{"id","scenario","evidence","verdict"}],"findings":[{"title","detail"}]}`) to `specforce implementation qa record <slug>` and repeats it after every correction cycle (a new record replaces the previous one; a stored `FAILED` report blocks archival). Tasks titled `[RED]` skip only the per-task hooks, with a visible notice; the GREEN pair proves lint and tests.
+
   **Correction Cycle:** On any `FAILED` verdict, spawn a fresh correction `implementer` with the failed criteria and evidence, then a fresh `qa-tester`. Maximum 2 cycles; then escalate to the user with evidence. If a fix requires a behavior or architecture change, HALT and require `/spf:spec`.
 
   #### C. Human-in-the-Loop & Blocker Protocol

@@ -19,3 +19,10 @@ func TestCommandAnnotations(t *testing.T) {
 		}
 	}
 }
+
+func TestRootCommands(t *testing.T) {
+	cmd, _, err := rootCmd.Find([]string{"implementation", "qa", "record"})
+	if err != nil || cmd == nil || cmd.Name() != "record" {
+		t.Fatalf("implementation qa record not registered: cmd=%v err=%v", cmd, err)
+	}
+}

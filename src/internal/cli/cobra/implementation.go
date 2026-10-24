@@ -1,6 +1,8 @@
 package cobra
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/jeancodogno/specforce-kit/src/internal/tui"
 )
@@ -35,6 +37,22 @@ var implementationUpdateCmd = &cobra.Command{
 	},
 }
 
+var implementationQACmd = &cobra.Command{
+	Use:   "qa",
+	Short: "Persist the independent QA report",
+}
+
+var implementationQARecordCmd = &cobra.Command{
+	Use:   "record [slug]",
+	Short: "Record a QA report (JSON on stdin) for a feature",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		executor := GetExecutor()
+		appUI := tui.NewUI()
+		return executor.HandleImplementationQARecord(cmd.Context(), appUI, args[0], os.Stdin)
+	},
+}
+
 var taskIds []string
 var taskStatus string
 
@@ -48,5 +66,7 @@ func init() {
 
 	implementationCmd.AddCommand(implementationStatusCmd)
 	implementationCmd.AddCommand(implementationUpdateCmd)
+	implementationQACmd.AddCommand(implementationQARecordCmd)
+	implementationCmd.AddCommand(implementationQACmd)
 	rootCmd.AddCommand(implementationCmd)
 }

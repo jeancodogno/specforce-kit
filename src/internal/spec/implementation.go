@@ -43,6 +43,13 @@ type ImplementationReport struct {
 	ExecutionStrategy     string               `json:"execution_strategy"`
 	PreemptiveMitigations string               `json:"preemptive_mitigations"`
 	TotalTime             time.Duration        `json:"total_time"`
+	QA                    *QASummary           `json:"qa,omitempty"`
+	QAError               string               `json:"qa_error,omitempty"`
+}
+
+// IsRedTask reports whether a task title carries the exact, case-sensitive [RED] token.
+func IsRedTask(title string) bool {
+	return strings.Contains(title, "[RED]")
 }
 
 // Tasks returns a flat list of tasks across all phases for backward compatibility.

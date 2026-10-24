@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -547,5 +548,82 @@ func TestHandleSpecDeltaCheckStatusStyle(t *testing.T) {
 				t.Errorf("success=%v want %v (successes=%v)", got, tc.success, ui.successes)
 			}
 		})
+	}
+}
+
+func TestHandleSpecArchive_QAGate(t *testing.T) {
+	e := NewExecutor("1.0.0")
+	withQA := func(t *testing.T, qa *spec.QAMetadata) string {
+		root := deltaCLIProject(t, spec.SpecSizeSmall, nil, "")
+		meta, err := spec.LoadMetadata(root, "my-spec")
+		if err != nil {
+			t.Fatal(err)
+		}
+		meta.QA = qa
+		if err := spec.SaveMetadata(root, "my-spec", meta); err != nil {
+			t.Fatal(err)
+		}
+		return root
+	}
+	failed := &spec.QAMetadata{Status: spec.QAStatusFailed, Run: 1, Criteria: []spec.QACriterion{
+		{ID: "US-1.1", Scenario: "Record a report", Evidence: "e", Verdict: spec.VerdictFailed},
+	}}
+
+	for _, force := range []bool{false, true} {
+		t.Run(fmt.Sprintf("failed refuses force=%v", force), func(t *testing.T) {
+			root := withQA(t, failed)
+			ui := &archiveMockUI{}
+			err := e.HandleSpecArchive(context.Background(), ui, "my-spec", force)
+			assertQARefusal(t, err, ui)
+			if _, serr := os.Stat(filepath.Join(root, ".specforce", "specs", "my-spec")); serr != nil {
+				t.Errorf("spec must remain: %v", serr)
+			}
+		})
+	}
+
+	t.Run("missing warns and archives", func(t *testing.T) {
+		root := withQA(t, nil)
+		ui := &archiveMockUI{}
+		if err := e.HandleSpecArchive(context.Background(), ui, "my-spec", false); err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(strings.Join(ui.warns, ""), "no QA report recorded for my-spec; archiving without QA evidence") {
+			t.Errorf("expected warning, got %v", ui.warns)
+		}
+		if _, serr := os.Stat(filepath.Join(root, ".specforce", "specs", "my-spec")); !os.IsNotExist(serr) {
+			t.Error("spec should be archived")
+		}
+	})
+
+	t.Run("passed archives", func(t *testing.T) {
+		root := withQA(t, &spec.QAMetadata{Status: spec.QAStatusPassed, Run: 1, Criteria: []spec.QACriterion{
+			{ID: "US-1.1", Scenario: "s", Evidence: "e", Verdict: spec.VerdictPassed},
+		}})
+		ui := &archiveMockUI{}
+		if err := e.HandleSpecArchive(context.Background(), ui, "my-spec", false); err != nil {
+			t.Fatal(err)
+		}
+		if len(ui.warns) != 0 {
+			t.Errorf("unexpected warns %v", ui.warns)
+		}
+		if _, serr := os.Stat(filepath.Join(root, ".specforce", "specs", "my-spec")); !os.IsNotExist(serr) {
+			t.Error("spec should be archived")
+		}
+	})
+}
+
+func assertQARefusal(t *testing.T, err error, ui *archiveMockUI) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected refusal")
+	}
+	out := err.Error() + strings.Join(ui.errors, "")
+	for _, want := range []string{"US-1.1 - Record a report", "specforce implementation qa record my-spec"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in %q", want, out)
+		}
+	}
+	if strings.Contains(strings.ReplaceAll(strings.ToLower(out), "specforce", ""), "force") {
+		t.Errorf("QA refusal must not mention force: %q", out)
 	}
 }

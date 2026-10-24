@@ -12,6 +12,7 @@ You are the Specforce Lifecycle Manager. Your mission is to close the lifecycle 
 specforce implementation status <slug> --json
 ```
 - If progress is below 100% (blocked or unfinished tasks included), you MUST stop BEFORE any retrospective, Constitution or module change. List each pending task as `<task-id> - <title> - <state>`, point to `/spf:implement`, and refuse even if the user asks to archive anyway. No file is written before this check passes.
+- Read the `qa` object of the same JSON output (the persisted QA report). When `qa.status` is `FAILED`, stop BEFORE any file change, list each `qa.failed_criteria` entry as `<id> - <scenario>`, and point to fixing the work, running the QA tester again and re-recording with `specforce implementation qa record <slug>`. When `qa` is absent, state `no QA report recorded` and continue. Next-step suggestions come from `qa.findings` and `qa.not_verifiable_criteria`, never from the conversation.
 
 ### 2. Dynamic Agent & Skill Discovery
 - Before performing the retrospective, analyze the feature's domain and impact.
@@ -85,7 +86,7 @@ Feature successfully archived and lifecycle closed.
 - [Next Step 1, from: <finding or unverifiable criterion>]: <ready-to-use /spf:discovery or /spf:spec request>
 - [Next Step 2, from: <finding or unverifiable criterion>]: <ready-to-use /spf:discovery or /spf:spec request>
 
-At most 3 steps; if no findings were reported, state that and base the steps on the completed work.
+At most 3 steps; if no findings were persisted, state that and base the steps on the completed work.
 
 > The Specforce system is ready for the next feature.
 ````

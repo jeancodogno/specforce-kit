@@ -19,6 +19,7 @@ func RenderImplementationStatus(report *spec.ImplementationReport) error {
 	renderImplementationContext(report)
 	renderExecutionStrategy(report)
 	renderAtomicTasks(report)
+	renderQALine(report)
 	renderProjectInstructions(report)
 	renderPreemptiveMitigations(report)
 
@@ -27,7 +28,7 @@ func RenderImplementationStatus(report *spec.ImplementationReport) error {
 
 func renderStatusHeader(report *spec.ImplementationReport) {
 	fmt.Println("\n" + HeaderStyle.Render("IMPLEMENTATION READINESS: "+strings.ToUpper(report.Name)))
-	
+
 	var statusBadge string
 	switch strings.ToLower(report.Status) {
 	case "ready":
@@ -117,7 +118,7 @@ func renderPhase(phase spec.Phase, totalPhases int) {
 	if allFinished {
 		phaseTitle = "✓ " + phaseTitle
 	}
-	
+
 	if totalPhases > 1 || (phase.ID != "0" && phase.ID != "") {
 		phaseStyle := HeaderStyle
 		if allFinished {
@@ -178,4 +179,26 @@ func renderPreemptiveMitigations(report *spec.ImplementationReport) {
 		fmt.Println(BodyStyle.Render("  " + report.PreemptiveMitigations))
 		fmt.Println()
 	}
+}
+
+func renderQALine(report *spec.ImplementationReport) {
+	switch {
+	case report.QAError != "":
+		fmt.Println(ErrorStyle.Render("QA: unreadable (" + report.QAError + ")"))
+	case report.QA == nil:
+		fmt.Println(SubtitleStyle.Render("QA: not recorded"))
+	default:
+		qa := report.QA
+		line := fmt.Sprintf("QA: %s (%d passed, %d failed, %d not-verifiable, %d findings)",
+			qa.Status, qa.Counts.Passed, qa.Counts.Failed, qa.Counts.NotVerifiable, len(qa.Findings))
+		style := BodyStyle
+		switch qa.Status {
+		case spec.QAStatusFailed:
+			style = ErrorStyle
+		case spec.QAStatusPassed:
+			style = SuccessStyle
+		}
+		fmt.Println(style.Render(line))
+	}
+	fmt.Println()
 }

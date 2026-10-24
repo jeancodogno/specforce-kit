@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"strings"
@@ -33,12 +34,14 @@ func (e *Executor) HandleImplementation(ctx context.Context, ui core.UI, args ..
 			jsonMode = true
 		}
 		return e.HandleImplementationStatus(ctx, ui, args[1], jsonMode)
+	case "qa":
+		return e.HandleImplementationQA(ctx, ui, args[1:]...)
 	case "update":
 		// This is just for legacy switch, but we'll use Cobra for real work.
 		return fmt.Errorf("update command requires specific flags, use Cobra-based CLI")
 	default:
 		fmt.Printf("Unknown implementation command: %s\n", subCommand)
-		fmt.Println("Available commands: status, update")
+		fmt.Println("Available commands: status, update, qa")
 		return nil
 	}
 }
@@ -158,7 +161,8 @@ func (e *Executor) HandleImplementationUpdate(ctx context.Context, ui core.UI, s
 		return err
 	}
 
-	if err := e.SpecService.UpdateTaskStatus(ctx, projectRoot, slug, taskIDs, status); err != nil {
+	skipped, err := e.SpecService.UpdateTaskStatusDetailed(ctx, projectRoot, slug, taskIDs, status)
+	if err != nil {
 		var hookErr *core.HookError
 		if errors.As(err, &hookErr) {
 			printHookErrors(hookErr)
@@ -170,10 +174,48 @@ func (e *Executor) HandleImplementationUpdate(ctx context.Context, ui core.UI, s
 		return fmt.Errorf("failed to update tasks %s for %s: %w", strings.Join(taskIDs, ", "), slug, err)
 	}
 
+	if len(skipped) > 0 {
+		ui.Warn("RED task: skipped per-task hooks: " + strings.Join(skipped, "; "))
+	}
+
 	if len(taskIDs) == 1 {
 		fmt.Printf("[OK] Task %s status updated to %s in %s\n", taskIDs[0], status, slug)
 	} else {
 		fmt.Printf("[OK] Tasks %s status updated to %s in %s\n", strings.Join(taskIDs, ", "), status, slug)
 	}
+	return nil
+}
+
+// HandleImplementationQA dispatches the 'implementation qa' sub-commands.
+func (e *Executor) HandleImplementationQA(ctx context.Context, ui core.UI, args ...string) error {
+	if len(args) == 0 || args[0] != "record" {
+		return fmt.Errorf("unknown implementation qa command. Usage: specforce implementation qa record <slug>")
+	}
+	if len(args) < 2 {
+		return fmt.Errorf("missing slug for implementation qa record. Usage: specforce implementation qa record <slug>")
+	}
+	return e.HandleImplementationQARecord(ctx, ui, args[1], os.Stdin)
+}
+
+// HandleImplementationQARecord reads a QA report as JSON from in and stores it in the spec metadata.
+func (e *Executor) HandleImplementationQARecord(ctx context.Context, ui core.UI, slug string, in io.Reader) error {
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+
+	input, err := spec.ParseQAInput(in)
+	if err != nil {
+		return err
+	}
+
+	qa, err := spec.RecordQA(ctx, projectRoot, slug, input)
+	if err != nil {
+		return err
+	}
+
+	sum := spec.SummarizeQA(qa)
+	fmt.Printf("[OK] QA report recorded for %s: %s (%d passed, %d failed, %d not-verifiable, %d findings, run %d)\n",
+		slug, sum.Status, sum.Counts.Passed, sum.Counts.Failed, sum.Counts.NotVerifiable, len(sum.Findings), sum.Run)
 	return nil
 }

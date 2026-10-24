@@ -72,6 +72,7 @@ type Metadata struct {
 	TimeLogs   map[string]TaskTimeLog `json:"time_logs,omitempty" yaml:"time_logs,omitempty"`
 	Refinement RefinementMetadata     `json:"refinement,omitempty" yaml:"refinement,omitempty"`
 	Delta      *DeltaMetadata         `json:"delta,omitempty" yaml:"delta,omitempty"`
+	QA         *QAMetadata            `json:"qa,omitempty" yaml:"qa,omitempty"`
 }
 
 // LoadMetadata reads the spec.yaml from the specification directory.
@@ -123,7 +124,32 @@ func SaveMetadata(projectRoot, slug string, meta *Metadata) error {
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
-	return os.WriteFile(metaPath, data, 0600)
+	tmp, err := os.CreateTemp(specDir, ".spec.yaml.*.tmp")
+	if err != nil {
+		return fmt.Errorf("failed to create temp metadata file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	cleanup := func() { _ = os.Remove(tmpPath) }
+
+	if err := tmp.Chmod(0600); err != nil {
+		_ = tmp.Close()
+		cleanup()
+		return fmt.Errorf("failed to set metadata permissions: %w", err)
+	}
+	if _, err := tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		cleanup()
+		return fmt.Errorf("failed to write metadata: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		cleanup()
+		return fmt.Errorf("failed to close metadata file: %w", err)
+	}
+	if err := os.Rename(tmpPath, metaPath); err != nil {
+		cleanup()
+		return fmt.Errorf("failed to replace metadata: %w", err)
+	}
+	return nil
 }
 
 // StartSession appends a new session with StartedAt = time.Now().UTC().
