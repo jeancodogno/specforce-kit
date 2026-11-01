@@ -1,0 +1,147 @@
+slug: 20261023-1159-behavioral-kit-manifest-tests
+name: 20261023-1159-behavioral-kit-manifest-tests
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-01T03:37:56.895177794Z
+              completed_at: 2026-11-01T03:39:50.982649727Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-01T03:37:56.895180393Z
+              completed_at: 2026-11-01T03:39:50.982650068Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-01T03:37:56.895180928Z
+              completed_at: 2026-11-01T03:39:50.982650242Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-01T03:37:56.895181331Z
+              completed_at: 2026-11-01T03:39:50.982650381Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-01T03:39:50.993406878Z
+              completed_at: 2026-11-01T03:54:06.209059696Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-01T03:39:50.993407379Z
+              completed_at: 2026-11-01T03:54:06.209061249Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-01T03:39:50.99340754Z
+              completed_at: 2026-11-01T03:54:06.209061481Z
+    T4.2:
+        sessions:
+            - started_at: 2026-11-01T03:39:50.993407692Z
+              completed_at: 2026-11-01T03:54:06.209061717Z
+    T5.1:
+        sessions:
+            - started_at: 2026-11-01T03:54:06.218328592Z
+              completed_at: 2026-11-01T03:54:07.832039996Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 2
+    recorded_at: 2026-11-01T04:01:26Z
+    criteria:
+        - id: US-1.s1
+          scenario: US-1.s1
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-1.s2
+          scenario: US-1.s2
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-1.s3
+          scenario: US-1.s3
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-2.s1
+          scenario: US-2.s1
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-2.s2
+          scenario: US-2.s2
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-2.s3
+          scenario: US-2.s3
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-2.s4
+          scenario: US-2.s4
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-2.s5
+          scenario: US-2.s5
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-2.s6
+          scenario: US-2.s6
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-3.s1
+          scenario: US-3.s1
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-3.s2
+          scenario: US-3.s2
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-3.s3
+          scenario: US-3.s3
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-4.s1
+          scenario: US-4.s1
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-4.s2
+          scenario: US-4.s2
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: US-4.s3
+          scenario: US-4.s3
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: INV-1
+          scenario: INV-1
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: INV-2
+          scenario: INV-2
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: INV-3
+          scenario: INV-3
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: INV-4
+          scenario: INV-4
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: NFR-perf
+          scenario: NFR-perf
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: NFR-maint
+          scenario: NFR-maint
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+        - id: NFR-security
+          scenario: NFR-security
+          evidence: cycle 1 re-validation on scratch copies; lint 0 issues, 578 tests, gocyclo max 9
+          verdict: PASSED
+    findings:
+        - title: Phrase checks miss contradictions that keep the anchor wording
+          detail: e.g. qualifier after 'Maximum 2 cycles'; beyond the 6 required inversions
+        - title: spf-archive SKILL.yaml next-steps rule not pinned
+          detail: only kit/instructions/archive.md is checked
+        - title: Partial archive inversion (one of two 'from:' occurrences) not caught
+          detail: phrase still present on the other line
+        - title: forbidIn is case-sensitive
+          detail: '[Batch x/y Completed] not caught by behavior checks'
+        - title: tasks.md T5.1 bookkeeping
+          detail: 213 vs 215 lines; package gofmt fails on pre-existing files
