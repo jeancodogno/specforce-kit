@@ -204,6 +204,21 @@ func TestGenerateAgentsContent(t *testing.T) {
 			t.Errorf("content contains obsolete slash command %s", slashCmd)
 		}
 	}
+
+	// Discovery wording assertions
+	if !strings.Contains(content, "read-only for product code") {
+		t.Errorf("content does not contain discovery wording 'read-only for product code'")
+	}
+	if !strings.Contains(content, ".specforce/scratch/") {
+		t.Errorf("content does not mention .specforce/scratch/")
+	}
+	if strings.Contains(content, "Purely read-only") {
+		t.Errorf("content still contains obsolete wording 'Purely read-only'")
+	}
+	if !strings.Contains(content, "STRICTLY FORBIDDEN from using mutation tools") ||
+		!strings.Contains(content, "`replace`") || !strings.Contains(content, "`write_file`") {
+		t.Errorf("content does not contain the direct-edit prohibition mentioning replace and write_file")
+	}
 }
 
 func TestMergeAgentsContent(t *testing.T) {
@@ -234,6 +249,20 @@ func TestMergeAgentsContent(t *testing.T) {
 		expected := "CUSTOM START\n" + replacement + "\nCUSTOM END"
 		if result != expected {
 			t.Errorf("expected %q, got %q", expected, result)
+		}
+	})
+
+	t.Run("Old discovery wording is replaced exactly once", func(t *testing.T) {
+		existing := "CUSTOM START\n<!-- SPECFORCE_AGENTS_START -->\n- Discovery: Purely read-only.\n<!-- SPECFORCE_AGENTS_END -->\nCUSTOM END"
+		result := mergeAgentsContent(existing, generateAgentsContent())
+		if strings.Contains(result, "Purely read-only") {
+			t.Errorf("old wording still present after merge")
+		}
+		if got := strings.Count(result, "read-only for product code"); got != 1 {
+			t.Errorf("expected new wording exactly once, got %d", got)
+		}
+		if got := strings.Count(result, "<!-- SPECFORCE_AGENTS_START -->"); got != 1 {
+			t.Errorf("expected exactly one start marker, got %d", got)
 		}
 	})
 }

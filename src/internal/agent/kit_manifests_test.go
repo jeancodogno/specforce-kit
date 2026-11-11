@@ -715,3 +715,60 @@ func TestKitManifests_QAPersistenceAndRedMarker(t *testing.T) {
 		assertFileContains(t, "kit/skills/spf-spec/SKILL.yaml", []string{"[RED]"})
 	})
 }
+
+func TestDiscoveryBlueprintEvidenceSandbox(t *testing.T) {
+	data, err := os.ReadFile("kit/skills/spf-discovery/SKILL.yaml")
+	if err != nil {
+		t.Fatalf("failed to read discovery SKILL.yaml: %v", err)
+	}
+
+	var parsed struct {
+		Description string `yaml:"description"`
+		Content     string `yaml:"content"`
+	}
+	if err := yaml.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("discovery SKILL.yaml is not valid YAML: %v", err)
+	}
+	if strings.TrimSpace(parsed.Content) == "" {
+		t.Fatal("discovery content must not be empty")
+	}
+
+	raw := string(data)
+	if !strings.Contains(raw, "content: |") && !strings.Contains(raw, "content: >") {
+		t.Error("content must be a block scalar (content: |), not a single escaped line")
+	}
+	lines := strings.Count(strings.TrimRight(raw, "\n"), "\n") + 1
+	if lines <= 20 {
+		t.Errorf("expected more than 20 lines in the raw file, got %d", lines)
+	}
+	if lines > 120 {
+		t.Errorf("expected at most 120 lines in the raw file, got %d", lines)
+	}
+
+	required := []string{
+		".specforce/scratch/",
+		"spf-probe",
+		".gitignore",
+		"specforce spec init",
+		"--type bug",
+		"Strong Opinions, Weakly Held",
+	}
+	for _, s := range required {
+		if !strings.Contains(parsed.Content, s) {
+			t.Errorf("discovery content missing required text: %q", s)
+		}
+	}
+
+	if strings.Contains(parsed.Description, "Purely read-only") || strings.Contains(parsed.Content, "Purely read-only") {
+		t.Error("description and content must not contain \"Purely read-only\"")
+	}
+	for _, s := range []string{"go test", "pytest", "jest", ".go", ".py", ".ts"} {
+		if strings.Contains(parsed.Content, s) {
+			t.Errorf("discovery content must be language-agnostic, found %q", s)
+		}
+	}
+
+	if strings.Contains(parsed.Content, "Micro-Turns over Monoliths") && strings.Contains(parsed.Content, "DO NOT give short, superficial") {
+		t.Error("discovery content has contradictory length guidance")
+	}
+}

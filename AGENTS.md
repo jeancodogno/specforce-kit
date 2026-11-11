@@ -6,7 +6,7 @@ This project uses **Specforce** for Spec-Driven Development (SDD). As an AI agen
 ## 1. Spec-Driven Development (SDD) Protocol
 You MUST operate exclusively through Specforce Skills. They define your mindset and mandatory steps:
 
-- **Discovery (`spf.discovery`):** Activate for brainstorming, research, bug investigation, or root cause analysis. Purely read-only.
+- **Discovery (`spf.discovery`):** Activate for brainstorming, research, bug investigation, or root cause analysis. Stays read-only for product code; disposable evidence (tests, scripts, screenshots) is allowed in `.specforce/scratch/`.
 - **Planning (`spf.spec`):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
 - **Governance (`spf.constitution`):** Use to ensure proposals respect architecture, security, and principles.
 - **Execution (`spf.implement`):** Activate to perform the deterministic implementation cycle following an approved roadmap.
@@ -75,6 +75,13 @@ If you encounter ambiguity, require user iteration, or need to make a critical d
 
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
+
+
+
+
+
+
 
 
 

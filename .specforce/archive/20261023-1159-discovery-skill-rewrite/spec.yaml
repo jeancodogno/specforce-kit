@@ -1,0 +1,118 @@
+slug: 20261023-1159-discovery-skill-rewrite
+name: 20261023-1159-discovery-skill-rewrite
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-10-31T23:56:51.453192176Z
+              completed_at: 2026-10-31T23:58:14.538102213Z
+    T1.2:
+        sessions:
+            - started_at: 2026-10-31T23:56:51.453193209Z
+              completed_at: 2026-10-31T23:58:14.538102548Z
+    T2.1:
+        sessions:
+            - started_at: 2026-10-31T23:58:14.551602455Z
+              completed_at: 2026-10-31T23:59:07.534806042Z
+    T2.2:
+        sessions:
+            - started_at: 2026-10-31T23:58:14.551603155Z
+              completed_at: 2026-10-31T23:59:07.534806648Z
+    T2.3:
+        sessions:
+            - started_at: 2026-10-31T23:58:14.551603436Z
+              completed_at: 2026-10-31T23:59:07.534806896Z
+    T3.1:
+        sessions:
+            - started_at: 2026-10-31T23:59:07.545326791Z
+              completed_at: 2026-10-31T23:59:08.341794107Z
+delta:
+    impact: modules
+    modules:
+        - module: agent-kit
+          id_map:
+            "NEW:discovery-lean": BR-KIT-29
+            "NEW:discovery-evidence": BR-KIT-30
+            "NEW:discovery-lifecycle": BR-KIT-31
+            "NEW:discovery-safe-exec": BR-KIT-32
+            "NEW:discovery-formalize": BR-KIT-33
+            "NEW:discovery-wording": BR-KIT-34
+            "NEW:us-discovery-lean": US-KIT-26
+            "NEW:us-discovery-evidence": US-KIT-27
+            "NEW:us-discovery-lifecycle": US-KIT-28
+            "NEW:us-discovery-wording": US-KIT-29
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-01T00:04:45Z
+    criteria:
+        - id: US-1
+          scenario: Lean blueprint, directives kept, size breach fails
+          evidence: 87-line block scalar; TestEnhancedBlueprintsDirectives and new sandbox test pass; padded 127-line copy fails
+          verdict: PASSED
+        - id: US-2
+          scenario: 'Evidence sandbox: scratch with .gitignore, spf-probe fallback, run and report, no edits, ask before risky effects'
+          evidence: SKILL.yaml Evidence Sandbox and Safe Execution sections; QA parse
+          verdict: PASSED
+        - id: US-3
+          scenario: 'Evidence lifecycle: cleanup verified via VCS, leftovers reported, stale scratch, proposal cites evidence'
+          evidence: SKILL.yaml Cleanup, Staleness and Formalization bullets
+          verdict: PASSED
+        - id: US-4
+          scenario: Non-mutating commands and read-only helpers
+          evidence: SKILL.yaml Safe Execution section
+          verdict: PASSED
+        - id: US-5
+          scenario: Proposal skeleton, bug hand-off, no push, decomposition
+          evidence: SKILL.yaml Formalization and scope bullets
+          verdict: PASSED
+        - id: US-6
+          scenario: Consistent wording; prohibition unchanged; old-wording merge not duplicated
+          evidence: Built CLI init in temp repo; merge test; make test exit 0
+          verdict: PASSED
+        - id: delta:NEW:discovery-lean
+          scenario: ADDED rule
+          evidence: Blueprint size and format
+          verdict: PASSED
+        - id: delta:NEW:discovery-evidence
+          scenario: ADDED rule
+          evidence: Sandbox section
+          verdict: PASSED
+        - id: delta:NEW:discovery-lifecycle
+          scenario: ADDED rule
+          evidence: Cleanup and proposal evidence
+          verdict: PASSED
+        - id: delta:NEW:discovery-safe-exec
+          scenario: ADDED rule
+          evidence: Safe Execution section
+          verdict: PASSED
+        - id: delta:NEW:discovery-formalize
+          scenario: ADDED rule
+          evidence: Formalization section
+          verdict: PASSED
+        - id: delta:NEW:discovery-wording
+          scenario: ADDED rule
+          evidence: Generator, repo guide, description aligned
+          verdict: PASSED
+        - id: delta:NEW:us-discovery-lean
+          scenario: ADDED story
+          evidence: As US-1
+          verdict: PASSED
+        - id: delta:NEW:us-discovery-evidence
+          scenario: ADDED story
+          evidence: As US-2
+          verdict: PASSED
+        - id: delta:NEW:us-discovery-lifecycle
+          scenario: ADDED story
+          evidence: As US-3
+          verdict: PASSED
+        - id: delta:NEW:us-discovery-wording
+          scenario: ADDED story
+          evidence: As US-6
+          verdict: PASSED
+    findings:
+        - title: Merge adds a blank line per init
+          detail: 'Pre-existing: each specforce init grows AGENTS.md by one blank line; repo AGENTS.md diff has 6 extra blank lines. Suggest a separate bug spec.'
+        - title: Minor wording gaps in discovery skill
+          detail: No explicit 'no secrets in evidence' line; cleanup trigger does not mention 'user moves on'; 'ask first' for tracked-file-changing commands is softer than 'not run'.
