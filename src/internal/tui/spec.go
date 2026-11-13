@@ -42,6 +42,12 @@ func RenderSpecStatus(status spec.SpecStatus) string {
 			indent := strings.Repeat(" ", 4)
 			fmt.Fprintf(&builder, "%s%s\n", indent, errorStyle.Render("- "+err))
 		}
+
+		// Render non-blocking validation warnings after errors
+		for _, w := range artifact.ValidationWarnings {
+			indent := strings.Repeat(" ", 4)
+			fmt.Fprintf(&builder, "%s%s\n", indent, warnStyle.Render("- warning: "+w))
+		}
 	}
 
 	// Render Coherence Errors

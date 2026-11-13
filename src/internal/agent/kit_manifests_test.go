@@ -772,3 +772,67 @@ func TestDiscoveryBlueprintEvidenceSandbox(t *testing.T) {
 		t.Error("discovery content has contradictory length guidance")
 	}
 }
+
+func readBlueprint(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read %s: %v", path, err)
+	}
+	return string(data)
+}
+
+func TestLeanBlueprintsManifest(t *testing.T) {
+	t.Run("Tasks", testLeanTasksBlueprint)
+	t.Run("Design", func(t *testing.T) {
+		assertFileContains(t, "artifacts/spec/design.yaml", []string{
+			"Why:",
+			"one-line",
+			"alternatives",
+			"dedicated rationale section",
+			"code-symbol anchors",
+		})
+	})
+	t.Run("ImplementBrief", testLeanImplementBrief)
+	t.Run("SpecSkill", func(t *testing.T) {
+		path := "kit/skills/spf-spec/SKILL.yaml"
+		assertFileContains(t, path, []string{"lean task", "Why:"})
+		if strings.Contains(readBlueprint(t, path), "action step density") {
+			t.Errorf("%s must not mention action step density", path)
+		}
+	})
+}
+
+func testLeanTasksBlueprint(t *testing.T) {
+	path := "artifacts/spec/tasks.yaml"
+	assertFileContains(t, path, []string{
+		"Lean Task",
+		"**Constraints:**",
+		"method signatures",
+		"constants",
+		"code snippets",
+		"single non-interactive command",
+		"no placeholders, no scope ambiguity",
+	})
+	content := readBlueprint(t, path)
+	for _, banned := range []string{"Action Density", "Directive Logic", "**Action Steps:**"} {
+		if strings.Contains(content, banned) {
+			t.Errorf("%s must no longer contain %q", path, banned)
+		}
+	}
+}
+
+func testLeanImplementBrief(t *testing.T) {
+	path := "kit/skills/spf-implement/SKILL.yaml"
+	assertFileContains(t, path, []string{
+		"Constraints: {constraints}",
+		"omit the line when",
+		"verbatim",
+		"design inventory entries",
+		"Why:",
+		"no design excerpt applies",
+	})
+	if strings.Contains(readBlueprint(t, path), "{action_steps}") {
+		t.Errorf("%s must not reference {action_steps}", path)
+	}
+}

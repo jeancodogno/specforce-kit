@@ -216,19 +216,115 @@ Check files`,
 }
 
 func getDensityErrorCases() []validateTasksTestCase {
+	return append(append(getLeanAcceptedCases(), getLeanBlockAcceptedCases()...), getLeanRejectedCases()...)
+}
+
+func getLeanAcceptedCases() []validateTasksTestCase {
 	return []validateTasksTestCase{
 		{
-			name: "Low Action Density",
+			name: "No step list accepted",
 			content: `### Phase 1: Phase One
-- [ ] T1.1: Low Density Task
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Context:** US-1
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+		{
+			name: "Constraints heading accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Context:** US-1
+**Constraints:**
+- Only one constraint
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+		{
+			name: "Legacy Action Steps heading with one item accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Legacy Task
 **Target:** CLI
 **Context:** US-1
 **Action Steps:**
 - Only one step
 **Acceptance Check:**
 Verify`,
+			expected: nil,
+		},
+	}
+}
+
+func getLeanBlockAcceptedCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Empty constraints block accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Empty Task
+**Target:** CLI
+**Context:** US-1
+**Constraints:**
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+		{
+			name: "Mixed headings across tasks accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Legacy Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Step
+**Acceptance Check:**
+Verify
+- [ ] T1.2: Lean Task
+**Target:** API
+**Context:** US-1
+**Constraints:**
+- Constraint
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+	}
+}
+
+func getLeanRejectedCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Missing Acceptance Check still rejected",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Context:** US-1`,
 			expected: []string{
-				"Task T1.1 (line 2) has insufficient action density (found 1, expected at least 2)",
+				"Task T1.1 (line 2) is missing mandatory **Acceptance Check:** section",
+			},
+		},
+		{
+			name: "Missing Target still rejected",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Context:** US-1
+**Acceptance Check:**
+Verify`,
+			expected: []string{
+				"Task T1.1 (line 2) is missing mandatory **Target:** field",
+			},
+		},
+		{
+			name: "Missing Context still rejected for non-small",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Acceptance Check:**
+Verify`,
+			expected: []string{
+				"Task T1.1 (line 2) is missing mandatory **Context:** field",
 			},
 		},
 	}
@@ -306,7 +402,6 @@ func getFieldAndPhaseErrorCases() []validateTasksTestCase {
 			expected: []string{
 				"Task T1.1 (line 2) is missing mandatory **Target:** field",
 				"Task T1.1 (line 2) is missing mandatory **Context:** field",
-				"Task T1.1 (line 2) is missing mandatory **Action Steps:** header",
 				"Task T1.1 (line 2) is missing mandatory **Acceptance Check:** section",
 			},
 		},
@@ -333,9 +428,7 @@ Verify`,
 **Action Steps:**
 **Acceptance Check:**
 - Step that looks like action step but is under verification`,
-			expected: []string{
-				"Task T1.1 (line 2) is missing mandatory items under **Action Steps:**",
-			},
+			expected: nil,
 		},
 	}
 }
@@ -381,7 +474,7 @@ Check files`
 		}
 	})
 
-	t.Run("Small spec with empty action steps still fails", func(t *testing.T) {
+	t.Run("Small spec with empty action steps is accepted", func(t *testing.T) {
 		content := `### Phase 1: Setup
 - [ ] T1.1: Empty Steps Task
 **Target:** src/pkg/file.go
@@ -396,9 +489,89 @@ Check files`
 		if err != nil {
 			t.Fatalf("ValidateTasks failed: %v", err)
 		}
-		expected := []string{"Task T1.1 (line 2) is missing mandatory items under **Action Steps:**"}
-		if !reflect.DeepEqual(errors, expected) {
-			t.Errorf("got %v, want %v", errors, expected)
+		if len(errors) != 0 {
+			t.Errorf("expected no validation errors, got: %v", errors)
 		}
 	})
+}
+
+type warningCase struct {
+	name     string
+	content  string
+	warnings []string
+}
+
+func warningCases() []warningCase {
+	fence := "```"
+	return []warningCase{
+		{
+			name: "fenced code block flagged",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/b.go`\n**Context:** US-1\n**Constraints:**\n- keep it\n" + fence + "go\nfunc X() {}\n" + fence + "\n**Acceptance Check:**\nVerify",
+			warnings: []string{"Task T1.1 (line 2) contains a fenced code block"},
+		},
+		{
+			name: "four distinct paths flagged",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go`, `c/three.go` and `d/four.go`\n**Acceptance Check:**\nVerify",
+			warnings: []string{"Task T1.1 (line 2) cites 4 distinct file paths (limit 3)"},
+		},
+		{
+			name: "three distinct paths not flagged",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go` and `c/three.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "repeated paths count once",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Action Steps:**\n- `a/one.go` `a/one.go` `b/two.go` `c/three.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "backtick tokens with spaces or without slash are not paths",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- `x y/z` `foo` `go test ./...` `b/two.go` `c/three.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "bullets under other bold headings are not constraints",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go`\n**Notes:**\n- see `c/three.go`\n- see `d/four.go`\n**Parallel With:**\n- also `e/five.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "fourth path inside constraints still flagged before other headings",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go`, `c/three.go` and `d/four.go`\n**Notes:**\n- see `e/five.go`\n**Acceptance Check:**\nVerify",
+			warnings: []string{"Task T1.1 (line 2) cites 4 distinct file paths (limit 3)"},
+		},
+	}
+}
+
+func TestValidateTasksReport_Warnings(t *testing.T) {
+	tmpDir := t.TempDir()
+	slug := "warn-feature"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	tasksPath := filepath.Join(specDir, "tasks.md")
+
+	tests := warningCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := os.WriteFile(tasksPath, []byte(tt.content), 0644); err != nil {
+				t.Fatal(err)
+			}
+			report, err := ValidateTasksReport(context.Background(), tmpDir, slug)
+			if err != nil {
+				t.Fatalf("ValidateTasksReport failed: %v", err)
+			}
+			if len(report.Errors) != 0 {
+				t.Errorf("warnings must not appear as errors, got errors %q", report.Errors)
+			}
+			if !reflect.DeepEqual(report.Warnings, tt.warnings) {
+				t.Errorf("warnings: got %q, want %q", report.Warnings, tt.warnings)
+			}
+			errs, err := ValidateTasks(context.Background(), tmpDir, slug)
+			if err != nil || len(errs) != 0 {
+				t.Errorf("ValidateTasks wrapper must return only errors, got %q (%v)", errs, err)
+			}
+		})
+	}
 }

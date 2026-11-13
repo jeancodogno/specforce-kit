@@ -21,44 +21,65 @@ type taskValidationState struct {
 	taskCountInPhase int
 	isSmall          bool
 	errors           []string
+	warnings         []string
 	allTasks         []*taskBlock
 }
 
-// taskBlock tracks mandatory fields within a task block.
-type taskBlock struct {
-	id               string
-	line             int
-	phaseID          int
-	hasTarget        bool
-	targetPath       string
-	hasContext       bool
-	hasActionHeader  bool
-	hasActionItems   bool
-	actionItemsCount int
-	hasVerify        bool
-	inActionSteps    bool
-	parallelWith     []string
-	isParallel       bool
+// maxTaskPaths is the number of distinct file paths a task may cite before a warning is raised.
+const maxTaskPaths = 3
+
+// TaskValidation holds the outcome of validating tasks.md: blocking errors and non-blocking warnings.
+type TaskValidation struct {
+	Errors   []string `json:"errors,omitempty"`
+	Warnings []string `json:"warnings,omitempty"`
 }
 
-// ValidateTasks performs an exhaustive structural and content validation of tasks.md.
+var taskPathTokenRegex = regexp.MustCompile("`([^`\\s]+)`")
+
+// taskBlock tracks mandatory fields within a task block.
+type taskBlock struct {
+	id            string
+	line          int
+	phaseID       int
+	hasTarget     bool
+	targetPath    string
+	hasContext    bool
+	hasVerify     bool
+	inConstraints bool
+	inFence       bool
+	hasFence      bool
+	citedPaths    map[string]bool
+	parallelWith  []string
+	isParallel    bool
+}
+
+// ValidateTasks performs an exhaustive structural and content validation of tasks.md and returns only the blocking errors.
 func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, error) {
+	report, err := ValidateTasksReport(ctx, projectRoot, slug)
+	if err != nil {
+		return nil, err
+	}
+	return report.Errors, nil
+}
+
+// ValidateTasksReport validates tasks.md and returns blocking errors and non-blocking warnings.
+func ValidateTasksReport(ctx context.Context, projectRoot, slug string) (TaskValidation, error) {
 	slug = ResolveSlug(projectRoot, slug)
 
 	tasksPath, err := core.SecurePath(projectRoot, filepath.Join(".specforce", "specs", slug, "tasks.md"))
 	if err != nil {
-		return nil, fmt.Errorf("security: %w", err)
+		return TaskValidation{}, fmt.Errorf("security: %w", err)
 	}
 
 	// #nosec G304 - Path is secured by core.SecurePath
 	content, err := os.ReadFile(tasksPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read tasks.md: %w", err)
+		return TaskValidation{}, fmt.Errorf("failed to read tasks.md: %w", err)
 	}
 
 	meta, err := LoadMetadata(projectRoot, slug)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load metadata: %w", err)
+		return TaskValidation{}, fmt.Errorf("failed to load metadata: %w", err)
 	}
 
 	isSmall := meta != nil && meta.Size == SpecSizeSmall
@@ -72,7 +93,7 @@ func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, err
 
 	for i, line := range lines {
 		if err := ctx.Err(); err != nil {
-			return nil, err
+			return TaskValidation{}, err
 		}
 		lineNum := i + 1
 		trimmed := strings.TrimSpace(line)
@@ -102,7 +123,7 @@ func ValidateTasks(ctx context.Context, projectRoot, slug string) ([]string, err
 	state.validateParallelReferences()
 	state.validateParallelTargets()
 
-	return state.errors, nil
+	return TaskValidation{Errors: state.errors, Warnings: state.warnings}, nil
 }
 
 func (s *taskValidationState) handlePhaseHeader(match []string, lineNum int, currentTask *taskBlock) *taskBlock {
@@ -140,43 +161,64 @@ func (s *taskValidationState) handleTaskHeader(match []string, lineNum int, curr
 
 	s.nextTaskIdx = tIdx + 1
 	s.taskCountInPhase++
-	
+
 	newTask := &taskBlock{id: taskID, line: lineNum, phaseID: s.currentPhase}
 	s.allTasks = append(s.allTasks, newTask)
 	return newTask
 }
 
 func updateTaskBlockState(task *taskBlock, trimmed string) {
-	if strings.HasPrefix(trimmed, "**Target:**") {
+	if strings.HasPrefix(trimmed, "```") {
+		task.inFence = !task.inFence
+		task.hasFence = true
+		return
+	}
+	if task.inFence {
+		return
+	}
+
+	if strings.HasPrefix(trimmed, "**") {
+		// Any bold field heading closes the constraints block (matches extractConstraints).
+		task.inConstraints = false
+	}
+
+	switch {
+	case strings.HasPrefix(trimmed, "**Target:**"):
 		task.hasTarget = true
-		task.inActionSteps = false
-		target := strings.TrimPrefix(trimmed, "**Target:**")
-		target = strings.TrimSpace(target)
-		target = strings.Trim(target, "`")
-		task.targetPath = target
-	} else if strings.HasPrefix(trimmed, "**Context:**") {
+		task.inConstraints = false
+		raw := strings.TrimSpace(strings.TrimPrefix(trimmed, "**Target:**"))
+		task.targetPath = strings.Trim(raw, "`")
+		task.collectPaths(raw)
+	case strings.HasPrefix(trimmed, "**Context:**"):
 		task.hasContext = true
-		task.inActionSteps = false
-	} else if strings.HasPrefix(trimmed, "**Action Steps:**") {
-		task.hasActionHeader = true
-		task.inActionSteps = true
-	} else if task.inActionSteps && strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "- [") {
-		task.hasActionItems = true
-		task.actionItemsCount++
-	} else if strings.HasPrefix(trimmed, "**Acceptance Check:**") || strings.HasPrefix(trimmed, "**Verification (TDD):**") {
+		task.inConstraints = false
+	case strings.HasPrefix(trimmed, "**Constraints:**"), strings.HasPrefix(trimmed, "**Action Steps:**"):
+		task.inConstraints = true
+	case task.inConstraints && strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "- ["):
+		task.collectPaths(trimmed)
+	case strings.HasPrefix(trimmed, "**Acceptance Check:**"), strings.HasPrefix(trimmed, "**Verification (TDD):**"):
 		task.hasVerify = true
-		task.inActionSteps = false
-	} else if strings.HasPrefix(trimmed, "**Parallel With:**") {
+		task.inConstraints = false
+	case strings.HasPrefix(trimmed, "**Parallel With:**"):
 		task.isParallel = true
 		peersStr := strings.TrimSpace(strings.TrimPrefix(trimmed, "**Parallel With:**"))
-		if peersStr != "" {
-			peers := strings.Split(peersStr, ",")
-			for _, p := range peers {
-				p = strings.TrimSpace(p)
-				if p != "" {
-					task.parallelWith = append(task.parallelWith, p)
-				}
+		for _, p := range strings.Split(peersStr, ",") {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				task.parallelWith = append(task.parallelWith, p)
 			}
+		}
+	}
+}
+
+// collectPaths records the backtick-quoted tokens without spaces that contain a slash.
+func (t *taskBlock) collectPaths(text string) {
+	for _, m := range taskPathTokenRegex.FindAllStringSubmatch(text, -1) {
+		if strings.Contains(m[1], "/") {
+			if t.citedPaths == nil {
+				t.citedPaths = make(map[string]bool)
+			}
+			t.citedPaths[m[1]] = true
 		}
 	}
 }
@@ -191,17 +233,14 @@ func (s *taskValidationState) validateLastTask(task *taskBlock) {
 	if !s.isSmall && !task.hasContext {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Context:** field", task.id, task.line))
 	}
-	if !task.hasActionHeader {
-		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Action Steps:** header", task.id, task.line))
-	} else if !task.hasActionItems {
-		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory items under **Action Steps:**", task.id, task.line))
-	} else if s.isSmall && task.actionItemsCount < 1 {
-		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) has insufficient action density (found %d, expected at least 1)", task.id, task.line, task.actionItemsCount))
-	} else if !s.isSmall && task.actionItemsCount < 2 {
-		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) has insufficient action density (found %d, expected at least 2)", task.id, task.line, task.actionItemsCount))
-	}
 	if !task.hasVerify {
 		s.errors = append(s.errors, fmt.Sprintf("Task %s (line %d) is missing mandatory **Acceptance Check:** section", task.id, task.line))
+	}
+	if task.hasFence {
+		s.warnings = append(s.warnings, fmt.Sprintf("Task %s (line %d) contains a fenced code block", task.id, task.line))
+	}
+	if n := len(task.citedPaths); n > maxTaskPaths {
+		s.warnings = append(s.warnings, fmt.Sprintf("Task %s (line %d) cites %d distinct file paths (limit %d)", task.id, task.line, n, maxTaskPaths))
 	}
 }
 

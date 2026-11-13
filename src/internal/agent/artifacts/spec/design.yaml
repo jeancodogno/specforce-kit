@@ -5,10 +5,10 @@ instruction: |
 
   Generate a deterministic technical blueprint based on the Requirements document. Adhere strictly to the following execution rules for SELF-CONTAINMENT:
 
-  1. **Zero Philosophy:** DO NOT write architectural rationale or debate alternatives. Your output must be a strict, actionable blueprint.
+  1. **Zero Philosophy:** DO NOT debate alternatives or add a dedicated rationale section. Your output must be a strict, actionable blueprint. A contract or an inventory entry MAY carry one one-line `Why:` for a non-obvious technical decision; omit it when the decision has no real alternative.
   2. **Visual Architecture:** You MUST generate a Mermaid.js diagram (`graph TB` or `erDiagram`) representing the data flow or persistence model.
   3. **Strict API Contracts:** API Contracts MUST be exact, including HTTP methods, JSON payload structures, and expected HTTP status codes. This is critical for downstream Developer TDD.
-  4. **Contextual Anchoring:** For existing systems, you MUST identify the specific code symbols (functions, structs, variables) that will be modified or extended. Use `[File/Path.ext] -> SymbolName` format.
+  4. **Contextual Anchoring:** For existing systems, you MUST identify the specific code symbols (functions, structs, variables) that will be modified or extended. Use `[File/Path.ext] -> SymbolName` format. The design is the only artifact where code-symbol anchors are written; tasks reference it instead.
   5. **Standardized Inventory:** The File & Component Inventory must use explicit file paths and map core responsibilities clearly.
   6. **Conditional Omission:** If the `lens` is "UI-heavy" and requires no backend changes, you MUST completely delete the `Persistence` and `API` sections. Do not leave placeholders.
   7. **Surface Blueprint (UI-Heavy):** You MUST visualize the core UI surface (Web, TUI, etc.) using ASCII wireframes (Ghost Protocol style: thin borders, 80-char width).
@@ -43,12 +43,14 @@ template: |
   - **Request Payload:** [JSON structure or Query Params]
   - **Response (200 OK):** [JSON structure]
   - **Response (4xx/5xx):** [Error mapping]
+  - **Why:** [Optional one-line reason for a non-obvious decision]
 
   ## 4. File & Component Inventory
   *The exact files that the Developer must create or modify. Map the core responsibility.*
   
   **Backend:**
   - `[src/Domain/Path/File.ext]` -> [Core responsibility]
+    Why: [Optional one-line reason for a non-obvious decision]
   
   **Frontend:**
   - `[src/components/Path/File.ext]` -> [Core responsibility]

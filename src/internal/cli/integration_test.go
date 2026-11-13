@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
@@ -309,3 +310,133 @@ func verifySpecStatusJSON(t *testing.T, executor *Executor, ui core.UI, slug str
 	}
 }
 
+
+func leanTasksMD() string {
+	fence := "```"
+	return "### Phase 1: Lean\n" +
+		"- [ ] T1.1: Lean task\n" +
+		"**Target:** `src/a/one.go`\n" +
+		"**Constraints:**\n" +
+		"- keep `src/b/two.go`, `src/c/three.go` and `src/d/four.go` in sync\n" +
+		fence + "\nx := 1\n" + fence + "\n" +
+		"**Acceptance Check:**\n" +
+		"- run tests\n" +
+		"- [ ] T1.2: Lean task without step list\n" +
+		"**Target:** `src/e/five.go`\n" +
+		"**Acceptance Check:**\n" +
+		"- run tests\n"
+}
+
+func setupLeanSpec(t *testing.T, tasks string) (*Executor, core.UI, string) {
+	t.Helper()
+	_ = setupIntegrationProject(t)
+	executor := NewExecutor("1.0.0")
+	ui := tui.NewUI()
+	slug := "lean-feature"
+	if err := executor.HandleSpec(context.Background(), ui, "init", slug, "--type", "bug", "--size", "small"); err != nil {
+		t.Fatalf("spec init failed: %v", err)
+	}
+	path := filepath.Join(".specforce", "specs", spec.ResolveSlug(".", slug), "tasks.md")
+	if err := os.WriteFile(path, []byte(tasks), 0644); err != nil {
+		t.Fatal(err)
+	}
+	return executor, ui, slug
+}
+
+func TestIntegration_LeanTasks_WarningsAndConstraints(t *testing.T) {
+	t.Run("spec status json exposes validation_warnings and keeps validity", testLeanStatusJSON)
+	t.Run("spec status human output prints warnings marked as warnings", testLeanStatusHuman)
+	t.Run("spec status human output prints warnings after errors", testLeanStatusWarningsAfterErrors)
+	t.Run("implementation status json exposes constraints", testLeanImplementationJSON)
+}
+
+func testLeanStatusJSON(t *testing.T) {
+	executor, ui, slug := setupLeanSpec(t, leanTasksMD())
+	out, err := captureOutput(func() error {
+		return executor.HandleSpec(context.Background(), ui, "status", slug, "--json")
+	})
+	if err != nil {
+		t.Fatalf("status failed: %v", err)
+	}
+	var status struct {
+		Progress  int  `json:"progress"`
+		IsValid   bool `json:"is_valid"`
+		Artifacts []struct {
+			Errors   []string `json:"validation_errors"`
+			Warnings []string `json:"validation_warnings"`
+		} `json:"artifacts"`
+	}
+	if err := json.Unmarshal([]byte(out), &status); err != nil {
+		t.Fatalf("invalid json: %v\n%s", err, out)
+	}
+	if !status.IsValid || status.Progress != 100 {
+		t.Errorf("warnings must not affect validity/progress: %+v", status)
+	}
+	if len(status.Artifacts) != 1 || len(status.Artifacts[0].Errors) != 0 || len(status.Artifacts[0].Warnings) != 2 {
+		t.Errorf("expected 2 warnings and no errors, got %+v", status.Artifacts)
+	}
+}
+
+func testLeanStatusHuman(t *testing.T) {
+	executor, ui, slug := setupLeanSpec(t, leanTasksMD())
+	out, err := captureOutput(func() error {
+		return executor.HandleSpec(context.Background(), ui, "status", slug)
+	})
+	if err != nil {
+		t.Fatalf("status must not fail on warnings: %v", err)
+	}
+	for _, want := range []string{
+		"warning: Task T1.1 (line 2) contains a fenced code block",
+		"warning: Task T1.1 (line 2) cites 4 distinct file paths (limit 3)",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("human output missing %q:\n%s", want, out)
+		}
+	}
+}
+
+func testLeanStatusWarningsAfterErrors(t *testing.T) {
+	executor, ui, slug := setupLeanSpec(t, leanTasksMD()+"- [ ] T1.3: Broken\n")
+	out, _ := captureOutput(func() error {
+		return executor.HandleSpec(context.Background(), ui, "status", slug)
+	})
+	errIdx := strings.Index(out, "T1.3 (line")
+	warnIdx := strings.Index(out, "warning: Task T1.1")
+	if errIdx < 0 || warnIdx < 0 || warnIdx < errIdx {
+		t.Errorf("expected warnings after errors (err=%d warn=%d):\n%s", errIdx, warnIdx, out)
+	}
+}
+
+func testLeanImplementationJSON(t *testing.T) {
+	executor, ui, slug := setupLeanSpec(t, leanTasksMD())
+	out, err := captureOutput(func() error {
+		return executor.HandleImplementation(context.Background(), ui, "status", slug, "--json")
+	})
+	if err != nil {
+		t.Fatalf("implementation status failed: %v", err)
+	}
+	if strings.Contains(out, "action_steps") {
+		t.Errorf("action_steps must be gone:\n%s", out)
+	}
+	var report struct {
+		Phases []struct {
+			Tasks []struct {
+				ID          string   `json:"id"`
+				Constraints []string `json:"constraints"`
+			} `json:"tasks"`
+		} `json:"phases"`
+	}
+	if err := json.Unmarshal([]byte(out), &report); err != nil {
+		t.Fatalf("invalid json: %v\n%s", err, out)
+	}
+	tasksOut := report.Phases[0].Tasks
+	if len(tasksOut) != 2 || len(tasksOut[0].Constraints) != 1 {
+		t.Errorf("unexpected tasks: %+v", tasksOut)
+	}
+	if tasksOut[1].Constraints == nil || len(tasksOut[1].Constraints) != 0 {
+		t.Errorf("task without step list must expose empty constraints array, got %#v", tasksOut[1].Constraints)
+	}
+	if !strings.Contains(out, `"constraints": []`) {
+		t.Errorf("expected explicit empty array in JSON:\n%s", out)
+	}
+}

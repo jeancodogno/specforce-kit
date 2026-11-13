@@ -16,7 +16,9 @@ type ArtifactStatus struct {
 	Blocked          bool     `json:"blocked"`
 	Dependency       string   `json:"dependency"`
 	ValidationErrors []string `json:"validation_errors,omitempty"`
-	ValidationGuide  string   `json:"validation_guide,omitempty"`
+	// ValidationWarnings are non-blocking: they never affect is_valid, progress or the exit outcome.
+	ValidationWarnings []string `json:"validation_warnings,omitempty"`
+	ValidationGuide    string   `json:"validation_guide,omitempty"`
 }
 
 // SpecStatus represents the overall completion state of a specific feature spec.
@@ -155,17 +157,19 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug, specType stri
 	prefixedName := fmt.Sprintf("%s-%s", specType, art.Name)
 	blocked := isArtifactBlocked(art.Dependency, allowed, existsMap)
 
-	var validationErrors []string
+	var validationErrors, validationWarnings []string
 	var validationGuide string
 	if art.Name == "tasks" && exists && validate {
 		var err error
-		validationErrors, err = ValidateTasks(ctx, projectRoot, slug)
+		var report TaskValidation
+		report, err = ValidateTasksReport(ctx, projectRoot, slug)
 		if err != nil {
 			return ArtifactStatus{}, fmt.Errorf("failed to validate tasks.md: %w", err)
 		}
+		validationErrors, validationWarnings = report.Errors, report.Warnings
 
 		if len(validationErrors) > 0 {
-			validationGuide = "### Phase 1: Example Phase\n- [ ] T1.1: Example Task\n**Target:** `path/to/file.go`\n**Context:** [US-1]\n**Action Steps:**\n- Step 1\n**Acceptance Check:**\n- run test"
+			validationGuide = "### Phase 1: Example Phase\n- [ ] T1.1: Example Task\n**Target:** `path/to/file.go`\n**Context:** [US-1]\n**Acceptance Check:**\n- run test"
 		}
 	}
 
@@ -176,8 +180,9 @@ func processArtifactStatus(ctx context.Context, projectRoot, slug, specType stri
 		Exists:           exists,
 		Blocked:          blocked,
 		Dependency:       art.Dependency,
-		ValidationErrors: validationErrors,
-		ValidationGuide:  validationGuide,
+		ValidationErrors:   validationErrors,
+		ValidationWarnings: validationWarnings,
+		ValidationGuide:    validationGuide,
 	}, nil
 }
 

@@ -596,3 +596,83 @@ func TestService_UpdateTaskStatus_HookFailureRollback(t *testing.T) {
 		t.Errorf("tasks.md was modified despite hook failure:\n%s", string(updatedContent))
 	}
 }
+
+func constraintsTasksMD() string {
+	return `## 2. Tasks
+
+### Phase 1: Setup
+- [ ] T1.1: Lean task
+**Target:** target/one
+**Context:** ctx
+**Constraints:**
+- keep legacy heading accepted
+- second constraint
+**Acceptance Check:**
+- check one
+
+- [ ] T1.2: Legacy task
+**Target:** target/two
+**Context:** ctx
+**Action Steps:**
+- legacy step
+**Acceptance Check:**
+- check two
+
+- [ ] T1.3: No step list
+**Target:** target/three
+**Context:** ctx
+**Acceptance Check:**
+- check three
+
+- [ ] T1.4: Empty block
+**Target:** target/four
+**Context:** ctx
+**Constraints:**
+**Acceptance Check:**
+- check four
+`
+}
+
+func TestParseTasks_Constraints(t *testing.T) {
+	content := constraintsTasksMD()
+	tmpDir := t.TempDir()
+	slug := "constraints-feature"
+	setupTasksFile(t, tmpDir, slug, content)
+
+	report, err := ParseTasks(context.Background(), tmpDir, slug)
+	if err != nil {
+		t.Fatalf("task without step list must not fail the report: %v", err)
+	}
+	tasks := report.Tasks()
+	if len(tasks) != 4 {
+		t.Fatalf("expected 4 tasks, got %d", len(tasks))
+	}
+
+	assertConstraints(t, tasks)
+}
+
+func assertConstraints(t *testing.T, tasks []ImplementationTask) {
+	t.Helper()
+	if strings.Join(tasks[0].Constraints, "|") != "keep legacy heading accepted|second constraint" {
+		t.Errorf("T1.1 constraints: %q", tasks[0].Constraints)
+	}
+	if strings.Join(tasks[1].Constraints, "|") != "legacy step" {
+		t.Errorf("T1.2 constraints: %q", tasks[1].Constraints)
+	}
+	for _, i := range []int{2, 3} {
+		if tasks[i].Constraints == nil || len(tasks[i].Constraints) != 0 {
+			t.Errorf("%s constraints must be an empty non-nil slice, got %#v", tasks[i].ID, tasks[i].Constraints)
+		}
+	}
+
+	data, err := json.Marshal(tasks[2])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `"constraints":[]`) {
+		t.Errorf("expected empty constraints array in JSON, got %s", data)
+	}
+	if strings.Contains(string(data), "action_steps") {
+		t.Errorf("action_steps must be gone from JSON, got %s", data)
+	}
+}

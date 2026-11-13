@@ -17,8 +17,9 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - Promotion (`small` -> `large`): newly required upstream artifacts are marked missing (`exists: false`), blocking implementation until completed.
   - Demotion (`large` -> `small`): validation rules relax, but existing files on disk are preserved as reference context (non-destructive).
 - `[BR-SPEC-04]` Task verification (`ValidateTasks`) and coherence auditing (`DeterministicCheck`) adjust strictness based on size:
-  - `small`: allows single-step tasks and optional `**Context:** [US-X]` mapping. Missing `requirements.md` is not flagged as an error.
-  - `medium`, `large`, `complex`: strictly enforces minimum 2 action steps, mandatory `**Context:** [US-X]`, and deterministic requirement-to-task coherence.
+  - `small`: optional `**Context:** [US-X]` mapping. Missing `requirements.md` is not flagged as an error.
+  - `medium`, `large`, `complex`: mandatory `**Context:** [US-X]` and deterministic requirement-to-task coherence.
+  - Every size: a task requires a target and an acceptance check, and enforces no minimum number of action steps or constraints.
 - `[BR-SPEC-05]` Every `medium`, `large` or `complex` specification declares its module impact before implementation: either one delta document per affected module (ADDED, MODIFIED and REMOVED sections carrying complete blocks, with provisional `NEW:` keys for additions) or the explicit declaration `delta.impact: none`. `small` specifications are exempt and keep the free-form archive path.
 - `[BR-SPEC-06]` Sealing a delta (`specforce spec delta seal <slug>`) records a fingerprint of the current text of every module block that the delta modifies or removes, so that parallel specifications changing the same block are detected: a block matching the recorded fingerprint is pending, a block matching the delta text is applied, and any other text is a conflict that requires redoing the delta against the current module. A modified use case may not lose scenarios, and unknown delta sections are reported as problems.
 - `[BR-SPEC-07]` `specforce spec archive <slug>` refuses to archive a `medium`, `large` or `complex` specification unless its delta status is `applied` or `none`; `small` specifications report `exempt`. The override flag for pending tasks never bypasses this check, and a refusal leaves the filesystem untouched.
@@ -27,6 +28,8 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
 - `[BR-SPEC-10]` The implementation status exposes the stored QA state (status, verdict counts, failed and not-verifiable criteria, findings) and omits it when no report exists; an unreadable QA block is reported as an error without hiding task data.
 - `[BR-SPEC-11]` Archiving refuses a specification whose stored QA status is FAILED, listing the failed criteria; the override for pending tasks never bypasses this refusal. A specification without a stored report archives with a visible warning.
 - `[BR-SPEC-12]` Finishing a batch in which every task is marked RED in its title skips only the per-task verification hooks and prints a notice naming each skipped hook; phase-level and all-tasks hooks still run, and any batch containing an unmarked task runs all hooks as before.
+- `[BR-SPEC-13]` Task validation produces non-blocking warnings, listed apart from errors in the human and machine-readable specification status, for a task that contains a fenced code block and for a task whose target and constraints cite more than three distinct file paths; warnings never change validity, progress or the outcome of any command.
+- `[BR-SPEC-14]` The step list of a task is optional: a task may omit it, may use the constraints heading or the legacy step-list heading, and may leave the block empty, with no minimum or maximum number of items; the implementation status exposes the items of either heading as the task's constraints, empty when absent, and every roadmap valid before this change stays valid.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-SPEC-01] Tiered Sizing at Initialization
@@ -46,6 +49,10 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - **GIVEN** a `small` specification with simple tasks
   - **WHEN** task validation and coherence audit run
   - **THEN** the validation suite passes without forcing multi-step decomposition or artificial requirement tags.
+- **Scenario:** Verifying lean tasks of a larger specification
+  - **GIVEN** a `medium`, `large` or `complex` specification whose tasks carry no step list
+  - **WHEN** task validation and coherence audit run
+  - **THEN** tasks are accepted as long as each has a target, a requirement link and an acceptance check.
 
 ### [US-SPEC-04] Size-Aware Implementation Readiness and Artifact Dependency Evaluation
 - **Scenario:** Implementation readiness query evaluates missing artifacts strictly against the active sizing tier
@@ -120,13 +127,27 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - **WHEN** it is finished
   - **THEN** the phase-level hooks still run.
 
+### [US-SPEC-10] Lean Task Roadmaps
+- **Scenario:** Task without a step list
+  - **GIVEN** a task with a target, a requirement link and an acceptance check but no step or constraint list
+  - **WHEN** the roadmap is validated
+  - **THEN** it is accepted and no message about constraints is produced.
+- **Scenario:** Legacy step list
+  - **GIVEN** a roadmap whose tasks use the legacy step-list heading
+  - **WHEN** it is validated and its tasks are read for implementation
+  - **THEN** it is accepted and the items are delivered as the task's constraints.
+- **Scenario:** Pseudo-code drift
+  - **GIVEN** a task containing a fenced code block or citing more than three distinct file paths
+  - **WHEN** the specification status is requested
+  - **THEN** a warning names the task and the reason while the specification is still reported as valid.
+
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
   - `specforce spec init <slug> [--type <type>] [--size <size>] [--json]`: Initializes a new feature or bug specification directory with tiered sizing metadata.
   - `specforce spec resize <slug> --size <size> [--json]`: Dynamically resizes an active specification and recalculates required artifact gates.
-  - `specforce spec status <slug> [--json]`: Evaluates completion, artifact presence, and task progress based on spec sizing.
+  - `specforce spec status <slug> [--json]`: Evaluates completion, artifact presence, and task progress based on spec sizing. Lists non-blocking task warnings (`validation_warnings`) apart from validation errors; they never affect validity.
   - `specforce spec list [--type <type>] [--status <status>] [--json]`: Lists active or archived specifications across the workspace.
-  - `specforce implementation status <slug> [--json]`: Evaluates implementation readiness and missing artifacts strictly matching the active spec size. Includes the stored QA state (status, counts, failed and not-verifiable criteria, findings) when a report exists.
+  - `specforce implementation status <slug> [--json]`: Evaluates implementation readiness and missing artifacts strictly matching the active spec size. Each task exposes its `constraints` (empty when none). Includes the stored QA state (status, counts, failed and not-verifiable criteria, findings) when a report exists.
   - `specforce implementation qa record <slug>`: Reads a QA report as JSON on standard input, validates it, derives the overall status (FAILED if any criterion FAILED, otherwise PASSED) and replaces the stored report atomically; refuses unknown, archived or out-of-directory specifications without writing.
   - `specforce implementation update <slug> --task <ids> --status finished`: Tasks whose title carries the RED token skip only the per-task hooks and print a notice naming them.
   - `specforce spec archive <slug> [--force]`: Finalizes and transitions an active specification to `.specforce/archive/`. For `medium`, `large` and `complex` specifications it requires a delta status of `applied` or `none`; `--force` only overrides the pending-tasks check, never the delta check. It also refuses a specification whose stored QA status is FAILED (never bypassed by `--force`) and warns when no QA report exists.

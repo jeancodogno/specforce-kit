@@ -2,6 +2,7 @@ package spec
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -489,3 +490,83 @@ func findArtifactStatus(artifacts []ArtifactStatus, baseName string) *ArtifactSt
 	return nil
 }
 
+
+func warningsTestRegistry(t *testing.T) *Registry {
+	t.Helper()
+	registry, err := NewRegistry(fstest.MapFS{
+		"tasks.yaml": {Data: []byte("description: Tasks\ninstruction: instr\ntemplate: tpl\n")},
+	})
+	if err != nil {
+		t.Fatalf("failed to create registry: %v", err)
+	}
+	return registry
+}
+
+func statusForTasks(t *testing.T, slug, tasks string) SpecStatus {
+	t.Helper()
+	tmpDir := t.TempDir()
+	specDir := setupTieredSpec(t, tmpDir, slug, "small")
+	_ = os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(tasks), 0644)
+	status, err := GetStatus(context.Background(), tmpDir, slug, warningsTestRegistry(t))
+	if err != nil {
+		t.Fatalf("GetStatus failed: %v", err)
+	}
+	return status
+}
+
+func TestGetStatus_ValidationWarnings(t *testing.T) {
+	t.Run("flagged task yields warnings without affecting validity or progress", testWarningsKeepValidity)
+	t.Run("warning list omitted from JSON when none", testWarningsOmittedWhenNone)
+	t.Run("validation guide shows no step list", testGuideHasNoStepList)
+}
+
+func testWarningsKeepValidity(t *testing.T) {
+	fence := "```"
+	content := "### Phase 1: Test\n- [ ] T1.1: Step\n**Target:** `a/b.go`\n**Constraints:**\n- see `c/d.go`, `e/f.go`, `g/h.go`\n" + fence + "\nx := 1\n" + fence + "\n**Acceptance Check:**\n- verify\n"
+	status := statusForTasks(t, "warn-spec", content)
+	art := findArtifactStatus(status.Artifacts, "tasks")
+	if art == nil {
+		t.Fatal("tasks artifact not found")
+	}
+	want := []string{
+		"Task T1.1 (line 2) contains a fenced code block",
+		"Task T1.1 (line 2) cites 4 distinct file paths (limit 3)",
+	}
+	if strings.Join(art.ValidationWarnings, "|") != strings.Join(want, "|") {
+		t.Errorf("warnings: got %q, want %q", art.ValidationWarnings, want)
+	}
+	if len(art.ValidationErrors) != 0 {
+		t.Errorf("unexpected errors: %v", art.ValidationErrors)
+	}
+	if !status.IsValid {
+		t.Error("warnings must not flip is_valid")
+	}
+	if status.Progress != 100 {
+		t.Errorf("expected 100%% progress, got %d", status.Progress)
+	}
+}
+
+func testWarningsOmittedWhenNone(t *testing.T) {
+	status := statusForTasks(t, "clean-spec", "### Phase 1: Test\n- [ ] T1.1: Step\n**Target:** file.go\n**Acceptance Check:**\n- verify\n")
+	data, err := json.Marshal(status)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "validation_warnings") {
+		t.Errorf("validation_warnings must be omitted when empty: %s", data)
+	}
+}
+
+func testGuideHasNoStepList(t *testing.T) {
+	status := statusForTasks(t, "bad-spec", "### Phase 1: Test\n- [ ] T1.1: Step\n")
+	art := findArtifactStatus(status.Artifacts, "tasks")
+	if art == nil || art.ValidationGuide == "" {
+		t.Fatalf("expected a validation guide, got %+v", art)
+	}
+	if strings.Contains(art.ValidationGuide, "Action Steps") {
+		t.Errorf("guide must not show a step list: %q", art.ValidationGuide)
+	}
+	if !strings.Contains(art.ValidationGuide, "**Acceptance Check:**") {
+		t.Errorf("guide must keep Acceptance Check: %q", art.ValidationGuide)
+	}
+}

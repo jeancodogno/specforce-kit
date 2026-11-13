@@ -1,12 +1,12 @@
 description: "Atomic implementation roadmap and TDD verification steps using natural Markdown checklist format. Supports strategic parallelism."
 dependency: design
 instruction: |
-  DETERMINISM MANDATE: Every technical decision and implementation step MUST be concrete. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden. The roadmap MUST be actionable by an AI agent with zero access to the previous conversation history.
+  DETERMINISM MANDATE: no placeholders, no scope ambiguity. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden, and every task MUST state exactly what it targets and how it is proven. The roadmap MUST be actionable by an AI agent with zero access to the previous conversation history, reading the design for the how.
 
   Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements. Adhere strictly to the following execution rules for SELF-CONTAINMENT:
 
-  1. **Directive Logic:** Action steps MUST be technical directives (e.g., "Add if guard", "Implement interface X"). Passive descriptions (e.g., "Check logic") are forbidden.
-  2. **Action Density Mandate:** Every task MUST have at least 3 concrete action steps that describe the technical implementation within the target file.
+  1. **Lean Task:** A task states its Target, Context and Acceptance Check; the design holds the how. Add an optional `**Constraints:**` block (`- ` items) ONLY for what the implementer cannot deduce from the design and the code: a pitfall, a deviation from repository convention, or a recorded design decision referenced by name rather than repeated. Tasks MUST NOT contain method signatures, constants or code snippets (no fenced code blocks); code-symbol anchors belong only in the design. Omit the block when nothing qualifies, and keep a task to at most 3 distinct paths.
+  2. **Reference, Don't Repeat:** When the design records a decision, point to it (for example "per the design inventory entry for X") instead of restating it.
   3. **TDD-First Verification:** Every task MUST include a specific terminal command or test scenario that objectively proves the task is finished. Every Acceptance Check MUST be a single non-interactive command or test scenario with an observable expected result, runnable in under 2 minutes, with no prompts, manual clicks or pasted secrets. A criterion needing human judgment MUST be rewritten into a scriptable check or marked in the task as not verifiable by a tester.
   4. **Strategic Parallelism:** Tasks are sequential by default. However, you MAY mark independent tasks as parallel within the same phase if they can be implemented simultaneously.
      - **Syntax:** Use `**Parallel With: T{Phase}.{Task}**` to declare relationships.
@@ -39,9 +39,8 @@ template: |
   **Context:** [US-X]
   **Parallel With:** T1.2
 
-  **Action Steps:**
-  - [Step 1: Concrete change]
-  - [Step 2: Concrete change]
+  **Constraints:** *(optional)*
+  - [Only a pitfall, a deviation from repository convention, or a referenced design decision the implementer cannot deduce]
 
   **Acceptance Check:**
   [MANDATORY: Define the exact test scenario or CLI command the developer MUST write/run to prove this task works.]
@@ -50,9 +49,6 @@ template: |
   **Target:** `{Different/File/Path.ext}`
   **Context:** [US-X]
   **Parallel With:** T1.1
-
-  **Action Steps:**
-  - [Step 1: Concrete change]
 
   **Acceptance Check:**
   [Explicit test scenario or CLI command]
@@ -64,9 +60,6 @@ template: |
   **Context:** [US-X]
   **Parallel With:** [Optional: T2.x]
 
-  **Action Steps:**
-  - [Step 1: Concrete change]
-
   **Acceptance Check:**
   [Explicit test scenario or CLI command]
 
@@ -76,11 +69,6 @@ template: |
   - [ ] T{N}.1: [VERIFY] {Scenario title}
   **Target:** `{CLI Command | Global Scope}`
   **Context:** [US-X]
-
-  **Action Steps:**
-  - [Step 1: Run the command]
-  - [Step 2: Compare against the expected observable result]
-  - [Step 3: Record the evidence]
 
   **Acceptance Check:**
   [Single non-interactive command and its expected observable result]

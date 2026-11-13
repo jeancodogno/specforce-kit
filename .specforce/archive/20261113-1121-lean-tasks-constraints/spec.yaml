@@ -1,0 +1,222 @@
+slug: 20261113-1121-lean-tasks-constraints
+name: 20261113-1121-lean-tasks-constraints
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344330392Z
+              completed_at: 2026-11-13T14:38:47.018789669Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344331241Z
+              completed_at: 2026-11-13T14:38:47.018790534Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344331385Z
+              completed_at: 2026-11-13T14:38:47.018790613Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344331485Z
+              completed_at: 2026-11-13T14:38:47.018790686Z
+    T2.3:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344331584Z
+              completed_at: 2026-11-13T14:38:47.018790751Z
+    T2.4:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344331682Z
+              completed_at: 2026-11-13T14:38:47.018790815Z
+    T2.5:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344331821Z
+              completed_at: 2026-11-13T14:38:47.01879088Z
+    T2.6:
+        sessions:
+            - started_at: 2026-11-13T14:34:31.344331978Z
+              completed_at: 2026-11-13T14:38:47.018790956Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-13T14:38:50.938619873Z
+              completed_at: 2026-11-13T14:41:14.235972691Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-13T14:38:50.938620776Z
+              completed_at: 2026-11-13T14:41:14.235972921Z
+    T3.3:
+        sessions:
+            - started_at: 2026-11-13T14:38:50.938620903Z
+              completed_at: 2026-11-13T14:41:14.235972999Z
+    T3.4:
+        sessions:
+            - started_at: 2026-11-13T14:38:50.938621007Z
+              completed_at: 2026-11-13T14:41:14.235973069Z
+    T3.5:
+        sessions:
+            - started_at: 2026-11-13T14:38:50.938621103Z
+              completed_at: 2026-11-13T14:41:14.235973134Z
+    T3.6:
+        sessions:
+            - started_at: 2026-11-13T14:38:50.938621226Z
+              completed_at: 2026-11-13T14:41:14.235973203Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-13T14:54:11.757362828Z
+              completed_at: 2026-11-13T14:54:12.724369626Z
+    T5.1:
+        sessions:
+            - started_at: 2026-11-13T14:54:22.528188906Z
+              completed_at: 2026-11-13T14:58:26.53045239Z
+    T5.2:
+        sessions:
+            - started_at: 2026-11-13T14:54:22.528189266Z
+              completed_at: 2026-11-13T14:58:26.530452563Z
+    T5.3:
+        sessions:
+            - started_at: 2026-11-13T14:54:22.528189439Z
+              completed_at: 2026-11-13T14:58:26.530452651Z
+    T5.4:
+        sessions:
+            - started_at: 2026-11-13T14:54:22.52818958Z
+              completed_at: 2026-11-13T14:58:26.530452722Z
+delta:
+    impact: modules
+    modules:
+        - module: agent-kit
+          id_map:
+            NEW:lean-planning: BR-KIT-35
+            NEW:design-why: BR-KIT-36
+            NEW:brief-design-excerpt: BR-KIT-37
+            NEW:us-lean-blueprints: US-KIT-30
+        - module: spec-management
+          id_map:
+            NEW:task-warnings: BR-SPEC-13
+            NEW:task-constraints: BR-SPEC-14
+            NEW:us-lean-tasks: US-SPEC-10
+          base_hashes:
+            BR-SPEC-04: 3b97ff95c396cb7fefb0944508f9106fe4ae24c631869ed3e90f6be7d4c010b4
+            US-SPEC-03: 6ca461cc5c032022cf9011d572ec3291cf186613b5a405d70dd91a0e14219321
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-13T14:58:26Z
+    criteria:
+        - id: US-1.1
+          scenario: Task without step/constraint list accepted
+          evidence: 'Compiled CLI: lean task valid, is_valid true; HEAD binary rejected it'
+          verdict: PASSED
+        - id: US-1.2
+          scenario: Constraints accepted with no min/max count
+          evidence: Fixtures with 1 and 2 items valid; density errors removed
+          verdict: PASSED
+        - id: US-1.3
+          scenario: Missing acceptance check/target/context(medium+) rejected naming task, line, field
+          evidence: Three fixtures each produced the expected message; small without Context accepted
+          verdict: PASSED
+        - id: US-2.1
+          scenario: Legacy step list validated and delivered as constraints
+          evidence: This spec (legacy heading) is_valid true; legacy items in implementation status constraints; 0 of 90 archived specs went valid to invalid
+          verdict: PASSED
+        - id: US-2.2
+          scenario: Legacy heading with no items accepted
+          evidence: Empty legacy block fixture valid, constraints []
+          verdict: PASSED
+        - id: US-2.3
+          scenario: Mixed headings each evaluated on its own
+          evidence: Mixed fixture valid, constraints ['c1'] and ['s1']
+          verdict: PASSED
+        - id: US-3.1
+          scenario: Fenced code block warns, spec stays valid
+          evidence: validation_warnings lists it, is_valid true, exit 0
+          verdict: PASSED
+        - id: US-3.2
+          scenario: More than 3 distinct paths warns, spec stays valid
+          evidence: 4 distinct paths warned, duplicate counted once, is_valid true
+          verdict: PASSED
+        - id: US-3.3
+          scenario: Task with neither signal gets no warning
+          evidence: '3 paths plus non-path tokens: no warning key'
+          verdict: PASSED
+        - id: US-3.4
+          scenario: Several flagged tasks listed separately, validity unchanged
+          evidence: Two separate warnings, is_valid true, progress 100; human output prints warnings after errors
+          verdict: PASSED
+        - id: US-4.1
+          scenario: Brief carries verbatim design entries, contract, rationale and constraints
+          evidence: spf-implement SKILL.yaml Design Excerpt rule and manifest test (fails on HEAD). Proven by blueprint text only; orchestrator LLM behaviour not executable
+          verdict: PASSED
+        - id: US-4.2
+          scenario: 'No design entry: brief says none applies and invents none'
+          evidence: SKILL.yaml fallback text asserted by manifest test; implementation status works without design.md
+          verdict: PASSED
+        - id: US-4.3
+          scenario: 'No constraints: no empty line'
+          evidence: SKILL.yaml omit-when-empty wording; implementation status gives [] not null
+          verdict: PASSED
+        - id: US-5.1
+          scenario: Non-obvious decision carries a one-line Why
+          evidence: design.yaml rule 1 and template Why lines; manifest test. Blueprint text only
+          verdict: PASSED
+        - id: US-5.2
+          scenario: 'No real alternative: no rationale line'
+          evidence: design.yaml rule 1 omission wording. Blueprint text only
+          verdict: PASSED
+        - id: US-5.3
+          scenario: One line only, no alternatives debate, no rationale section
+          evidence: design.yaml rule 1 ban text; no new section in template; manifest test
+          verdict: PASSED
+        - id: US-6.1
+          scenario: Self-containment rule amended
+          evidence: engineering.md diff shows the approved wording
+          verdict: PASSED
+        - id: US-6.2
+          scenario: Constitution changed only with human approval
+          evidence: 'Orchestrator-attested: the user chose ''Aprovar o texto'' in an interactive question before the edit; not independently verifiable by QA'
+          verdict: PASSED
+        - id: ADDED NEW:task-warnings
+          scenario: Non-blocking warnings apart from errors
+          evidence: Implemented and exercised in Tier 2 and 4; module-doc application pending archive
+          verdict: PASSED
+        - id: ADDED NEW:task-constraints
+          scenario: Optional step list, either heading, constraints exposed
+          evidence: Implemented; 0 regressions over 90 archived specs; module-doc application pending archive
+          verdict: PASSED
+        - id: ADDED NEW:us-lean-tasks
+          scenario: BDD for lean tasks, legacy list, pseudo-code drift
+          evidence: Covered by US-1.1, US-2.1, US-3.1, US-3.2; pending archive
+          verdict: PASSED
+        - id: MODIFIED BR-SPEC-04
+          scenario: Size-adaptive strictness without step minimum
+          evidence: small/medium Context behaviour and Target/Acceptance Check enforcement verified; pending archive
+          verdict: PASSED
+        - id: MODIFIED US-SPEC-03
+          scenario: Lean tasks of larger specs accepted
+          evidence: Medium fixture and this large spec valid; pending archive
+          verdict: PASSED
+        - id: ADDED NEW:lean-planning
+          scenario: Planning blueprints lean rules
+          evidence: tasks.yaml Lean Task and Reference rules, design.yaml rule 4; manifest tests; pending archive
+          verdict: PASSED
+        - id: ADDED NEW:design-why
+          scenario: Design allows one-line Why
+          evidence: design.yaml rule 1 and template; pending archive
+          verdict: PASSED
+        - id: ADDED NEW:brief-design-excerpt
+          scenario: Brief carries constraints and verbatim design excerpt
+          evidence: spf-implement SKILL.yaml; manifest test; pending archive
+          verdict: PASSED
+        - id: ADDED NEW:us-lean-blueprints
+          scenario: BDD for lean planning and design-anchored briefs
+          evidence: Blueprint texts and manifest tests; text only; pending archive
+          verdict: PASSED
+    findings:
+        - title: Constraints block end differs between validator and parser
+          detail: tasks.go closes the constraints block only on Target, Context or Acceptance Check, while implementation.go closes it on any bold heading. Bullets under an unknown heading such as Notes after Constraints are counted toward the path warning, giving a false-positive warning; validity is never affected.
+        - title: Design inventory and T2.6 name the wrong render file
+          detail: design.md section 4 and task T2.6 target src/internal/cli/spec.go, but warning rendering is in src/internal/tui/spec.go; behaviour is correct, spec text is inconsistent. cli/implementation_test.go is listed but was not modified.
+        - title: spec status exits 0 when is_valid is false
+          detail: Pre-existing on the HEAD baseline; not introduced by this spec.
+        - title: Task and phase headers inside fenced blocks are still parsed
+          detail: 'Pre-existing: header regexes run before the fence-aware field parsing, so a task-like line inside a fenced block is read as a header.'
+        - title: Local lint tooling
+          detail: The snap golangci-lint on PATH fails in this sandbox even on a clean tree; the GOPATH binary was used and reports 0 issues.

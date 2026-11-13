@@ -113,11 +113,13 @@ content: |
   ## 3. TARGETS & CONTEXT
   - Targets: {target_files_list}
   - Shared Context: {bdd_scenarios_or_design_notes}
+  - Design Excerpt rule: for each task, copy verbatim the design inventory entries, related contracts and `Why:` lines that concern the task's Target, naming the design source (file and section). If the design is absent or has no matching entry, write "no design excerpt applies" and invent none.
 
   ## 4. TASK BATCH STEPS
   {for_each_task_in_batch}
   ### Task {task_id}: {title}
-  - Action Steps: {action_steps}
+  - Constraints: {constraints} (omit the line when the task has none)
+  - Design Excerpt: {design_excerpt}
   - Verification: {verification_command}
   {end_for}
   ```

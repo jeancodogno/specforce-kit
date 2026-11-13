@@ -121,7 +121,7 @@
 - **Idempotency Guards:** Operations that mutate persistent state (e.g., `BootstrapProject`) MUST guard against re-execution by checking existing state and returning the appropriate domain sentinel error if the operation would be redundant.
 
 ## Specification & Task Organization
-- **Self-Containment Mandate:** All specification artifacts (Requirements, Design, Tasks) MUST be actionable by an AI agent with zero access to the previous conversation history. Every business rule, technical constraint, and symbol-level code anchor MUST be explicitly documented within the spec triad.
+- **Self-Containment Mandate:** All specification artifacts (Requirements, Design, Tasks) MUST be actionable by an AI agent with zero access to the previous conversation history. Every business rule, intent and technical decision MUST be explicitly documented within the spec triad. Symbol-level code anchors are written only in the design, and in tasks only as non-obvious constraints that reference the design instead of repeating it.
 - **Requirement Prefix Standardization:** To maintain consistency with industry-standard User Story terminology:
     - **Features:** Functional requirements MUST use the `[US-x]` prefix.
     - **Bugfixes:** Requirements focusing on fixes MUST use the `[FIX-x]` prefix.

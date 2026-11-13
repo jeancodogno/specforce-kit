@@ -19,7 +19,7 @@ type ImplementationTask struct {
 	State        string        `json:"state"`
 	Target       string        `json:"target"`
 	Context      string        `json:"context"`
-	ActionSteps  []string      `json:"action_steps"`
+	Constraints  []string      `json:"constraints"`
 	Verification string        `json:"verification"`
 	TotalTime    time.Duration `json:"total_time"`
 	IsWorking    bool          `json:"is_working"`
@@ -262,19 +262,38 @@ func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int,
 		task.Verification = extractField(taskBlock, `(?s)\*\*Verification \(TDD\):\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
 	}
 
-	actionStepsRegex := regexp.MustCompile(`(?m)^- (.*)$`)
-	actionMatches := actionStepsRegex.FindAllSubmatch(taskBlock, -1)
-	for i, am := range actionMatches {
-		if i == 0 && isChecklist {
-			continue
-		}
-		step := strings.TrimSpace(string(am[1]))
-		if step != "" {
-			task.ActionSteps = append(task.ActionSteps, step)
-		}
-	}
+	task.Constraints = extractConstraints(taskBlock)
 
 	return task
+}
+
+// extractConstraints returns the "- " items under **Constraints:** or the legacy **Action Steps:** heading.
+// It always returns a non-nil slice so the JSON field is an empty array when the block is absent.
+func extractConstraints(taskBlock []byte) []string {
+	constraints := []string{}
+	inBlock := false
+	inFence := false
+	for _, line := range strings.Split(string(taskBlock), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") {
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			continue
+		}
+		switch {
+		case strings.HasPrefix(trimmed, "**Constraints:**"), strings.HasPrefix(trimmed, "**Action Steps:**"):
+			inBlock = true
+		case strings.HasPrefix(trimmed, "**"):
+			inBlock = false
+		case inBlock && strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "- ["):
+			if item := strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")); item != "" {
+				constraints = append(constraints, item)
+			}
+		}
+	}
+	return constraints
 }
 
 func findNextHeaderPos(content []byte, taskStart, taskEnd int, taskMatches, phaseMatches [][]int) int {
