@@ -17,8 +17,9 @@ instruction: |
      - The checkbox state indicates progress (`- [ ]` for pending).
      - You may also include a `**State:** [PENDING]` tag if more formal tracking is required.
   8. **Target Precision:** Set the `**Target:**` to the exact file path or CLI command.
-  9. **Black-box Verification Phase:** For `large` and `complex` specs the last phase MUST be `### Phase {N}: Black-box Verification`, with one task per scenario tracing to `[US-x]`, each stating the command and the expected observable result. `small` and `medium` specs omit it.
-  10. **Bug-First Regression:** For `bug` specs, task T1.1 creates the regression test and states that it fails before the fix; no fix task precedes it.
+  9. **Black-box Scenarios:** Black-box scenarios live in a non-executable `## 3. Black-box Scenarios` section placed after the task phases, never as tasks, checkboxes or task ids. Each scenario uses an `S{n}` id, links to at least one `[US-x]`, and states one non-interactive command and its expected observable result. The section is mandatory for `large` and `complex` specs, optional for `medium` specs that produce a runnable artifact (command, service, screen), and omitted for `small` specs. Legacy roadmaps with a verification phase of tasks remain valid.
+  10. **No Verification-Only Tasks:** A verification-only task is forbidden at every size. Every task MUST change at least one product file or artifact; a task that only runs the full test suite, a smoke run, a build check or repository-wide searches MUST NOT exist, since that belongs to the final independent QA and the `on_all_tasks_finished` hooks.
+  11. **Bug-First Regression:** For `bug` specs, task T1.1 creates the regression test and states that it fails before the fix; no fix task precedes it.
 template: |
   ---
   slug: {FEATURE_SLUG}
@@ -63,16 +64,14 @@ template: |
   **Acceptance Check:**
   [Explicit test scenario or CLI command]
 
-  ### Phase {N}: Black-box Verification
-  *(Render this phase ONLY for `large` and `complex` specs, as the last phase; omit otherwise).*
+  ## 3. Black-box Scenarios
+  *(Render this section ONLY for `large` and `complex` specs, or `medium` specs with a runnable artifact; omit for `small`. It is not executable: no checkboxes, no task ids).*
 
-  - [ ] T{N}.1: [VERIFY] {Scenario title}
-  **Target:** `{CLI Command | Global Scope}`
+  - **S1:** {Scenario title}
   **Context:** [US-X]
+  **Command:** `{Single non-interactive command}`
+  **Expected:** {Observable result}
 
-  **Acceptance Check:**
-  [Single non-interactive command and its expected observable result]
-
-  ## 3. Pre-emptive Mitigations
+  ## 4. Pre-emptive Mitigations
   *(Render this section ONLY if there are high-impact execution risks, otherwise omit).*
   - **Risk:** [e.g., Concurrent DB writes] -> **Mitigation:** [e.g., Use pessimistic locking].

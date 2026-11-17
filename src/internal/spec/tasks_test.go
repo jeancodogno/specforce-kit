@@ -1,8 +1,11 @@
 package spec
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -478,3 +481,140 @@ func TestUpdateTaskStatusesFile_MetadataTiming(t *testing.T) {
 	assertTaskSessions(t, meta, []string{"T1.1", "T1.2"}, 1, false)
 }
 
+
+const scenarioFixtureTasks = `---
+slug: scenario-guard
+---
+
+# Implementation Roadmap
+
+## 1. Execution Strategy
+- **Gravity Order:** one then two.
+
+## 2. Tasks
+
+### Phase 1: Core
+
+- [x] T1.1: [CODE] First task
+**Target:** ` + "`src/a.go`" + `
+**Context:** [US-1]
+
+**Constraints:**
+- Keep it small.
+
+**Acceptance Check:**
+` + "`go test ./...`" + ` exits 0.
+
+- [ ] T1.2: [CODE] Second task
+**Target:** ` + "`src/b.go`" + `
+**Context:** [US-2]
+
+**Constraints:**
+- Last real constraint.
+
+**Acceptance Check:**
+` + "`go test ./src/...`" + ` exits 0.
+`
+
+const scenarioFixtureSection = `
+## 3. Black-box Scenarios
+
+- **S1** [US-1] First scenario
+  - Command: ` + "`specforce spec list --json`" + `
+  - Expected: exit 0 and JSON output.
+- **S2** [US-2] Second scenario
+  - Command: ` + "`specforce spec validate`" + `
+  - Expected: no errors.
+`
+
+func parseScenarioFixture(t *testing.T, slug, content string) (*ImplementationReport, TaskValidation) {
+	t.Helper()
+	root := t.TempDir()
+	setupTasksTest(t, root, slug, content)
+	report, err := ParseTasks(context.Background(), root, slug)
+	if err != nil {
+		t.Fatalf("ParseTasks failed: %v", err)
+	}
+	validation, err := ValidateTasksReport(context.Background(), root, slug)
+	if err != nil {
+		t.Fatalf("ValidateTasksReport failed: %v", err)
+	}
+	return report, validation
+}
+
+func TestParseTasks_ScenarioSectionNotCountedAsTasks(t *testing.T) {
+	base, baseVal := parseScenarioFixture(t, "scenario-base", scenarioFixtureTasks)
+	with, withVal := parseScenarioFixture(t, "scenario-with", scenarioFixtureTasks+scenarioFixtureSection)
+
+	baseTasks, withTasks := base.Tasks(), with.Tasks()
+	if len(baseTasks) != 2 {
+		t.Fatalf("baseline expected 2 tasks, got %d", len(baseTasks))
+	}
+	if len(withTasks) != len(baseTasks) {
+		t.Fatalf("scenario section changed task count: got %d, want %d", len(withTasks), len(baseTasks))
+	}
+	if len(with.Phases) != len(base.Phases) {
+		t.Errorf("scenario section changed phase count: got %d, want %d", len(with.Phases), len(base.Phases))
+	}
+	if with.Status != base.Status {
+		t.Errorf("scenario section changed progress status: got %q, want %q", with.Status, base.Status)
+	}
+	for i := range baseTasks {
+		if withTasks[i].ID != baseTasks[i].ID || withTasks[i].State != baseTasks[i].State {
+			t.Errorf("task %d changed: got %s/%s, want %s/%s", i, withTasks[i].ID, withTasks[i].State, baseTasks[i].ID, baseTasks[i].State)
+		}
+	}
+
+	last, lastBase := withTasks[len(withTasks)-1], baseTasks[len(baseTasks)-1]
+	if !reflect.DeepEqual(last.Constraints, lastBase.Constraints) {
+		t.Errorf("last task constraints absorbed scenario text: got %v, want %v", last.Constraints, lastBase.Constraints)
+	}
+	if last.Verification != lastBase.Verification {
+		t.Errorf("last task verification absorbed scenario text: got %q, want %q", last.Verification, lastBase.Verification)
+	}
+	for _, c := range last.Constraints {
+		if strings.Contains(c, "S1") || strings.Contains(c, "S2") || strings.Contains(c, "Command") {
+			t.Errorf("scenario text leaked into constraints: %q", c)
+		}
+	}
+
+	if len(withVal.Errors) != len(baseVal.Errors) || len(withVal.Warnings) != len(baseVal.Warnings) {
+		t.Errorf("validation changed with scenario section: errors %v vs %v, warnings %v vs %v",
+			withVal.Errors, baseVal.Errors, withVal.Warnings, baseVal.Warnings)
+	}
+	if len(withVal.Errors) != 0 {
+		t.Errorf("expected valid roadmap, got errors: %v", withVal.Errors)
+	}
+}
+
+func TestParseTasks_LegacyVerifyPhaseStaysValid(t *testing.T) {
+	legacy := scenarioFixtureTasks + `
+### Phase 2: Black-box Verification
+
+- [ ] T2.1: [VERIFY] Scenario: legacy check
+**Target:** ` + "`src/c.go`" + `
+**Context:** [US-1]
+
+**Constraints:**
+- Run the legacy check.
+
+**Acceptance Check:**
+` + "`go test ./src/...`" + ` exits 0.
+`
+	report, validation := parseScenarioFixture(t, "scenario-legacy", legacy)
+
+	if len(validation.Errors) != 0 {
+		t.Fatalf("legacy [VERIFY] phase must stay valid, got errors: %v", validation.Errors)
+	}
+	tasks := report.Tasks()
+	if len(tasks) != 3 {
+		t.Fatalf("expected 3 tasks including legacy [VERIFY], got %d", len(tasks))
+	}
+	if len(report.Phases) != 2 {
+		t.Errorf("expected 2 phases, got %d", len(report.Phases))
+	}
+	last := tasks[len(tasks)-1]
+	if last.ID != "T2.1" || !strings.Contains(last.Title, "[VERIFY]") {
+		t.Errorf("legacy [VERIFY] task not counted as an ordinary task: %+v", last)
+	}
+}

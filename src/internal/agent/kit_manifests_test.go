@@ -612,15 +612,47 @@ func assertFileContains(t *testing.T, path string, directives []string) {
 	}
 }
 
+func assertFileNotContains(t *testing.T, path string, forbidden []string) {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read %s: %v", path, err)
+	}
+	content := string(data)
+	for _, directive := range forbidden {
+		if strings.Contains(content, directive) {
+			t.Errorf("%s contains forbidden directive: %q", path, directive)
+		}
+	}
+}
+
 func TestKitManifests_ExecutableCriteriaAndArchivePreflight(t *testing.T) {
 	t.Run("Spec", testSpecSkillExecutableCriteria)
 
 	t.Run("TaskBlueprint", func(t *testing.T) {
 		assertFileContains(t, "artifacts/spec/tasks.yaml", []string{
 			"non-interactive",
-			"Black-box Verification",
+			"Black-box Scenarios",
+			"verification-only task",
+			"`S{n}`",
 			"`large`",
 			"fails before the fix",
+		})
+		assertFileNotContains(t, "artifacts/spec/tasks.yaml", []string{
+			"[VERIFY]",
+			"Phase {N}: Black-box Verification",
+		})
+	})
+
+	t.Run("ImplementScenarioRows", func(t *testing.T) {
+		assertFileContains(t, "kit/skills/spf-implement/SKILL.yaml", []string{
+			"one matrix row per scenario",
+		})
+	})
+
+	t.Run("SpecAuditVerificationOnly", func(t *testing.T) {
+		assertFileContains(t, "kit/skills/spf-spec/SKILL.yaml", []string{
+			"verification-only task",
 		})
 	})
 

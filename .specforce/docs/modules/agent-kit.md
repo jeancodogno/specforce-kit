@@ -27,7 +27,7 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - `[BR-KIT-17]` Planning blueprints MUST direct `medium`, `large` and `complex` specifications to write one delta document per affected module after requirements (and design when required) and before the task roadmap, to seal it, to make the roadmap cover every delta item, and to list the delta in the hand-off summary; when no module changes, the blueprint MUST direct declaring `delta.impact: none` instead and not sealing.
 - `[BR-KIT-18]` Archival blueprints and instructions MUST direct the agent to correct each delta to the as-built result, allocate final identifiers only in the module (the delta keeps its provisional key and the mapping is recorded in the specification metadata), apply the delta so module blocks equal delta blocks, rewrite the scope, public surface and operational sections as-built where the delta changes them, stop without touching the module on a base conflict, lazily migrate a prefix-less target module after the user confirms a proposed prefix, and require `specforce spec delta check <slug>` to report `applied` (or `none`/`exempt`) before archiving.
 - `[BR-KIT-19]` The independent qa-tester's traceability matrix MUST contain one additional row per delta item (operation plus identifier or provisional key) using the existing verdicts; specifications without a delta or with `delta.impact: none` add no rows, and a removal row fails when the block is still present.
-- `[BR-KIT-20]` Planning blueprints MUST direct every task acceptance check to be a single non-interactive command or test scenario with an observable expected result, rewriting or explicitly flagging criteria that need human judgment as not verifiable by a tester; `large` and `complex` roadmaps MUST end with a black-box verification phase whose scenarios trace to requirements and are runnable by the independent qa-tester.
+- `[BR-KIT-20]` Planning blueprints MUST direct every task acceptance check to be a single non-interactive command or test scenario with an observable expected result, rewriting or explicitly flagging criteria that need human judgment as not verifiable by a tester. Every task MUST change at least one product file or artifact; tasks whose only purpose is running the full test suite, a smoke run, a build check or repository-wide searches are forbidden, since that verification belongs to the independent QA step and the all-tasks hooks. Black-box scenarios are declared in a non-executable scenario section placed after the task phases (never as tasks, checkboxes or task identifiers), each linked to at least one requirement and stating one non-interactive command and its expected observable result; the section is mandatory for `large` and `complex` roadmaps, optional for `medium` roadmaps that produce a runnable artifact, and omitted for `small` roadmaps. Existing roadmaps with a verification phase of tasks remain valid and are executed as ordinary tasks.
 - `[BR-KIT-21]` Bug specification blueprints MUST require concrete reproduction steps and an established root cause (halting to ask or recommend discovery when unknown), and the roadmap MUST start with a regression test task that fails before the fix, with no fix task preceding it.
 - `[BR-KIT-22]` Planning blueprints MUST restate decisions already taken in a proposal for a single confirmation and ask only open questions and newly found gaps; questions go in waves of at most four, each with a recommendation, and an approval of all recommendations confirms that wave only and never carries over; the hard gate before writing artifacts is preserved.
 - `[BR-KIT-23]` Planning blueprints MAY delegate strictly read-only exploration to helpers during grounding of `large` and `complex` specifications, while interview, decisions and artifact writing remain in the primary session; unresolved markers (`TBD`, `TODO`, bare `N/A`) stay forbidden, and a section that does not apply is omitted or kept with a one-line justification.
@@ -45,6 +45,7 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - `[BR-KIT-35]` Planning blueprints MUST direct task roadmaps to state constraints only when they carry something the implementer cannot deduce from the design and the code (a pitfall, a deviation from repository convention, or a recorded design decision referenced rather than repeated), MUST forbid method signatures, constants and code snippets in tasks, and MUST direct the design to be the only artifact where code-symbol anchors are written.
 - `[BR-KIT-36]` The design blueprint MUST allow a one-line `Why:` on a non-obvious technical decision inside the contract or inventory entry it affects, MUST forbid debating alternatives and adding a dedicated rationale section, and MUST NOT require it for decisions with no real alternative.
 - `[BR-KIT-37]` Implementation orchestration blueprints MUST direct the orchestrator to put into each worker brief the task's constraints (omitting the line when there are none) and, copied verbatim and naming their source, the design inventory entries, related contracts and `Why:` lines that concern the task's target, or to state that none applies when the design is absent or has no matching entry.
+- `[BR-KIT-38]` The independent qa-tester's black-box tier MUST execute every scenario of the roadmap's black-box scenario section and add one traceability matrix row per scenario, identified by its scenario identifier, using the existing verdicts; a scenario that cannot be executed is `NOT-VERIFIABLE` with a stated reason, and roadmaps without the section derive black-box checks from the requirements' acceptance scenarios.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -147,16 +148,19 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - **WHEN** `/spf:archive` runs
   - **THEN** the module is left untouched and the developer is told to redo the delta and seal it again.
 
-### [US-KIT-17] Executable Acceptance Checks and Black-box Verification
+### [US-KIT-17] Executable Acceptance Checks and Black-box Scenarios
 - **Scenario:** Planning a large specification
   - **GIVEN** a `large` or `complex` specification being planned
   - **WHEN** the roadmap is produced
-  - **THEN** every task has a non-interactive acceptance check and the final phase holds black-box scenarios traced to requirements.
+  - **THEN** every task has a non-interactive acceptance check, no task exists only to run verification, and a black-box scenario section traced to requirements follows the task phases.
+- **Scenario:** Planning a small specification
+  - **GIVEN** a `small` specification being planned
+  - **WHEN** the roadmap is produced
+  - **THEN** it has no scenario section and no verification-only task.
 - **Scenario:** Criterion needing human judgment
   - **GIVEN** a task whose outcome cannot be scripted
   - **WHEN** its acceptance check is written
   - **THEN** it is rewritten into an observable check or flagged as not verifiable by a tester.
-
 ### [US-KIT-18] Bug Specification Starts From a Failing Test
 - **Scenario:** Planning a bug fix
   - **GIVEN** a bug specification
@@ -280,6 +284,19 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - **GIVEN** a task whose target has no matching design entry
   - **WHEN** the orchestrator prepares the brief
   - **THEN** the brief states that no design excerpt applies and invents none.
+### [US-KIT-31] Independent QA Runs Declared Scenarios Once
+- **Scenario:** Roadmap with scenarios
+  - **GIVEN** a roadmap that declares black-box scenarios
+  - **WHEN** the qa-tester runs the black-box tier
+  - **THEN** every scenario command is executed and recorded as its own matrix row next to requirement and delta rows.
+- **Scenario:** Roadmap without scenarios
+  - **GIVEN** a roadmap with no scenario section
+  - **WHEN** the qa-tester runs the black-box tier
+  - **THEN** black-box checks are derived from the requirements' acceptance scenarios.
+- **Scenario:** Scenario cannot run
+  - **GIVEN** a scenario whose command cannot be executed in the environment
+  - **WHEN** the matrix is built
+  - **THEN** its row is `NOT-VERIFIABLE` with a reason and is never reported as passed.
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**

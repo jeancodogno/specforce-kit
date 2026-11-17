@@ -676,3 +676,53 @@ func assertConstraints(t *testing.T, tasks []ImplementationTask) {
 		t.Errorf("action_steps must be gone from JSON, got %s", data)
 	}
 }
+
+func TestParseTasks_MitigationsSectionNumbering(t *testing.T) {
+	task := "### Phase 1: Setup\n#### T1.1: Task\n**State:** [PENDING]\n"
+	cases := []struct {
+		name    string
+		content string
+		want    string
+	}{
+		{
+			name: "after black-box scenarios as section 4",
+			content: "## 1. Execution Strategy\nStrategy.\n\n## 2. Phases\n" + task +
+				"\n## 3. Black-box Scenarios\n- S1: scenario text\n\n## 4. Pre-emptive Mitigations\n- Risk: something\n",
+			want: "- Risk: something",
+		},
+		{
+			name:    "legacy section 3 numbering",
+			content: "## 1. Execution Strategy\nStrategy.\n\n## 2. Phases\n" + task + "\n## 3. Pre-emptive Mitigations\n- Legacy risk\n",
+			want:    "- Legacy risk",
+		},
+		{
+			name:    "followed by another section",
+			content: "## 1. Execution Strategy\nStrategy.\n\n## 2. Phases\n" + task + "\n## 3. Pre-emptive Mitigations\n- Risk line\n\n## 4. Appendix\nLeaked text\n",
+			want:    "- Risk line",
+		},
+		{
+			name:    "no mitigations section",
+			content: "## 1. Execution Strategy\nStrategy.\n\n## 2. Phases\n" + task + "\n## 3. Black-box Scenarios\n- S1: scenario text\n",
+			want:    "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir, err := os.MkdirTemp("", "specforce-test-*")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = os.RemoveAll(tmpDir) }()
+
+			setupTasksFile(t, tmpDir, "mit-feature", tc.content)
+			report, err := ParseTasks(context.Background(), tmpDir, "mit-feature")
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			if report.PreemptiveMitigations != tc.want {
+				t.Errorf("Expected mitigations %q, got %q", tc.want, report.PreemptiveMitigations)
+			}
+		})
+	}
+}

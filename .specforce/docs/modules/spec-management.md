@@ -30,6 +30,7 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
 - `[BR-SPEC-12]` Finishing a batch in which every task is marked RED in its title skips only the per-task verification hooks and prints a notice naming each skipped hook; phase-level and all-tasks hooks still run, and any batch containing an unmarked task runs all hooks as before.
 - `[BR-SPEC-13]` Task validation produces non-blocking warnings, listed apart from errors in the human and machine-readable specification status, for a task that contains a fenced code block and for a task whose target and constraints cite more than three distinct file paths; warnings never change validity, progress or the outcome of any command.
 - `[BR-SPEC-14]` The step list of a task is optional: a task may omit it, may use the constraints heading or the legacy step-list heading, and may leave the block empty, with no minimum or maximum number of items; the implementation status exposes the items of either heading as the task's constraints, empty when absent, and every roadmap valid before this change stays valid.
+- `[BR-SPEC-15]` The implementation status identifies a roadmap's pre-emptive mitigations section by its title, whatever section number it carries, exposes its text up to the next top-level section, and leaves the mitigations empty when the roadmap has no such section; roadmaps numbering it 3 keep the same output.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-SPEC-01] Tiered Sizing at Initialization
@@ -140,6 +141,19 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - **GIVEN** a task containing a fenced code block or citing more than three distinct file paths
   - **WHEN** the specification status is requested
   - **THEN** a warning names the task and the reason while the specification is still reported as valid.
+### [US-SPEC-11] Mitigations Shown Regardless of Section Number
+- **Scenario:** Renumbered section
+  - **GIVEN** a roadmap whose mitigations section is numbered 4
+  - **WHEN** the implementation status is requested
+  - **THEN** the mitigations text is shown.
+- **Scenario:** Legacy numbering
+  - **GIVEN** a roadmap whose mitigations section is numbered 3
+  - **WHEN** the implementation status is requested
+  - **THEN** the output is unchanged.
+- **Scenario:** Followed by another section
+  - **GIVEN** a mitigations section followed by another top-level section
+  - **WHEN** the implementation status is requested
+  - **THEN** only the mitigations text is exposed.
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
@@ -147,7 +161,7 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - `specforce spec resize <slug> --size <size> [--json]`: Dynamically resizes an active specification and recalculates required artifact gates.
   - `specforce spec status <slug> [--json]`: Evaluates completion, artifact presence, and task progress based on spec sizing. Lists non-blocking task warnings (`validation_warnings`) apart from validation errors; they never affect validity.
   - `specforce spec list [--type <type>] [--status <status>] [--json]`: Lists active or archived specifications across the workspace.
-  - `specforce implementation status <slug> [--json]`: Evaluates implementation readiness and missing artifacts strictly matching the active spec size. Each task exposes its `constraints` (empty when none). Includes the stored QA state (status, counts, failed and not-verifiable criteria, findings) when a report exists.
+  - `specforce implementation status <slug> [--json]`: Evaluates implementation readiness and missing artifacts strictly matching the active spec size. Each task exposes its `constraints` (empty when none). The roadmap's pre-emptive mitigations are exposed whatever their section number. Includes the stored QA state (status, counts, failed and not-verifiable criteria, findings) when a report exists.
   - `specforce implementation qa record <slug>`: Reads a QA report as JSON on standard input, validates it, derives the overall status (FAILED if any criterion FAILED, otherwise PASSED) and replaces the stored report atomically; refuses unknown, archived or out-of-directory specifications without writing.
   - `specforce implementation update <slug> --task <ids> --status finished`: Tasks whose title carries the RED token skip only the per-task hooks and print a notice naming them.
   - `specforce spec archive <slug> [--force]`: Finalizes and transitions an active specification to `.specforce/archive/`. For `medium`, `large` and `complex` specifications it requires a delta status of `applied` or `none`; `--force` only overrides the pending-tasks check, never the delta check. It also refuses a specification whose stored QA status is FAILED (never bypassed by `--force`) and warns when no QA report exists.

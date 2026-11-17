@@ -101,6 +101,7 @@ content: |
     - For `small` specs: Ensure task IDs and acceptance checks in `tasks.md` are well-formed and actionable.
     - For `medium` specs: Ensure every requirement `[US-X]` in `requirements.md` maps to tasks in `tasks.md`.
     - For `large` and `complex` specs: Cross-verify the full triad (`requirements.md`, `design.md`, `tasks.md`) to ensure requirement coverage, architectural alignment, and task traceability.
+    - For every size: Remove any verification-only task (a task that only runs the full suite, a smoke run, a build check or repository-wide searches). Convert runnable end-to-end checks into entries of the `## 3. Black-box Scenarios` section when the size allows it (mandatory for `large`/`complex`, optional for `medium` with a runnable artifact, omitted for `small`), and confirm each scenario links to a requirement `[US-X]`. Name every removal in the planning summary.
 
   2. **Surgical Corrections & Human Escalation:**
     - If gaps are structural or technical, apply surgical fixes directly to the target markdown file.

@@ -187,7 +187,7 @@ func extractStrategyAndMitigations(content []byte, report *ImplementationReport)
 		report.ExecutionStrategy = strings.TrimSpace(string(strategyMatch[1]))
 	}
 
-	mitigationsRegex := regexp.MustCompile(`(?s)## 3\. Pre-emptive Mitigations\n(.*?)(?:\n##|$)`)
+	mitigationsRegex := regexp.MustCompile(`(?s)## \d+\. Pre-emptive Mitigations\n(.*?)(?:\n##|$)`)
 	mitigationsMatch := mitigationsRegex.FindSubmatch(content)
 	if len(mitigationsMatch) > 1 {
 		report.PreemptiveMitigations = strings.TrimSpace(string(mitigationsMatch[1]))
