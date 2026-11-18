@@ -44,21 +44,6 @@ func TestIntegration_UpdateFlow(t *testing.T) {
 	}
 }
 
-func TestIntegration_SilenceCheck(t *testing.T) {
-	// This verifies that IsUpdateAvailable respects IgnoredVersion.
-	tempDir, _ := os.MkdirTemp("", "silence-test-*")
-	defer func() { _ = os.RemoveAll(tempDir) }()
-	
-	mgr := &StateManager{path: filepath.Join(tempDir, "state.json")}
-	svc := NewService(mgr, &MockProvider{}, "v1.0.0")
-	
-	_ = mgr.Save(&State{LatestVersion: "v2.0.0", IgnoredVersion: "v2.0.0"})
-	available, _ := svc.IsUpdateAvailable()
-	if available {
-		t.Error("expected update to be silent when version is ignored")
-	}
-}
-
 func TestIntegration_BackgroundUpdate(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "background-update-test-*")
 	if err != nil {

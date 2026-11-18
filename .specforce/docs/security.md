@@ -30,6 +30,7 @@
     1. Call `filepath.Clean(path)`.
     2. Ensure the resulting path remains within the project's root boundary.
     3. Reject any path that attempts to escape via directory traversal (e.g., `../`).
+- **Verify Immediately Before Use:** Any downloaded artifact that is used later (e.g., a staged binary) MUST carry a fingerprint (hash and size) recorded when it was verified against its trusted source, and MUST be re-verified immediately before use and after any step that executes it. It MUST be a regular file (checked without following symlinks), and permission changes MUST be applied through the opened file, never through a path that could be a link. On any mismatch the artifact is discarded, never used.
 - **Command Sanitization:** Subprocess execution (e.g., Hooks) MUST NOT use shell-mediated execution (e.g., `sh -c`). Instead, command strings MUST be parsed into a base command and an explicit slice of arguments to prevent shell injection.
 
 ## AI Security Constraints

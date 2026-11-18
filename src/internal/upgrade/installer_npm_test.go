@@ -31,7 +31,7 @@ func TestNPMInstaller(t *testing.T) {
 	mock := &MockCommandExecutor{}
 	installer := &NPMInstaller{Executor: mock}
 
-	err := installer.Install(context.Background())
+	err := installer.Install(context.Background(), "1.0.0-beta.3")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestNPMInstaller(t *testing.T) {
 		t.Errorf("expected cmd npm, got %s", mock.LastCmd)
 	}
 
-	expectedArgs := []string{"install", "-g", "@jeancodogno/specforce-kit"}
+	expectedArgs := []string{"install", "-g", "@jeancodogno/specforce-kit@1.0.0-beta.3"}
 	if len(mock.LastArgs) != len(expectedArgs) {
 		t.Fatalf("expected %d args, got %d", len(expectedArgs), len(mock.LastArgs))
 	}

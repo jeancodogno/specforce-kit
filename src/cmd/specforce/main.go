@@ -24,7 +24,7 @@ func main() {
 
 	// 2. Check if an update is ready to be swapped
 	// This happens before any command execution to ensure we use the new binary
-	checkForSwap()
+	checkForSwap(defaultSwapEnv())
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -35,7 +35,26 @@ func main() {
 	}
 }
 
-func checkForSwap() {
+// swapEnv holds the process-level dependencies of the pre-command swap so it can
+// be exercised without replacing the test process.
+type swapEnv struct {
+	version    string
+	executable func() (string, error)
+	exec       func(path string) error
+}
+
+func defaultSwapEnv() swapEnv {
+	return swapEnv{
+		version:    core.Version,
+		executable: os.Executable,
+		exec:       (&upgrade.Service{}).ExecuteBinary,
+	}
+}
+
+// checkForSwap applies a staged update before any command runs (agent or not).
+// It never writes to stdout or stderr: the applied version is recorded in state
+// and announced later, only for interactive non-agent commands.
+func checkForSwap(env swapEnv) {
 	mgr, err := upgrade.NewStateManager()
 	if err != nil {
 		return
@@ -46,27 +65,25 @@ func checkForSwap() {
 		return
 	}
 
-	// Create service to perform swap
 	// We use a mock provider here because we won't need it for swap
-	svc := upgrade.NewService(mgr, &upgrade.MockProvider{}, core.Version)
-	
-	exePath, err := os.Executable()
+	svc := upgrade.NewService(mgr, &upgrade.MockProvider{}, env.version)
+
+	exePath, err := env.executable()
 	if err != nil {
 		return
 	}
 
-	stagedVer := state.StagedVersion
 	if err := svc.PerformAtomicSwapAt(exePath); err != nil {
-		// Failed to swap, just continue
+		// Not applied (skipped or failed): just continue on the current binary
 		return
 	}
 
-	// Subtle notification
-	fmt.Printf("\n\x1b[38;5;245m(Specforce updated to %s)\x1b[0m\n", stagedVer)
-
-	// Restart with new binary
-	_ = svc.ExecuteBinary(exePath)
-	// If it fails to restart, we just continue with the old binary in memory
+	// Restart with new binary. The .old backup is kept until the outcome is
+	// known: when the restart fails, the previous executable is restored and the
+	// command continues on the old binary in memory.
+	if err := env.exec(exePath); err != nil {
+		_ = svc.RollbackFailedRestartAt(exePath, err)
+	}
 }
 
 func runInternalUpgradeCheck() {
@@ -75,9 +92,9 @@ func runInternalUpgradeCheck() {
 		os.Exit(1)
 	}
 
-	// TODO: Proper provider detection. For now, default to GitHub.
-	provider := upgrade.NewGitHubProvider()
-	svc := upgrade.NewService(mgr, provider, core.Version)
+	// Version source follows the installation method (npm channel or GitHub)
+	exe, _ := os.Executable()
+	svc := upgrade.NewService(mgr, upgrade.SelectProvider(exe, core.Version), core.Version)
 
 	// Perform the background update (check + stage)
 	// Timeout after 1 minute to avoid zombie processes

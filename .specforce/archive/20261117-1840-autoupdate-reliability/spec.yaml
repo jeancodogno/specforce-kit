@@ -1,0 +1,169 @@
+slug: 20261117-1840-autoupdate-reliability
+name: 20261117-1840-autoupdate-reliability
+type: bug
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-17T22:27:13.339412078Z
+              completed_at: 2026-11-17T22:52:40.000981983Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-17T22:27:13.339413321Z
+              completed_at: 2026-11-17T22:52:40.000982239Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-17T22:27:13.339413546Z
+              completed_at: 2026-11-17T22:52:40.000982358Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-17T22:27:13.339413761Z
+              completed_at: 2026-11-17T22:52:40.000982457Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-17T22:52:47.506325223Z
+              completed_at: 2026-11-18T00:11:39.072249683Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-17T22:52:47.506325836Z
+              completed_at: 2026-11-18T00:11:39.072249962Z
+    T3.3:
+        sessions:
+            - started_at: 2026-11-17T22:52:47.506326086Z
+              completed_at: 2026-11-18T00:11:39.072250137Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-17T22:52:47.5063263Z
+              completed_at: 2026-11-18T00:11:39.072250262Z
+    T4.2:
+        sessions:
+            - started_at: 2026-11-17T22:52:47.506326509Z
+              completed_at: 2026-11-18T00:11:39.072250393Z
+    T4.3:
+        sessions:
+            - started_at: 2026-11-17T22:52:47.50632803Z
+              completed_at: 2026-11-18T00:11:39.072250522Z
+    T5.1:
+        sessions:
+            - started_at: 2026-11-18T00:11:39.080770248Z
+              completed_at: 2026-11-18T00:15:54.184186562Z
+    T5.2:
+        sessions:
+            - started_at: 2026-11-18T00:11:39.080770605Z
+              completed_at: 2026-11-18T00:15:54.184187938Z
+    T6.1:
+        sessions:
+            - started_at: 2026-11-18T00:11:39.080770678Z
+              completed_at: 2026-11-18T00:15:54.1841885Z
+    T6.2:
+        sessions:
+            - started_at: 2026-11-18T00:11:39.080770751Z
+              completed_at: 2026-11-18T00:15:54.184189011Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-18T00:27:44Z
+    criteria:
+        - id: FIX-1/no-download-no-retry
+          scenario: 'Non-writable install dir, newer version: nothing downloaded or staged, version recorded as manual'
+          evidence: 'S1: chmod 555 install dir, beta.2 --internal-upgrade-check exit 0; staged count 0; state update_ready:false, manual_update_version:v1.0.0-beta.3 (re-verified by orchestrator: 0)'
+          verdict: PASSED
+        - id: FIX-1/hint-once-per-version
+          scenario: Manual hint shown once on stderr, naming version and command, never says applied automatically
+          evidence: 'S1 run1 ''MANUAL UPDATE REQUIRED Specforce v1.0.0-beta.3'' + releases URL + ''sudo make install''; run2 0 matches; ''applied automatically'' 0; hint only in stderr file (orchestrator re-run: 4 / 0 / 0)'
+          verdict: PASSED
+        - id: FIX-2/failed-swap-clears-pending
+          scenario: 'Swap failure: version unchanged, ready cleared, staged deleted, manual recorded, no retry'
+          evidence: 'beta.3 installed, beta.9 staged, dir 555: ''swap failed ... permission denied; v1.0.0-beta.9 requires a manual update''; --version 1.0.0-beta.3; staged 0; update_ready:false, manual_update_version:v1.0.0-beta.9; second run no swap attempt'
+          verdict: PASSED
+        - id: FIX-3/older-or-equal-discarded
+          scenario: Older or equal staged version not applied and discarded
+          evidence: 'beta.3 + staged beta.2: skipped ''not newer; discarding'', version stays beta.3, staged 0; equal: sha256 unchanged, staged deleted'
+          verdict: PASSED
+        - id: FIX-3/newer-applied
+          scenario: Newer staged version in writable dir is applied and the command runs on it
+          evidence: 'beta.3 + staged beta.9: --version prints 1.0.0-beta.9 immediately and next run; applied_version:v1.0.0-beta.9'
+          verdict: PASSED
+        - id: FIX-4/other-executables-ignore
+          scenario: Executable B ignores the update staged for A
+          evidence: 'B: ''swap skipped: targets .../i/specforce, not .../b/specforce'', stays beta.3; staged file and update_ready intact; A then becomes beta.9'
+          verdict: PASSED
+        - id: FIX-4/target-missing
+          scenario: Update staged for a nonexistent path is left untouched
+          evidence: 'target_path=.../deleted/specforce: skipped, binary unchanged, staged file and update_ready intact'
+          verdict: PASSED
+        - id: FIX-5/agent-json-during-swap
+          scenario: Agent JSON command applies the update and stdout parses as JSON
+          evidence: 'S2: after real staged beta.3, spec list --json 2>/dev/null passes json.tool (JSON_OK); --version 1.0.0-beta.3'
+          verdict: PASSED
+        - id: FIX-5/notices-interactive-only
+          scenario: No notice on any stream for non-TTY or agent commands; interactive notices on stderr only
+          evidence: 'applied/manual/available kinds: non-TTY and agent commands 0 bytes on both streams; TTY completion 0 hits on stdout, notices on stderr only'
+          verdict: PASSED
+        - id: FIX-6/offline-throttle
+          scenario: Failed check persists check time; no new check within 6h
+          evidence: 'S3 prints 1,0,0; last_checked_at written offline; DEBUG ''check skipped: throttled'''
+          verdict: PASSED
+        - id: FIX-7/exact-version-channel
+          scenario: npm install uses the exact version from the matching channel tag
+          evidence: beta.2 -> @1.0.0-beta.3; alpha.1 -> @1.0.0-alpha.3; 0.2.1 -> @0.2.2
+          verdict: PASSED
+        - id: FIX-7/channel-tag-missing
+          scenario: 'No tag for the channel: no update, check time persisted, nothing shown'
+          evidence: '1.0.0-rc.1: ''no npm dist-tag for release channel: rc'', exit 0, npm never called, last_checked_at written, stderr 0 bytes'
+          verdict: PASSED
+        - id: FIX-7/npm-install-fails
+          scenario: Failed npm install records manual with the npm command and is not retried
+          evidence: 'fake npm exit 1: manual_update_version:1.0.0-beta.3; re-check does not call npm (1 call total); hint with exact npm command once on stderr'
+          verdict: PASSED
+        - id: FIX-7/detection-specific
+          scenario: Path containing node/npm words outside the package is treated as binary install
+          evidence: '.../node/npm/node_modules/specforce/bin/specforce: npm never called, GitHub binary staged with target_path'
+          verdict: PASSED
+        - id: FIX-8/no-temp-files
+          scenario: No temp download file left after a failed download
+          evidence: 'CONNECT proxy denying github.com / asset host, TMPDIR empty dir: 0 entries after failure; unit TestDownloadHygiene_TempCleanupOnEveryFailure PASS'
+          verdict: PASSED
+        - id: FIX-8/bounded-download-time
+          scenario: Check ends within the 1-minute budget
+          evidence: 'stalled download host: context deadline exceeded at 60s, TMPDIR empty; TestDownloadHygiene_ChecksumTimeoutHonorsContext PASS'
+          verdict: PASSED
+        - id: FIX-8/private-staged
+          scenario: Staged file is owner-only until applied
+          evidence: specforce_next 600, staged dir 700, state.json 600; StagedPerm tests PASS (same-fs and cross-fs)
+          verdict: PASSED
+        - id: FIX-9/legacy-state
+          scenario: State with ignored_version loads and has no effect
+          evidence: 'ignored_version = latest: loads, UPDATE AVAILABLE shown, background check stages beta.3; grep IgnoredVersion|PerformUpgrade 0 matches'
+          verdict: PASSED
+        - id: S1
+          scenario: Non-writable install shows a single honest hint and never loops
+          evidence: 0 / 4 / 0; 'applied automatically' 0; version stays 1.0.0-beta.2
+          verdict: PASSED
+        - id: S2
+          scenario: Agent JSON stays valid while an update is applied
+          evidence: JSON_OK then 'specforce version 1.0.0-beta.3' (must run inside a Specforce project)
+          verdict: PASSED
+        - id: S3
+          scenario: Offline runs respect the 6-hour throttle
+          evidence: 1, 0, 0
+          verdict: PASSED
+        - id: S4
+          scenario: npm installs the exact version of their own channel
+          evidence: install -g @jeancodogno/specforce-kit@1.0.0-beta.3 = dist-tags.beta
+          verdict: PASSED
+    findings:
+        - title: 'High: corrupt staged binary is applied and leaves the install unusable'
+          detail: 'Staged file is not re-verified before the swap. A 0-byte or random staged specforce_next with valid newer staged_version and target_path is swapped in (orchestrator reproduced: executable became 0 bytes). applied_version recorded although re-exec failed; only specforce.old remains. Fix proposal: store sha256 and size at staging, re-verify before swap, roll back to .old when re-exec fails. Needs a spec update (behavior change).'
+        - title: 'Medium: unparseable state.json silently disables auto-update permanently'
+          detail: Load error makes CheckForUpdate and PerformBackgroundUpdate return early; the file is never reset.
+        - title: 'Low: npm install that succeeds without changing the running binary repeats every 6h'
+          detail: If npm installs into a different global prefix, applied_version never matches; 'UPDATE AVAILABLE ... applied automatically' shows on every interactive run and the install repeats.
+        - title: 'Low: specforce.old can linger after a swap'
+          detail: When the swap happens on --version (no PersistentPreRun), .old stays until the next normal command.
+        - title: 'Info: 13 empty /tmp/specforce-update-* files'
+          detail: 0-byte leftovers dated 2026-11-17 11:00:14 to 21:11:33; the later ones were likely created by unit test runs before the T5.2 cleanup fix landed. Not removed.
+        - title: 'Info: symlinked install path'
+          detail: checkForSwap passes the unresolved os.Executable path; QA observed the real file upgraded with the symlink intact.

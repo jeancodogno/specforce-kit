@@ -15,6 +15,9 @@ var (
 	devMode        bool
 	upgradeService *upgrade.Service
 	appVersion     string
+
+	// isTTY reports whether stdout is a terminal; injectable for tests.
+	isTTY = tui.IsTTY
 )
 
 var rootCmd = &cobra.Command{
@@ -31,13 +34,12 @@ well-defined specifications.`,
 			return nil // Don't block CLI if state fails
 		}
 
-		// TODO: Detect if installed via NPM to choose provider
-		provider := upgrade.NewGitHubProvider()
-		upgradeService = upgrade.NewService(mgr, provider, appVersion)
+		// Version source follows the installation method (npm channel or GitHub)
+		exe, _ := os.Executable()
+		upgradeService = upgrade.NewService(mgr, upgrade.SelectProvider(exe, appVersion), appVersion)
 
 		// Check for update if TTY and not an agent command
-		isTTY := tui.IsTTY()
-		isAgentCmd := false
+		interactive := isTTY()
 
 		// Cleanup .old file from previous upgrade if it exists
 		if exe, err := os.Executable(); err == nil {
@@ -46,44 +48,58 @@ well-defined specifications.`,
 			}
 		}
 
-		for c := cmd; c != nil; c = c.Parent() {
-			if c.Annotations["IsAgentCommand"] == "true" {
-				isAgentCmd = true
-				break
-			}
-		}
+		isAgentCmd := isAgentCommand(cmd)
 
 		if os.Getenv("DEBUG") == "1" {
-			_, _ = fmt.Fprintf(os.Stderr, "[DEBUG] UpgradeCheck: TTY=%v, AgentCmd=%v\n", isTTY, isAgentCmd)
+			_, _ = fmt.Fprintf(os.Stderr, "[DEBUG] UpgradeCheck: TTY=%v, AgentCmd=%v\n", interactive, isAgentCmd)
 		}
 
-		if isTTY && !isAgentCmd {
+		if interactive && !isAgentCmd {
 			upgradeService.CheckForUpdate()
 		}
 
 		return nil
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if upgradeService == nil {
-			return
-		}
-
-		// Only show notification if TTY and not an agent command
-		isTTY := tui.IsTTY()
-		isAgentCmd := false
-		for c := cmd; c != nil; c = c.Parent() {
-			if c.Annotations["IsAgentCommand"] == "true" {
-				isAgentCmd = true
-				break
-			}
-		}
-
-		if isTTY && !isAgentCmd {
-			if available, latest := upgradeService.IsUpdateAvailable(); available {
-				fmt.Print(tui.RenderUpdateNotification(appVersion, latest))
-			}
-		}
+		showUpdateNotice(cmd)
 	},
+}
+
+// isAgentCommand reports whether cmd or one of its parents is an agent command.
+func isAgentCommand(cmd *cobra.Command) bool {
+	for c := cmd; c != nil; c = c.Parent() {
+		if c.Annotations["IsAgentCommand"] == "true" {
+			return true
+		}
+	}
+	return false
+}
+
+// showUpdateNotice writes the pending updater notice to the command's error
+// stream, only for interactive (stdout is a terminal), non-agent commands.
+// Notices are marked as shown only after they were written.
+func showUpdateNotice(cmd *cobra.Command) {
+	if upgradeService == nil || !isTTY() || isAgentCommand(cmd) {
+		return
+	}
+
+	notice := upgradeService.PendingNotice()
+	var text string
+	switch notice.Kind {
+	case upgrade.NoticeApplied:
+		text = tui.RenderUpdateAppliedNotification(notice.Version)
+	case upgrade.NoticeManual:
+		text = tui.RenderManualUpdateNotification(appVersion, notice.Version, upgradeService.ManualUpdateCommand(notice.Version))
+	case upgrade.NoticeAvailable:
+		text = tui.RenderUpdateNotification(appVersion, notice.Version)
+	default:
+		return
+	}
+
+	if _, err := fmt.Fprint(cmd.ErrOrStderr(), text); err != nil {
+		return
+	}
+	_ = upgradeService.MarkNoticeShown(notice)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
