@@ -30,7 +30,7 @@ The first continuous integration run on the `1.x` line failed in three places: t
 
 **Technical Constraints (NFR):**
 - **[Performance]:** No extra CI job; the existing security job must pass in its current time budget.
-- **[Safety & Security]:** Exactly one suppression, scoped to the one line, with its reason.
+- **[Safety & Security]:** Exactly one suppression in scanned production code, scoped to the one line, with its reason (test files are not scanned; a justified test-only annotation is allowed).
 - **[Integrity]:** Module definition, CI and release workflows name the same toolchain version.
 
 ### [US-2] Archiving instructions and skill metadata work on Windows
@@ -67,7 +67,7 @@ The first continuous integration run on the `1.x` line failed in three places: t
 **User Story:** AS A Specforce maintainer, I WANT the engineering rule on user-state isolation to name both home variables and the permission-bit exception, SO THAT new tests do not repeat this failure.
 
 **Scenarios:**
-1. **[Happy Path]** GIVEN the engineering constitution WHEN a contributor reads the user-state isolation rule THEN it requires pointing both `HOME` and `USERPROFILE` at a temporary directory and allows skipping only permission-bit assertions on Windows, with a stated reason.
+1. **[Happy Path]** GIVEN the engineering constitution WHEN a contributor reads the user-state isolation rule THEN it requires pointing both `HOME` and `USERPROFILE` at a temporary directory and allows Windows-only skips only for capabilities Windows does not provide to tests (permission bits / read-only directories, symlink creation without privileges, running POSIX shell scripts), each with a stated reason.
 2. **[Edge Case]** GIVEN a test that skips on Windows for any other reason WHEN it is reviewed THEN it violates the rule.
 
 **Technical Constraints (NFR):**

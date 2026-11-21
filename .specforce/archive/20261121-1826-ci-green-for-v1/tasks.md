@@ -58,7 +58,7 @@ lens: Integration
 
 ### Phase 2: Windows product defects
 
-- [/] T2.1: [GREEN] Embedded-kit lookups use the embedded file system's path rules
+- [x] T2.1: [GREEN] Embedded-kit lookups use the embedded file system's path rules
 **Target:** `src/internal/agent/instructions.go`, `src/internal/agent/registry.go`
 **Context:** [US-2]
 
@@ -68,7 +68,7 @@ lens: Integration
 **Acceptance Check:**
 `go test ./src/internal/agent/ ./src/internal/cli/ && GOOS=windows go vet ./src/internal/agent/ ./src/internal/cli/ && ! grep -nE 'fs\.(ReadFile|ReadDir|Stat|Sub|Glob)\([^)]*filepath\.' src/internal/agent/*.go && echo OK` prints `OK` (the Windows proof is S1).
 
-- [/] T2.2: [GREEN] Tools-only installation filter accepts native Windows paths
+- [x] T2.2: [GREEN] Tools-only installation filter accepts native Windows paths
 **Target:** `src/internal/project/refresh_integration_test.go` (diagnostics, done), `src/internal/installer/installer.go`
 **Context:** [US-2]
 
@@ -111,7 +111,7 @@ lens: Integration
 **Parallel With:** T3.1, T3.2, T3.4
 
 **Constraints:**
-- Hook commands in tests use `go version` (success) and `go no-such-command` (failure) instead of `true`/`false` (approved decision).
+- Hook commands in tests are portable: the failure case uses `go no-such-command` instead of `false` (approved decision); hooks whose runs are counted through a log file (previously `#!/bin/sh` scripts) re-run the test binary on a helper test (`TestHookHelperProcess`), because `go version` cannot record a run. The helper fails with a clear message when the test binary path contains whitespace, since hook commands are split on spaces.
 - File-mode assertions (`0600`) skip on Windows only, with the reason "permission bits do not apply on Windows".
 
 **Acceptance Check:**
