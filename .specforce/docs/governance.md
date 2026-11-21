@@ -19,7 +19,7 @@
 - **Permitted AI Autonomous Actions:**
   - Propose new Spec drafts for requested features.
   - Generate implementation code based on approved Specs.
-  - Update the Project Memorial (`.specforce/memorial/`) with lessons learned and architectural precedents during archival or implementation.
+  - Consolidate lessons learned, architectural precedents and as-built business rules into the affected module living specs (`.specforce/docs/modules/<slug>.md`) during archival.
   - Refactor existing code within the scope of a feature.
 - **Prohibited AI Actions (Requires Human Approval):**
   - Modify the project Constitution (`.specforce/docs/`).
@@ -40,3 +40,4 @@
 - **Human vs. Agent Actions:** In user documentation, every step the reader performs MUST be labeled as either a terminal command or an agent chat request. Commands the agent runs on its own appear only as explanation (prose or a collapsed "behind the scenes" block), never as a step.
 - **Chat First:** User documentation MUST NOT ask the reader to run a terminal check for state the agent already reports (task status, delta state, QA results) or to choose a value the agent decides (such as the spec size).
 - **Concrete Examples:** Example chat requests MUST be concrete (a named feature, bug or spec slug), not bare placeholders.
+- **Published-Version Accuracy:** Update, migration and release documentation MUST describe the behavior of the versions users actually have installed, verified against the released git tags, and scope any behavior that exists only in unreleased code with the version it ships in (for example "from 1.0.0 onward").

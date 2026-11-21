@@ -74,7 +74,7 @@
     - Adheres to the "Ghost in the Machine" aesthetic using consistent ANSI colors (Mint Green for success/fixes, Error Red for failures).
 
 - **Instruction-Driven Agent Pattern:** Agent command definitions (`.yaml`) SHOULD NOT contain complex, hardcoded logic or multi-step instructions. Instead, they MUST trigger a dedicated Specforce CLI command (e.g., `specforce archive instructions`) to retrieve a dynamic instruction set. This allows the framework to inject global context (Constitution), core kit rules, and project-specific overrides from `config.yaml` without updating the agent's definition.
-- **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST update the project's distributed memorial directory (`.specforce/memorial/`) with lessons learned, established precedents, and critical architectural decisions discovered during the implementation.
+- **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST consolidate lessons learned, established precedents, and critical architectural decisions discovered during the implementation into the affected module living specs (`.specforce/docs/modules/<slug>.md`), applying the spec's module deltas, and update the Constitution when a project-wide rule changed.
 - **Output Channel Discipline:** Standard output of any command is reserved for that command's own output, which agents may parse (e.g., `--json`). Incidental messages (update notices, hints, diagnostics) MUST be written to standard error, only when standard output is a terminal and the command is not annotated as an agent command, and never from code that runs before command parsing. Debug traces are gated behind `DEBUG=1` and also go to standard error.
 - **JSON Collection Standards:** To ensure machine-readable APIs consistently return an empty array `[]` instead of `null` for empty collections, Go slices intended for JSON marshaling MUST be explicitly initialized with an empty literal (e.g., `s := []T{}`) rather than just declared (e.g., `var s []T`).
 - **Machine-Readable Metadata Standard:** To maintain the readability of Markdown artifacts (requirements, design, tasks) for humans and agents, all machine-specific state and instrumentation data (e.g., session timestamps, deployment IDs) MUST be stored in the specification's `spec.yaml` file. The core framework MUST provide structured Go models for this metadata to ensure type-safe access and persistence.
@@ -102,6 +102,7 @@
 - **Unit Testing Rules:** All core logic and state transitions MUST have automated unit tests.
 - **Regression Rules:** Any reported bug MUST be reproduced with a failing test case before being fixed.
 - **User-State Isolation:** Tests that touch per-user state (anything under `~/.specforce`) MUST point `HOME` at a temporary directory (`t.Setenv("HOME", t.TempDir())`) before creating any state manager, and MUST NOT spawn real processes or reach the network (inject launchers, executors and HTTP endpoints). Manual or scripted runs of a locally built binary MUST also use an isolated `HOME`: running it against the real home can consume or overwrite the user's pending update.
+- **Release & CI Tooling:** Release and CI decisions (version agreement, channel selection, publish-or-skip, release notes selection) MUST live in versioned scripts under `scripts/` tested with the built-in `node:test` runner and no third-party dependencies; workflows only call those scripts and never swallow a failure. Release builds MUST be reproducible (`-trimpath` and the commit timestamp as build time), so a re-run of the same tag produces byte-identical binaries.
 
 ## Delivery Standards & DoD
 - **Commit Standard:** Conventional Commits (e.g., `feat:`, `fix:`, `docs:`, `chore:`).
@@ -113,7 +114,7 @@
   - [ ] Security scans pass (zero critical findings).
   - [ ] TUI views are manually verified for layout consistency.
   - [ ] Feature Specification status is updated to "Implemented".
-  - [ ] The Memorial is updated with relevant "Last Actions".
+  - [ ] The affected module living specs reflect the as-built behavior (module deltas applied).
 
 ## Error Handling Standards
 - **Sentinel Errors:** All domain-specific errors MUST be defined as package-level sentinel variables using `errors.New()` in `src/internal/core/errors.go`. No ad-hoc error strings in business logic.
