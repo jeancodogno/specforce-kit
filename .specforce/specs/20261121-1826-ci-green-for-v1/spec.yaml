@@ -1,0 +1,41 @@
+slug: 20261121-1826-ci-green-for-v1
+name: 20261121-1826-ci-green-for-v1
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T21:34:56.776896842Z
+              completed_at: 2026-11-21T21:41:10.179921619Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T21:34:56.776898063Z
+              completed_at: 2026-11-21T21:41:10.179922118Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-21T21:34:56.77689837Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857062263Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857062914Z
+              completed_at: 2026-11-21T21:41:10.179922364Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.85706314Z
+              completed_at: 2026-11-21T21:41:10.179922651Z
+    T3.3:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857063336Z
+              completed_at: 2026-11-21T21:41:10.179922806Z
+    T3.4:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857063532Z
+              completed_at: 2026-11-21T21:41:10.17992296Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857063724Z
+              completed_at: 2026-11-21T21:41:10.179923109Z
+delta:
+    impact: none

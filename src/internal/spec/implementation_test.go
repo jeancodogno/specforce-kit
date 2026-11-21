@@ -446,14 +446,60 @@ func TestParseTasks_ParallelTasks(t *testing.T) {
 	}
 }
 
+// hookHelperEnv switches the test binary into TestHookHelperProcess mode.
+const hookHelperEnv = "SPECFORCE_TEST_HOOK_HELPER"
+
+// TestHookHelperProcess is not a real test. Hook commands built by
+// createHookScript re-run the test binary on it, so the hook is portable to
+// every platform (no shell script): it appends its name to the log and exits.
+func TestHookHelperProcess(t *testing.T) {
+	if os.Getenv(hookHelperEnv) != "1" {
+		return
+	}
+	args := os.Args
+	for i, a := range args {
+		if a == "--" {
+			args = args[i+1:]
+			break
+		}
+	}
+	if len(args) != 2 {
+		fmt.Fprintf(os.Stderr, "hook helper: expected <name> <log>, got %q\n", args)
+		os.Exit(2)
+	}
+	// #nosec G304 - the log path is created by the calling test
+	f, err := os.OpenFile(args[1], os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	_, err = fmt.Fprintln(f, args[0])
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
+// createHookScript returns a hook command that appends name to logPath when
+// run. It re-runs the test binary (see TestHookHelperProcess) instead of a
+// shell script, so it works on Linux, macOS and Windows.
 func createHookScript(t *testing.T, tmpDir, name, logPath string) string {
 	t.Helper()
-	scriptPath := filepath.Join(tmpDir, name)
-	scriptContent := fmt.Sprintf("#!/bin/sh\necho %s >> %s\n", name, logPath)
-	if err := os.WriteFile(scriptPath, []byte(scriptContent), 0755); err != nil {
-		t.Fatalf("failed to write hook script: %v", err)
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatalf("failed to locate the test binary: %v", err)
 	}
-	return scriptPath
+	cmd := fmt.Sprintf("%s -test.run=^TestHookHelperProcess$ -- %s %s", exe, name, logPath)
+	// Hook commands are split on whitespace, so no part may contain any.
+	if len(strings.Fields(cmd)) != 5 {
+		t.Fatalf("hook command parts must not contain whitespace (tmp dir %q): %q", tmpDir, cmd)
+	}
+	t.Setenv(hookHelperEnv, "1")
+	return cmd
 }
 
 func countLogLines(t *testing.T, logPath, match string) int {
@@ -580,7 +626,7 @@ func TestService_UpdateTaskStatus_HookFailureRollback(t *testing.T) {
 
 	config := &core.ProjectConfig{
 		Hooks: core.HooksConfig{
-			OnTaskFinished: []string{"false"},
+			OnTaskFinished: []string{"go no-such-command"},
 		},
 	}
 	svc := NewService(nil, &mockConfigProvider{config: config})

@@ -338,7 +338,7 @@ func TestDownloadHygiene_TempCleanupOnEveryFailure(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Setenv("HOME", t.TempDir())
+			setTestHome(t)
 			tmp := isolatedTmpDir(t)
 			ts := httptest.NewServer(tc.handler)
 			defer ts.Close()
@@ -354,7 +354,7 @@ func TestDownloadHygiene_TempCleanupOnEveryFailure(t *testing.T) {
 }
 
 func TestDownloadHygiene_ChecksumTimeoutHonorsContext(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	tmp := isolatedTmpDir(t)
 
 	release := make(chan struct{})

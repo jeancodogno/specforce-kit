@@ -29,6 +29,8 @@ func TestServiceCheckForUpdate(t *testing.T) {
 	fakeNow := time.Date(2023, 10, 27, 10, 0, 0, 0, time.UTC)
 	svc := NewService(mgr, mockProvider, "v1.0.0")
 	svc.now = func() time.Time { return fakeNow }
+	launches := 0
+	svc.launch = func() error { launches++; return nil }
 
 	// 1. First check - should trigger
 	// 1. Initial check should trigger background process
@@ -40,6 +42,9 @@ func TestServiceCheckForUpdate(t *testing.T) {
 	// 2. Second check immediately - should be throttled
 	// No way to verify easily without checking state, but CheckForUpdate doesn't update state itself anymore,
 	// it's the spawned process that does.
+	if launches != 1 {
+		t.Errorf("expected exactly one background launch, got %d", launches)
+	}
 }
 
 func TestServiceIsUpdateAvailable(t *testing.T) {
@@ -156,7 +161,7 @@ type swapFixture struct {
 // An empty target means "this fixture's active binary".
 func newSwapFixture(t *testing.T, runningVer, stagedVer, target string) *swapFixture {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	mgr, err := NewStateManager()
 	if err != nil {
 		t.Fatal(err)
@@ -297,6 +302,7 @@ func TestSwap_UpdateStagedForAnotherExecutableIsLeftIntact(t *testing.T) {
 }
 
 func TestSwap_FailureIsTerminalForThatVersion(t *testing.T) {
+	skipWithoutPermissionBits(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root ignores directory permissions")
 	}
@@ -359,7 +365,7 @@ type bgFixture struct {
 
 func newBGFixture(t *testing.T, provider Provider) *bgFixture {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	mgr, err := NewStateManager()
 	if err != nil {
 		t.Fatal(err)
@@ -435,6 +441,7 @@ func TestBackgroundUpdate_ProviderErrorPersistsCheckTimeAndThrottles(t *testing.
 }
 
 func TestBackgroundUpdate_NonWritableInstallDirRecordsManualUpdate(t *testing.T) {
+	skipWithoutPermissionBits(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root ignores directory permissions")
 	}
@@ -488,8 +495,14 @@ func TestBackgroundUpdate_WritableInstallDirStagesForResolvedTarget(t *testing.T
 	if !s.UpdateReady || s.StagedVersion != "v2.0.0" {
 		t.Errorf("expected v2.0.0 staged and ready, got %+v", s)
 	}
-	if s.TargetPath != f.exePath {
-		t.Errorf("expected target path %q, got %q", f.exePath, s.TargetPath)
+	// The product records the symlink-resolved path (/private/var on macOS,
+	// long folder names on Windows); resolve the expectation the same way.
+	wantTarget, err := filepath.EvalSymlinks(f.exePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.TargetPath != wantTarget {
+		t.Errorf("expected target path %q, got %q", wantTarget, s.TargetPath)
 	}
 	if s.ManualUpdateVersion != "" {
 		t.Errorf("expected no manual update recorded, got %q", s.ManualUpdateVersion)
@@ -500,7 +513,7 @@ func TestBackgroundUpdate_WritableInstallDirStagesForResolvedTarget(t *testing.T
 
 func newNoticeService(t *testing.T, runningVer string, state *State) (*StateManager, *Service) {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	mgr, err := NewStateManager()
 	if err != nil {
 		t.Fatal(err)
@@ -632,7 +645,7 @@ type npmFixture struct {
 
 func newNPMFixture(t *testing.T, provider Provider) *npmFixture {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	mgr, err := NewStateManager()
 	if err != nil {
 		t.Fatal(err)
@@ -1178,6 +1191,7 @@ func TestVerifyRetry_FailuresOfAnotherVersionDoNotCount(t *testing.T) {
 }
 
 func TestVerifyRetry_SwapFailureStaysTerminal(t *testing.T) {
+	skipWithoutPermissionBits(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root ignores directory permissions")
 	}

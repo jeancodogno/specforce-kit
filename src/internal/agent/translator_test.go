@@ -623,10 +623,11 @@ func TestResolveMapping_TildeExpansionFailure(t *testing.T) {
 		},
 	}
 
-	oldHome := os.Getenv("HOME")
+	// t.Setenv restores both home variables after the test; then unset them.
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
 	_ = os.Unsetenv("HOME")
-	_ = os.Unsetenv("USERPROFILE") // For windows compatibility in tests if ever run there
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
+	_ = os.Unsetenv("USERPROFILE")
 
 	// macOS and some other platforms might have fallback mechanisms for UserHomeDir
 	// that don't rely on environment variables. If it still succeeds, we skip the test.
@@ -662,38 +663,38 @@ func TestCodexExpansionHierarchy(t *testing.T) {
 	}
 	bp := &core.Blueprint{ID: "test"}
 
-	// Cleanup env after test
-	defer func() {
-		_ = os.Unsetenv("CODEX_PROMPTS_DIR")
-		_ = os.Unsetenv("CODEX_HOME")
-	}()
+	// Isolated home (HOME and USERPROFILE); t.Setenv restores every variable.
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("CODEX_PROMPTS_DIR", "")
+	t.Setenv("CODEX_HOME", "")
 
 	// Case 1: CODEX_PROMPTS_DIR
-	_ = os.Setenv("CODEX_PROMPTS_DIR", "/path/to/prompts")
+	t.Setenv("CODEX_PROMPTS_DIR", "/path/to/prompts")
 	mappings, err := resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
 		t.Fatalf("resolveMappings failed: %v", err)
 	}
 	mapping := mappings[0]
-	if mapping.Path != "/path/to/prompts" {
-		t.Errorf("Priority 1 failed: expected /path/to/prompts, got %s", mapping.Path)
+	if want := filepath.FromSlash("/path/to/prompts"); mapping.Path != want {
+		t.Errorf("Priority 1 failed: expected %s, got %s", want, mapping.Path)
 	}
 
 	// Case 2: CODEX_HOME
 	_ = os.Unsetenv("CODEX_PROMPTS_DIR")
-	_ = os.Setenv("CODEX_HOME", "/home/user/.codex")
+	t.Setenv("CODEX_HOME", "/home/user/.codex")
 	mappings, err = resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
 		t.Fatalf("resolveMappings failed: %v", err)
 	}
 	mapping = mappings[0]
-	if mapping.Path != "/home/user/.codex/prompts" {
-		t.Errorf("Priority 2 failed: expected /home/user/.codex/prompts, got %s", mapping.Path)
+	if want := filepath.FromSlash("/home/user/.codex/prompts"); mapping.Path != want {
+		t.Errorf("Priority 2 failed: expected %s, got %s", want, mapping.Path)
 	}
 
 	// Case 3: Default ~/.codex/prompts
 	_ = os.Unsetenv("CODEX_HOME")
-	home, _ := os.UserHomeDir()
 	mappings, err = resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
 		t.Fatalf("resolveMappings failed: %v", err)
@@ -738,8 +739,8 @@ func TestCodexGlobalLocalIsolation(t *testing.T) {
 		t.Fatalf("resolveMappings failed: %v", err)
 	}
 	mapping := mappings[0]
-	if mapping.Path != globalDir {
-		t.Errorf("expected global path %s, got %s", globalDir, mapping.Path)
+	if want := filepath.FromSlash(globalDir); mapping.Path != want {
+		t.Errorf("expected global path %s, got %s", want, mapping.Path)
 	}
 
 	// 2. Verify Skill is Local (Relative)

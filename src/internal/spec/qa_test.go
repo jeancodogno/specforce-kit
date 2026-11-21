@@ -237,9 +237,12 @@ func TestSaveMetadata_AtomicMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm() != 0600 {
-		t.Errorf("expected mode 0600, got %v", info.Mode().Perm())
-	}
+	t.Run("owner-only file mode", func(t *testing.T) {
+		skipWithoutPermissionBits(t)
+		if info.Mode().Perm() != 0600 {
+			t.Errorf("expected mode 0600, got %v", info.Mode().Perm())
+		}
+	})
 	entries, _ := os.ReadDir(dir)
 	if len(entries) != 1 {
 		var names []string

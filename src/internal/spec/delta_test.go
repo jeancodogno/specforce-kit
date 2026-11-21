@@ -454,10 +454,13 @@ func TestSealDelta(t *testing.T) {
 	if !bytes.Equal(modBefore, modAfter) || !bytes.Equal(delBefore, delAfter) {
 		t.Error("seal must not change the module or the delta document")
 	}
-	info, _ := os.Stat(filepath.Join(p.root, ".specforce", "specs", deltaSlug, "spec.yaml"))
-	if info.Mode().Perm() != 0600 {
-		t.Errorf("spec.yaml mode = %v", info.Mode().Perm())
-	}
+	t.Run("owner-only file mode", func(t *testing.T) {
+		skipWithoutPermissionBits(t)
+		info, _ := os.Stat(filepath.Join(p.root, ".specforce", "specs", deltaSlug, "spec.yaml"))
+		if info.Mode().Perm() != 0600 {
+			t.Errorf("spec.yaml mode = %v", info.Mode().Perm())
+		}
+	})
 }
 
 func TestSealDelta_RefusesInvalid(t *testing.T) {

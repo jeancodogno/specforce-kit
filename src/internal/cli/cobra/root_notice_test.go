@@ -8,11 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// setupNoticeTest isolates HOME, records a pending manual-update version and
+// setupNoticeTest isolates HOME and USERPROFILE, records a pending manual-update version and
 // installs a service and TTY check for the post-run hook.
 func setupNoticeTest(t *testing.T, tty bool) *upgrade.StateManager {
 	t.Helper()
-	t.Setenv("HOME", t.TempDir())
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	mgr, err := upgrade.NewStateManager()
 	if err != nil {
 		t.Fatal(err)

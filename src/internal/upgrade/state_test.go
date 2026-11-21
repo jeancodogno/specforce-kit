@@ -10,13 +10,8 @@ import (
 )
 
 func TestNewStateManager(t *testing.T) {
-	// We need to set up HOME or XDG_CONFIG_HOME if we want to test the default path
-	oldHome := os.Getenv("HOME")
-	tempHome := t.TempDir()
-	if err := os.Setenv("HOME", tempHome); err != nil {
-		t.Fatalf("failed to set HOME: %v", err)
-	}
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
+	// The default path lives under the home directory: isolate it.
+	setTestHome(t)
 
 	mgr, err := NewStateManager()
 	if err != nil {
@@ -64,14 +59,17 @@ func TestStateManager_Persistence(t *testing.T) {
 	}
 
 	// Verify file permissions
-	info, err := os.Stat(statePath)
-	if err != nil {
-		t.Fatalf("failed to stat state file: %v", err)
-	}
-	expectedMode := os.FileMode(0600)
-	if info.Mode().Perm() != expectedMode {
-		t.Errorf("expected file mode %v, got %v", expectedMode, info.Mode().Perm())
-	}
+	t.Run("owner-only file mode", func(t *testing.T) {
+		skipWithoutPermissionBits(t)
+		info, err := os.Stat(statePath)
+		if err != nil {
+			t.Fatalf("failed to stat state file: %v", err)
+		}
+		expectedMode := os.FileMode(0600)
+		if info.Mode().Perm() != expectedMode {
+			t.Errorf("expected file mode %v, got %v", expectedMode, info.Mode().Perm())
+		}
+	})
 
 	// Test Load (Existing)
 	loaded, err := mgr.Load()
@@ -168,7 +166,7 @@ func TestStateRepair_UnparseableStateLoadsAsEmpty(t *testing.T) {
 	}
 	for name, data := range cases {
 		t.Run(name, func(t *testing.T) {
-			t.Setenv("HOME", t.TempDir())
+			setTestHome(t)
 			mgr, err := NewStateManager()
 			if err != nil {
 				t.Fatal(err)
@@ -202,7 +200,7 @@ func TestStateRepair_UnparseableStateLoadsAsEmpty(t *testing.T) {
 }
 
 func TestStateRepair_ReadErrorIsReturned(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	setTestHome(t)
 	mgr, err := NewStateManager()
 	if err != nil {
 		t.Fatal(err)

@@ -2,6 +2,8 @@ package project_test
 
 import (
 	"context"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,6 +31,34 @@ tools:
 	}
 }
 
+// listToolFiles describes every file and directory under the tool folder, so
+// a failure shows what the installation actually created.
+func listToolFiles(root string) string {
+	var found []string
+	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			found = append(found, fmt.Sprintf("%s (walk error: %v)", p, err))
+			return nil
+		}
+		rel, relErr := filepath.Rel(root, p)
+		if relErr != nil {
+			rel = p
+		}
+		if d.IsDir() {
+			rel += string(filepath.Separator)
+		}
+		found = append(found, rel)
+		return nil
+	})
+	if err != nil {
+		found = append(found, fmt.Sprintf("(walk failed: %v)", err))
+	}
+	if len(found) == 0 {
+		return fmt.Sprintf("nothing under %s", root)
+	}
+	return fmt.Sprintf("files under %s: [%s]", root, strings.Join(found, ", "))
+}
+
 func TestService_UpdateTools_RefreshesAllCategories(t *testing.T) {
 	kitFS := createMockKitFS()
 	artifactsFS := fstest.MapFS{}
@@ -52,7 +82,7 @@ func TestService_UpdateTools_RefreshesAllCategories(t *testing.T) {
 	filesToModify := []string{agentPath, skillPath, commandPath}
 	for _, p := range filesToModify {
 		if err := os.WriteFile(p, []byte("user-modified-content"), 0644); err != nil {
-			t.Fatalf("failed to modify file %s: %v", p, err)
+			t.Fatalf("failed to modify file %s: %v; %s", p, err, listToolFiles(filepath.Join(tmpDir, ".claude")))
 		}
 	}
 
@@ -75,7 +105,7 @@ func TestService_UpdateTools_RefreshesAllCategories(t *testing.T) {
 	for _, tt := range tests {
 		content, err := os.ReadFile(tt.path)
 		if err != nil {
-			t.Errorf("failed to read file %s: %v", tt.path, err)
+			t.Errorf("failed to read file %s: %v; %s", tt.path, err, listToolFiles(filepath.Join(tmpDir, ".claude")))
 			continue
 		}
 		// Note: AdaptArtifacts might inject headers, so we check if it contains the kit content

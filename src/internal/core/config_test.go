@@ -51,9 +51,14 @@ func TestEnsureConfigExists(t *testing.T) {
 	})
 
 	t.Run("returns error on security failure", func(t *testing.T) {
-		err := EnsureConfigExists("/nonexistent/root")
+		// A root below a regular file can never be created, on any platform.
+		blocker := filepath.Join(t.TempDir(), "not-a-dir")
+		if err := os.WriteFile(blocker, []byte("file"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		err := EnsureConfigExists(filepath.Join(blocker, "root"))
 		if err == nil {
-			t.Fatal("expected error for nonexistent root")
+			t.Fatal("expected error for a root that cannot be created")
 		}
 	})
 }
