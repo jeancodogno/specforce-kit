@@ -1,7 +1,7 @@
 {
   "name": "@jeancodogno/specforce-kit",
   "version": "1.0.0-beta.3",
-  "description": "SpecForce Kit CLI - Distributed via Native Binaries",
+  "description": "Specforce — Spec-Driven Development for AI agents",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jeancodogno/specforce-kit.git"

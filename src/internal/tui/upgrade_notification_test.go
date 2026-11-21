@@ -3,6 +3,8 @@ package tui
 import (
 	"strings"
 	"testing"
+
+	"github.com/muesli/termenv"
 )
 
 func TestManualUpdateNotification_NamesVersionAndCommand(t *testing.T) {
@@ -35,6 +37,24 @@ func TestUpdateAppliedNotification_NamesVersion(t *testing.T) {
 	out := RenderUpdateAppliedNotification("v1.0.0-beta.3")
 	if !strings.Contains(out, "v1.0.0-beta.3") {
 		t.Errorf("applied notice must name the version, got %q", out)
+	}
+}
+
+func TestUpgradeAppliedNotification_NoEscapesWithAscii(t *testing.T) {
+	withColorState(t, termenv.Ascii, true)
+	out := RenderUpdateAppliedNotification("v1.0.0-beta.3")
+	if strings.Contains(out, "\x1b[") {
+		t.Errorf("applied notice must have no escape sequences under Ascii, got %q", out)
+	}
+	if !strings.Contains(out, "(Specforce updated to v1.0.0-beta.3)") {
+		t.Errorf("applied notice text changed, got %q", out)
+	}
+}
+
+func TestUpgradeAppliedNotification_UsesTextGrey(t *testing.T) {
+	withColorState(t, termenv.TrueColor, true)
+	if out := RenderUpdateAppliedNotification("v1"); !strings.Contains(out, seq("#808080", false)) {
+		t.Errorf("applied notice must use textGrey, got %q", out)
 	}
 }
 

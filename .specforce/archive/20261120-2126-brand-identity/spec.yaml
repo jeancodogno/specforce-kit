@@ -1,0 +1,247 @@
+slug: 20261120-2126-brand-identity
+name: 20261120-2126-brand-identity
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236821439Z
+              completed_at: 2026-11-21T01:05:00.956588276Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822076Z
+              completed_at: 2026-11-21T01:05:00.956588858Z
+    T1.3:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822227Z
+              completed_at: 2026-11-21T01:05:00.956589072Z
+    T1.4:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822334Z
+              completed_at: 2026-11-21T01:05:00.956589272Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822447Z
+              completed_at: 2026-11-21T01:05:00.956589482Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822537Z
+              completed_at: 2026-11-21T01:05:00.956589685Z
+    T2.3:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822628Z
+              completed_at: 2026-11-21T01:05:00.956589883Z
+    T2.4:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822719Z
+              completed_at: 2026-11-21T01:05:00.95659008Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236822812Z
+              completed_at: 2026-11-21T01:05:00.956590288Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236826728Z
+              completed_at: 2026-11-21T01:05:00.956590483Z
+    T3.3:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236826858Z
+              completed_at: 2026-11-21T01:05:00.95659068Z
+    T3.4:
+        sessions:
+            - started_at: 2026-11-21T00:34:42.236826969Z
+              completed_at: 2026-11-21T01:05:00.956590877Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-21T01:05:19.543451167Z
+              completed_at: 2026-11-21T01:06:05.647555181Z
+    T4.2:
+        sessions:
+            - started_at: 2026-11-21T01:05:19.543451508Z
+              completed_at: 2026-11-21T01:06:05.64755606Z
+    T4.3:
+        sessions:
+            - started_at: 2026-11-21T01:05:19.543451627Z
+              completed_at: 2026-11-21T01:06:05.647556319Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-21T01:18:31Z
+    criteria:
+        - id: US-1.1
+          scenario: Brand folder contains SVG masters
+          evidence: 27 files incl. 5 SVG masters; legacy logos deleted
+          verdict: PASSED
+        - id: US-1.2
+          scenario: Single regeneration command, byte-identical
+          evidence: make brand-assets 27 files, sha256 identical across runs; sizes match table 2.5
+          verdict: PASSED
+        - id: US-1.3
+          scenario: Unwritable file handling
+          evidence: read-only dir -> rc=1, names file, pre-existing file untouched; mid-run failure leaves later files untouched
+          verdict: PASSED
+        - id: US-1.4
+          scenario: 16px icon distinct
+          evidence: visual + TestAppIcon16BracketAndCheckStayDistinct (row 7)
+          verdict: PASSED
+        - id: US-1-NFR
+          scenario: Perf <10s, flat, no deps in binary
+          evidence: 1.27s; no text/stroke/gradient; separate go.mod; root only moves termenv/x-term to direct
+          verdict: PASSED
+        - id: US-2.1
+          scenario: Full Gate mark on init
+          evidence: S1 three expected lines with wordmark+tagline
+          verdict: PASSED
+        - id: US-2.2
+          scenario: Version single leading v
+          evidence: v9.9.9 and 1.0.0-beta.3 builds render one v
+          verdict: PASSED
+        - id: US-2.3
+          scenario: No mark when piped
+          evidence: grep count 0
+          verdict: PASSED
+        - id: US-2.4
+          scenario: Narrow terminal stacks
+          evidence: cols 47/40/20 stacked; 48 side-by-side
+          verdict: PASSED
+        - id: US-3.1
+          scenario: Compact header on report screens and console
+          evidence: all report screens start with [✓] specforce v…
+          verdict: PASSED
+        - id: US-3.2
+          scenario: Footer lowercase
+          evidence: 'specforce v1.0.0-beta.3 | Workspace: …'
+          verdict: PASSED
+        - id: US-3.3
+          scenario: Piped output unchanged
+          evidence: cmp vs HEAD build identical incl. --json
+          verdict: PASSED
+        - id: US-3.4
+          scenario: Console no duplicate header
+          evidence: header emitted once over 12s
+          verdict: PASSED
+        - id: US-3-NFR
+          scenario: Header <=34 cols
+          evidence: 34 cols for v+19 chars
+          verdict: PASSED
+        - id: US-4.1
+          scenario: Dark palette unchanged
+          evidence: S6 dark sequences; theme dark values identical to HEAD
+          verdict: PASSED
+        - id: US-4.2
+          scenario: Light palette, default primary fg
+          evidence: S5 light sequences, spec bold without fg
+          verdict: PASSED
+        - id: US-4.3
+          scenario: Light badges white label; INFO neutral
+          evidence: overlay test sequences
+          verdict: PASSED
+        - id: US-4.4
+          scenario: Unknown background -> dark
+          evidence: malformed COLORFGBG and non-interactive -> dark
+          verdict: PASSED
+        - id: US-4-NFR
+          scenario: Contrast >=4.5, no own query, no stray literals
+          evidence: contrast 5.40-6.86; single pre-existing bubbletea query; TestNoStrayColor
+          verdict: PASSED
+        - id: US-5.1
+          scenario: NO_COLOR zero escapes same shape
+          evidence: S4 count 0, header present (re-run by orchestrator)
+          verdict: PASSED
+        - id: US-5.2
+          scenario: Empty NO_COLOR keeps colors
+          evidence: colored output observed
+          verdict: PASSED
+        - id: US-5.3
+          scenario: Labels distinguish statuses
+          evidence: SUCCESS/WARNING/ERROR/INFO labels, 0 escapes
+          verdict: PASSED
+        - id: US-5-NFR
+          scenario: Decision before any output
+          evidence: ConfigureColor first statement in Execute
+          verdict: PASSED
+        - id: US-6.1
+          scenario: Theme-specific lockups on repo page
+          evidence: <picture> sources present; rendering requires merge to main
+          verdict: NOT-VERIFIABLE
+        - id: US-6.2
+          scenario: App icon fallback on registry
+          evidence: <img> fallback present; npm rendering requires publish
+          verdict: NOT-VERIFIABLE
+        - id: US-6.3
+          scenario: Title, tagline, localized alt
+          evidence: all three READMEs correct
+          verdict: PASSED
+        - id: US-6.4
+          scenario: Package README copies
+          evidence: no OpenSpec; identical to README.md
+          verdict: PASSED
+        - id: US-6.5
+          scenario: package description and short help
+          evidence: exact strings
+          verdict: PASSED
+        - id: US-6.6
+          scenario: Absolute image URLs
+          evidence: raw.githubusercontent main URLs
+          verdict: PASSED
+        - id: US-6-NFR
+          scenario: Size and preservation
+          evidence: max 16.9KB; only header/tagline/title lines changed
+          verdict: PASSED
+        - id: US-7.1
+          scenario: Constitution brand rules
+          evidence: grep chain passes; Brand and Color environment subsections
+          verdict: PASSED
+        - id: US-7.2
+          scenario: Contradictions corrected
+          evidence: 'braille, #000000 canvas, Warning/Orange removed'
+          verdict: PASSED
+        - id: US-7-NFR
+          scenario: <200 lines, structure kept
+          evidence: 151 lines, sections unchanged
+          verdict: PASSED
+        - id: S1
+          scenario: Full mark on init
+          evidence: expected lines
+          verdict: PASSED
+        - id: S2
+          scenario: Compact header
+          evidence: first line [✓] specforce
+          verdict: PASSED
+        - id: S3
+          scenario: Piped no branding
+          evidence: "0"
+          verdict: PASSED
+        - id: S4
+          scenario: NO_COLOR no escapes
+          evidence: 0 (re-run)
+          verdict: PASSED
+        - id: S5
+          scenario: Light palette
+          evidence: 0;121;77 present, 0;250;154 absent (re-run)
+          verdict: PASSED
+        - id: S6
+          scenario: Dark palette
+          evidence: 0;250;154 present
+          verdict: PASSED
+        - id: S7
+          scenario: Reproducible assets
+          evidence: sha256 identical (assets uncommitted)
+          verdict: PASSED
+    findings:
+        - title: brandgen removes pre-existing .tmp
+          detail: writeAtomic deletes an empty pre-existing <name>.tmp on failure; low impact
+        - title: Pre-existing 5s stall on unresponsive ptys
+          detail: bubbletea init OSC 11 query; same on HEAD; out of scope
+        - title: Upgrade screen dark colors changed
+          detail: magenta/red/green mapped to palette per design 4.1; conflicts with letter of dark-invariant
+        - title: Specforce Kit in README prose and config template
+          detail: README body lines and core/config.go commented example; for docs spec
+        - title: formatVersion edge cases
+          detail: '''vv1.0'' and empty version not normalized'
+        - title: ui-ux.md pending/description glyph light value missing
+          detail: 'only #808080 listed'
+        - title: QA cleanup used rm -rf /tmp/tmp.*
+          detail: may have removed unrelated mktemp dirs in /tmp

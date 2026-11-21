@@ -11,7 +11,7 @@ import (
 // RenderImplementationStatus renders the implementation status report.
 func RenderImplementationStatus(report *spec.ImplementationReport) error {
 	if IsTTY() {
-		PrintBranding()
+		PrintHeader()
 	}
 
 	renderStatusHeader(report)

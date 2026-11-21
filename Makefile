@@ -43,6 +43,9 @@ bootstrap:
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
 
+brand-assets:
+	cd scripts/brandgen && go run . -out ../../assets/brand
+
 clean-test:
 	rm -rf test-init/.specforce test-init/.agent test-init/.claude test-init/.gemini
 	rm -f results.sarif coverage.out
@@ -72,4 +75,4 @@ npm-packages:
 			"$$pkg_name" "$(VERSION)" "$$os" "$$arch" "$$os" "$$arch" "$$( [ "$$os" = "win32" ] && echo ".exe" )" > $$pkg_dir/package.json; \
 	done
 
-.PHONY: build test lint security quality check bootstrap clean-test install uninstall npm-packages
+.PHONY: build test lint security quality check bootstrap clean-test install uninstall npm-packages brand-assets

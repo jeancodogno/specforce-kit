@@ -4,85 +4,113 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
 
-var brailleLines = []string{
-	`    ⢠⣶⣶⡄     `,
-	`  ⢠⣿⣿⣿⣿⡄    `,
-	` ⢠⣿⣿⣿⣿⣿⣿⡄   `,
-	` ⠻⣿⣿⣿⣿⣿⣿⠟   `,
-	`   ⠻⣿⣿⣿⠟    `,
-	`     ⠻⠟       `,
+// Tagline is the one-line product description shown with the brand mark.
+const Tagline = "Spec-Driven Development for AI agents"
+
+// gateMark is the 3-line Gate symbol; each line is split into the left
+// bracket (Mint), the check mark (Ice) and the right bracket (Cyan).
+var gateMark = [3][3]string{
+	{"┌─", "    ╱", "─┐"},
+	{"│ ", "╲  ╱ ", " │"},
+	{"└─", " ╲╱  ", "─┘"},
 }
 
-var gradientColors = []lipgloss.Color{
-	lipgloss.Color("#00FA9A"),
-	lipgloss.Color("#00FCBB"),
-	lipgloss.Color("#00FDEE"),
-	lipgloss.Color("#00FFFF"),
-	lipgloss.Color("#70FFFF"),
-	lipgloss.Color("#E0FFFF"),
+// Layout of the full mark: text beside the symbol, or below it.
+const (
+	layoutSideBySide = iota
+	layoutStacked
+)
+
+// sideBySideMinWidth is the narrowest terminal that fits mark + gap + tagline.
+const sideBySideMinWidth = 48
+
+// brandCache memoizes one rendered brand form for a given version.
+type brandCache struct {
+	key   string
+	value string
 }
 
 var (
-	cachedLogo     string
-	cachedBranding string
+	cachedHeader   brandCache
+	cachedFullMark [2]brandCache
 )
 
-// GenerateLogo returns the styled lipgloss string for the new Ghost in the Machine logo.
-func GenerateLogo(withSubtitle bool) string {
-	if withSubtitle && cachedBranding != "" {
-		return cachedBranding
+// formatVersion normalizes a version to exactly one leading "v".
+func formatVersion(version string) string {
+	return "v" + strings.TrimPrefix(version, "v")
+}
+
+// renderWordmark renders the lowercase wordmark: "spec" primary, "force" Mint.
+func renderWordmark() string {
+	return WordmarkSpecStyle.Render("spec") + WordmarkForceStyle.Render("force")
+}
+
+// renderBrandLine renders "specforce v<version>" with the version dimmed.
+func renderBrandLine(version string) string {
+	return renderWordmark() + " " + DimmedStyle.Render(formatVersion(version))
+}
+
+// renderMarkLines renders the three colored lines of the Gate symbol.
+func renderMarkLines() []string {
+	lines := make([]string, 0, len(gateMark))
+	for _, l := range gateMark {
+		lines = append(lines, MarkLeftStyle.Render(l[0])+MarkCheckStyle.Render(l[1])+MarkRightStyle.Render(l[2]))
 	}
-	if !withSubtitle && cachedLogo != "" {
-		return cachedLogo
+	return lines
+}
+
+func layoutFor(width int) int {
+	if width >= sideBySideMinWidth {
+		return layoutSideBySide
 	}
+	return layoutStacked
+}
 
-	var renderedBraille []string
-	for i, line := range brailleLines {
-		style := lipgloss.NewStyle().Foreground(gradientColors[i]).Bold(true)
-		renderedBraille = append(renderedBraille, style.Render(line))
-	}
-	brailleBlock := lipgloss.JoinVertical(lipgloss.Left, renderedBraille...)
+// renderFullMark renders the full Gate mark with wordmark, version and
+// tagline, preceded by one blank line of top padding.
+func renderFullMark(version string, width int) string {
+	mark := renderMarkLines()
+	text := []string{renderBrandLine(version), DimmedStyle.Render(Tagline)}
 
-	var textLines []string
-	textLines = append(textLines, "") // Alignment for Line 0
-
-	specforceText := lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF")).Bold(true).Render("SPECFORCE ")
-	versionStr := core.Version
-	if !strings.HasPrefix(versionStr, "v") {
-		versionStr = "v" + versionStr
-	}
-	versionText := DimmedStyle.Render(versionStr)
-	textLines = append(textLines, specforceText+versionText)
-
-	if withSubtitle {
-		textLines = append(textLines, DimmedStyle.Render("Spec-Driven Development (SDD)"))
-		textLines = append(textLines, DimmedStyle.Render("Ecosystem for AI-assisted development"))
-	}
-
-	textBlock := lipgloss.JoinVertical(lipgloss.Left, textLines...)
-
-	finalStr := lipgloss.JoinHorizontal(lipgloss.Top, brailleBlock, textBlock)
-	finalStr = lipgloss.NewStyle().Padding(1, 0, 0, 0).Render(finalStr)
-
-	if withSubtitle {
-		cachedBranding = finalStr
+	var lines []string
+	if layoutFor(width) == layoutStacked {
+		lines = append(mark, text...)
 	} else {
-		cachedLogo = finalStr
+		lines = []string{mark[0] + "  " + text[0], mark[1] + "  " + text[1], mark[2]}
 	}
-
-	return finalStr
+	return "\n" + strings.Join(lines, "\n")
 }
 
-// PrintLogo renders the Specforce logo.
-func PrintLogo() {
-	fmt.Println(GenerateLogo(false))
+// fullMark returns the full mark, rendered at most once per layout.
+func fullMark(version string, width int) string {
+	c := &cachedFullMark[layoutFor(width)]
+	if c.value == "" || c.key != version {
+		*c = brandCache{key: version, value: renderFullMark(version, width)}
+	}
+	return c.value
 }
 
-// PrintBranding renders both the logo and the subtitle.
+// RenderCompactHeader returns the one-line brand header "[✓] specforce v<version>".
+func RenderCompactHeader(version string) string {
+	if cachedHeader.value != "" && cachedHeader.key == version {
+		return cachedHeader.value
+	}
+	symbol := MarkLeftStyle.Render("[") + MarkCheckStyle.Render("✓") + MarkRightStyle.Render("]")
+	cachedHeader = brandCache{key: version, value: symbol + " " + renderBrandLine(version)}
+	return cachedHeader.value
+}
+
+// PrintHeader prints the compact brand header used on working screens. The
+// blank line that follows it comes from the leading newline every caller
+// already prints before its title.
+func PrintHeader() {
+	fmt.Println(RenderCompactHeader(core.Version))
+}
+
+// PrintBranding prints the full Gate mark used on welcome surfaces.
 func PrintBranding() {
-	fmt.Println(GenerateLogo(true))
+	fmt.Println(fullMark(core.Version, GetTerminalWidth()))
 }

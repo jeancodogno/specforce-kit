@@ -16,7 +16,7 @@ func RenderSpecStatus(status spec.SpecStatus) string {
 	successStyle := lipgloss.NewStyle().Foreground(successGreen)
 	errorStyle := lipgloss.NewStyle().Foreground(errorRed)
 	descStyle := lipgloss.NewStyle().Foreground(textGrey)
-	nameStyle := lipgloss.NewStyle().Foreground(textWhite).Bold(true)
+	nameStyle := lipgloss.NewStyle().Foreground(textPrimary).Bold(true)
 	warnStyle := lipgloss.NewStyle().Foreground(brandCyan)
 
 	// Render Refinement State if active
@@ -56,7 +56,7 @@ func RenderSpecStatus(status spec.SpecStatus) string {
 		for _, err := range status.RefinementErrors {
 			fmt.Fprintf(&builder, "  %s\n", errorStyle.Render("↳ "+err))
 		}
-		
+
 		if status.RefinementIteration >= 3 {
 			fmt.Fprintf(&builder, "\n %s\n", warnStyle.Render("Automatic refinement reached limit. Manual intervention required."))
 		}

@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/jeancodogno/specforce-kit/src/internal/cli"
 	"github.com/jeancodogno/specforce-kit/src/internal/tui"
 	"github.com/jeancodogno/specforce-kit/src/internal/upgrade"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -22,8 +23,10 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:   "specforce",
-	Short: "Specforce: AI-Native Software Design and Delivery Framework",
-	Long: `Specforce is an AI-native framework designed to streamline the software 
+	Short: tui.Tagline,
+	Long: tui.Tagline + `
+
+Specforce is an AI-native framework designed to streamline the software 
 development lifecycle through Spec-Driven Development (SDD). It coordinates 
 AI agents and human developers to build high-quality software from 
 well-defined specifications.`,
@@ -105,6 +108,7 @@ func showUpdateNotice(cmd *cobra.Command) {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(ctx context.Context, v string) error {
+	tui.ConfigureColor(os.Getenv, tui.IsTTY(), lipgloss.HasDarkBackground)
 	appVersion = v
 	rootCmd.Version = v
 	rootCmd.SetVersionTemplate("specforce version {{.Version}}\n")

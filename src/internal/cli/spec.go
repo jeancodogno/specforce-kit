@@ -447,7 +447,7 @@ func (e *Executor) HandleSpecStatus(ctx context.Context, ui core.UI, slug string
 
 func (e *Executor) renderSpecStatusTUI(slug string, status spec.SpecStatus) {
 	if tui.IsTTY() {
-		tui.PrintBranding()
+		tui.PrintHeader()
 	}
 
 	fmt.Println("\n" + tui.HeaderStyle.Render("SPEC COMPLETENESS REPORT: "+strings.ToUpper(slug)))
@@ -525,7 +525,7 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 
 func (e *Executor) renderSpecArtifactTUI(art *spec.Artifact) {
 	if tui.IsTTY() {
-		tui.PrintBranding()
+		tui.PrintHeader()
 	}
 
 	fmt.Println("\n" + tui.HeaderStyle.Render("SPEC ARTIFACT: "+strings.ToUpper(art.Name)))

@@ -45,14 +45,14 @@ func (m UpgradePromptModel) View() string {
 
 	promptStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#00FFFF"))
+		Foreground(brandCyan)
 
 	versionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF00FF")).
+		Foreground(brandMint).
 		Bold(true)
 
-	return fmt.Sprintf("\n %s Do you want to upgrade to version %s now? [y/N] ", 
-		promptStyle.Render("?"), 
+	return fmt.Sprintf("\n %s Do you want to upgrade to version %s now? [y/N] ",
+		promptStyle.Render("?"),
 		versionStyle.Render(m.Version))
 }
 

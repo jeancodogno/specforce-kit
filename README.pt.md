@@ -2,13 +2,15 @@
 <p align="center">
   <a href="https://github.com/jeancodogno/specforce-kit/">
     <picture>
-      <img src="assets/logo.png" alt="Logo Specforce" height="128">
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jeancodogno/specforce-kit/main/assets/brand/lockup-dark-256.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/jeancodogno/specforce-kit/main/assets/brand/lockup-light-256.png">
+      <img src="https://raw.githubusercontent.com/jeancodogno/specforce-kit/main/assets/brand/app-icon-256.png" alt="Logo do Specforce" height="128">
     </picture>
   </a>
 </p>
-<p align="center">Ecossistema para desenvolvimento assistido por IA.</p>
+<p align="center">Spec-Driven Development para agentes de IA.</p>
 
-# Specforce Kit
+# Specforce
 
 <p align="center">
   <a href="https://github.com/jeancodogno/specforce-kit/releases"><img src="https://img.shields.io/github/v/release/jeancodogno/specforce-kit?style=flat-square" alt="Latest Release"></a>

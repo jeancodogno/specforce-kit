@@ -16,7 +16,7 @@ func RenderConstitutionStatus(status constitution.ConstitutionStatus) string {
 	successStyle := lipgloss.NewStyle().Foreground(successGreen)
 	errorStyle := lipgloss.NewStyle().Foreground(errorRed)
 	descStyle := lipgloss.NewStyle().Foreground(textGrey)
-	nameStyle := lipgloss.NewStyle().Foreground(textWhite).Bold(true)
+	nameStyle := lipgloss.NewStyle().Foreground(textPrimary).Bold(true)
 
 	for _, artifact := range status.Artifacts {
 		glyph := errorStyle.Render(EmptyBulletGlyph)

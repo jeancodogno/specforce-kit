@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jeancodogno/specforce-kit/src/internal/core"
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
 )
 
@@ -126,7 +127,7 @@ func (m *ConsoleModel) View() string {
 func (m *ConsoleModel) renderDashboard() string {
 	var s strings.Builder
 
-	// 1. Logo
+	// 1. Brand header
 	s.WriteString(m.renderLogo())
 	s.WriteString("\n\n")
 
@@ -180,7 +181,7 @@ func (m *ConsoleModel) renderDashboard() string {
 }
 
 func (m *ConsoleModel) renderLogo() string {
-	return GenerateLogo(true) + "\n"
+	return RenderCompactHeader(core.Version) + "\n"
 }
 
 func (m *ConsoleModel) renderItem(item spec.StateItem) string {

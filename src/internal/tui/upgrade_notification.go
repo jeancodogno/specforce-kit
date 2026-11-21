@@ -8,19 +8,19 @@ import (
 
 // RenderUpdateNotification returns a stylized notification box for an available update.
 func RenderUpdateNotification(current, latest string) string {
-	// Neon Theme (Cyan/Magenta)
+	// Brand palette (Cyan/Mint)
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#00FFFF")). // Cyan
+		Foreground(brandCyan).
 		Padding(0, 1)
 
 	versionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF00FF")). // Magenta
+		Foreground(brandMint).
 		Bold(true)
 
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#00FFFF")).
+		BorderForeground(brandCyan).
 		Padding(1, 2).
 		MarginTop(1).
 		MarginBottom(1)
@@ -38,16 +38,16 @@ func RenderUpdateNotification(current, latest string) string {
 func RenderManualUpdateNotification(current, latest, command string) string {
 	titleStyle := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#00FFFF")). // Cyan
+		Foreground(brandCyan).
 		Padding(0, 1)
 
 	versionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF00FF")). // Magenta
+		Foreground(brandMint).
 		Bold(true)
 
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#00FFFF")).
+		BorderForeground(brandCyan).
 		Padding(1, 2).
 		MarginTop(1).
 		MarginBottom(1)
@@ -64,5 +64,6 @@ func RenderManualUpdateNotification(current, latest, command string) string {
 // RenderUpdateAppliedNotification returns a subtle line announcing that the
 // running binary was updated automatically.
 func RenderUpdateAppliedNotification(version string) string {
-	return fmt.Sprintf("\n\x1b[38;5;245m(Specforce updated to %s)\x1b[0m\n", version)
+	style := lipgloss.NewStyle().Foreground(textGrey)
+	return "\n" + style.Render(fmt.Sprintf("(Specforce updated to %s)", version)) + "\n"
 }

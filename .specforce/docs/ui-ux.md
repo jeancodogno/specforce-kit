@@ -6,25 +6,30 @@
 - **Atmosphere:** Surgical, alien, and extremely clean. Conveys the idea of an autonomous agent working flawlessly.
 - **Density Posture:** Compact (Optimized for standard terminal dimensions).
 - **Design Philosophy:** Optimizes for readability and fast keyboard navigation; avoids unnecessary visual clutter.
-- **Signature Moves:** Consistent "Branding" boxes, ASCII art logos (Braille-based), and color-coded status indicators. Minimalist separators instead of thick borders.
+- **Signature Moves:** The Gate mark (full on welcome surfaces, compact header `[✓] specforce` on working screens), adaptive light/dark colors, and color-coded status indicators. Minimalist separators instead of thick borders.
 
 ## 2. Color Palette & Roles
 ### Brand & Accent
-- **Primary Brand:** `#00FA9A` (Mint Green) | Primary borders, brand name, and major headings.
-- **Secondary Brand:** `#00FFFF` (Cyan) | Subheadings and active selection highlights.
-- **Accent:** `#E0FFFF` (Silver/Ice) | Muted subtitles and special focus elements.
+Values are adaptive: Dark is used on dark terminals, Light on light terminals (contrast ratio vs. a white background in parentheses).
+
+| Role | Dark | Light | Use |
+|---|---|---|---|
+| Primary Brand (Mint) | `#00FA9A` | `#007A4D` (5.4) | Primary borders, brand name, major headings |
+| Secondary Brand (Cyan) | `#00FFFF` | `#00727F` (5.7) | Subheadings and active selection highlights |
+| Accent (Ice) | `#E0FFFF` | `#3F5F6B` (6.9) | Muted subtitles and special focus elements |
+| Success / Done | `#5FFF87` | `#1E7A34` (5.4) | Successful operations and completed items (`◉`) |
+| Warning / In-Progress | `#FFFFAF` | `#8A6100` (5.5) | Non-critical alerts and active items (`◉`) |
+| Error | `#FF5F5F` | `#C62828` (5.6) | Critical failures, validation errors, destructive actions |
+| Info | `#87AFFF` | `#2F5FB3` (6.2) | Informational messages (documented role, not used by code yet) |
+| Secondary Text / Metadata | `#808080` | `#5C5C5C` (6.7) | Muted information, captions, pending items |
 
 ### Text & Feedback
-- **Primary Text:** `#FFFFFF` | Standard body text and labels.
-- **Secondary Text / Metadata:** `#808080` | Muted information, metadata, captions, and pending items.
-- **Error:** `#FF5F5F` | Critical failures, validation errors, and destructive actions.
-- **Success / Done:** `#5FFF87` | Successful operations and completed items (`◉`).
-- **Warning / In-Progress:** `#FFFFAF` | Non-critical alerts and active/working items (`◉`).
-- **Info:** `#87AFFF` | Informational messages and help context.
+- **Primary Text:** `#FFFFFF` on dark; the terminal default foreground on light. Standard body text and labels.
+- **Badges:** success, warning and error badges use a white label on the light fill (black label on the dark fill). The INFO badge stays neutral grey.
 
 ### Iconography & Status States
-- **Done:** `◉` (Filled Circle) in **Success Green** (`#5FFF87`).
-- **In-Progress:** `◉` (Filled Circle) in **Warning/Orange** (`#FFFFAF`).
+- **Done:** `◉` (Filled Circle) in **Success Green** (`#5FFF87` dark, `#1E7A34` light).
+- **In-Progress:** `◉` (Filled Circle) in **Warning/Yellow** (`#FFFFAF` dark, `#8A6100` light).
 - **Pending / Inactive:** `○` (Empty Circle) in **Secondary Gray** (`#808080`).
 - **Description / Context:** `↳` (Right Arrow) in **Secondary Gray** (`#808080`) for indented details.
 - **Timer Precision (Conditional):** To maximize high-fidelity feedback without overwhelming the interface, TUI timers MUST follow the **1Hz rule**:
@@ -32,10 +37,24 @@
     - **Long Durations (>= 60m):** Hide seconds (`HHh MMm`) to maintain high density and focus on high-signal data.
 
 ### Surface & Border
-- **Canvas:** `#000000` | Terminal background.
-- **Surface:** `#121212` | Highlighted block backgrounds.
-- **Muted Surface:** `#080808` | Secondary block backgrounds.
-- **Border:** `#444444` | Standard UI borders, preferring thin or dashed lines.
+- **Canvas:** terminal background (light or dark, detected). Never assume black.
+- **Surface:** `#121212` | Highlighted block backgrounds (dark terminals).
+- **Muted Surface:** `#080808` | Secondary block backgrounds (dark terminals).
+- **Border:** `#444444` dark / `#B0B0B0` light | Standard UI borders, preferring thin or dashed lines.
+- **Footer background:** `#111111` dark / `#EEEEEE` light.
+
+### Brand
+- **Symbol (Gate):** two brackets `[ ]` frame a check `✓`: a spec passing the gate. Left bracket Mint, check Ice, right bracket Cyan.
+- **Full mark** (shown on `specforce init`, 9 columns, 3 lines): `┌─    ╱─┐` / `│ ╲  ╱  │` / `└─ ╲╱  ─┘`, side by side with text at width >= 48, stacked below.
+- **Compact header** (report screens and console): `[✓] specforce v<version>`.
+- **Wordmark:** lowercase `specforce` in terminal and logo (`spec` primary text, `force` Mint); "Specforce" only in prose.
+- **Tagline:** "Spec-Driven Development for AI agents".
+- **Assets:** generated SVG/PNG live in `assets/brand/`; regenerate with `make brand-assets`.
+
+### Color environment
+- **Dark fallback:** when the background cannot be determined (non-interactive output), dark is assumed.
+- **`COLORFGBG`:** when set, its last field decides: 7 or 9-15 is light, any other number is dark; otherwise an interactive terminal is queried once. (The bubbletea framework issues one pre-existing background query on interactive terminals; specforce overrides its result.)
+- **`NO_COLOR`:** when set to a non-empty value, all color output is disabled.
 
 ## 3. Typography Rules
 ### Font Family
@@ -98,7 +117,7 @@
 
 ## 7. Do's and Don'ts
 ### Do
-- Use consistent ASCII art branding across all major views.
+- Use the full Gate mark on welcome surfaces and the compact header on working screens.
 - Ensure all interactive elements provide visual feedback on focus.
 - Adhere to the 80-character width standard for core content.
 
