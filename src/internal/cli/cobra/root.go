@@ -78,6 +78,10 @@ func isAgentCommand(cmd *cobra.Command) bool {
 	return false
 }
 
+// stableSwitchCommand is the command that moves an npm installation to the
+// stable channel; switching channels is always done by hand.
+const stableSwitchCommand = "npm install -g @jeancodogno/specforce-kit@latest"
+
 // showUpdateNotice writes the pending updater notice to the command's error
 // stream, only for interactive (stdout is a terminal), non-agent commands.
 // Notices are marked as shown only after they were written.
@@ -93,6 +97,8 @@ func showUpdateNotice(cmd *cobra.Command) {
 		text = tui.RenderUpdateAppliedNotification(notice.Version)
 	case upgrade.NoticeManual:
 		text = tui.RenderManualUpdateNotification(appVersion, notice.Version, upgradeService.ManualUpdateCommand(notice.Version))
+	case upgrade.NoticeStable:
+		text = tui.RenderStableNotification(notice.Version, upgrade.ChannelOf(appVersion), stableSwitchCommand)
 	case upgrade.NoticeAvailable:
 		text = tui.RenderUpdateNotification(appVersion, notice.Version)
 	default:

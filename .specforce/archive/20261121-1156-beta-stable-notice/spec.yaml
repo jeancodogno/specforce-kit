@@ -1,0 +1,152 @@
+slug: 20261121-1156-beta-stable-notice
+name: 20261121-1156-beta-stable-notice
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T16:39:12.315185101Z
+              completed_at: 2026-11-21T16:41:15.289662708Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T16:39:12.315188235Z
+              completed_at: 2026-11-21T16:41:15.289663181Z
+    T1.3:
+        sessions:
+            - started_at: 2026-11-21T16:39:12.315188482Z
+              completed_at: 2026-11-21T16:41:15.28966338Z
+    T1.4:
+        sessions:
+            - started_at: 2026-11-21T16:39:12.315188688Z
+              completed_at: 2026-11-21T16:41:15.28966358Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-21T16:41:35.892226986Z
+              completed_at: 2026-11-21T16:43:37.245800413Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-21T16:41:35.892227491Z
+              completed_at: 2026-11-21T16:43:37.245802649Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-21T16:41:35.892227723Z
+              completed_at: 2026-11-21T16:43:37.245802863Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-21T16:41:35.892227919Z
+              completed_at: 2026-11-21T16:43:37.245803041Z
+delta:
+    impact: modules
+    modules:
+        - module: auto-update
+          base_hashes:
+            BR-UPD-11: 583451291077fdd2d337315a1f93268f9fac40a350028a34e9c86f8b3b20a7f9
+            BR-UPD-12: b93a53aab692700ee00c67fda7d94a08495d36861e1849174b4c78266315184f
+            US-UPD-04: 2368c9405f0a7e17158f8f6eaa773ef49889a9ee34aaeaf30bda16fe55345e20
+          id_map:
+            NEW:stable-notice: BR-UPD-16
+            NEW:us-stable-notice: US-UPD-07
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-21T16:53:24Z
+    criteria:
+        - id: US-1.1
+          scenario: npm 1.0.0-beta.3 + stable 1.0.0 -> notice once on stderr with exact sentence
+          evidence: 'real binary + local fake registry: stable_version 1.0.0 recorded (0600), STABLE RELEASE AVAILABLE box on stderr only, flattened text equals US-1.1 sentence'
+          verdict: PASSED
+        - id: US-1.2
+          scenario: not shown again
+          evidence: stable_notice_shown_version=1.0.0 after run 1; run 2 stderr empty
+          verdict: PASSED
+        - id: US-1.3
+          scenario: stable moves to 1.0.1 -> shown once
+          evidence: check recorded 1.0.1, next run showed 1.0.1 and marked it, following run silent
+          verdict: PASSED
+        - id: US-1.4
+          scenario: 1.1.0-beta.1 vs stable 1.0.2 -> never
+          evidence: debug 'no newer stable version recorded', no keys, no notice
+          verdict: PASSED
+        - id: US-1.5
+          scenario: channel tag missing, stable newer
+          evidence: 'body {latest:1.0.0}: exit 0, no npm call, last_checked_at saved, stable recorded and shown once'
+          verdict: PASSED
+        - id: US-1.6
+          scenario: registry unreachable leaves stable info unchanged
+          evidence: '500 response: shown and pending pairs unchanged; pending still shown later; unit test passes'
+          verdict: PASSED
+        - id: US-1.7
+          scenario: running stable 1.0.0 -> no notice
+          evidence: 'npm 1.0.0: nothing recorded; leftover stable_version 1.0.0: no notice'
+          verdict: PASSED
+        - id: US-1.8
+          scenario: native or npm stable -> never recorded or shown
+          evidence: native uses GitHub provider, nothing recorded; npm 1.0.0 with latest 1.0.1 records nothing; unit tests pass (shared-state caveat F1)
+          verdict: PASSED
+        - id: US-2.1
+          scenario: updated beats stable
+          evidence: run1 'updated to 1.0.0-beta.4' only, run2 stable box, run3 nothing
+          verdict: PASSED
+        - id: US-2.2
+          scenario: manual beats stable
+          evidence: run1 MANUAL UPDATE REQUIRED only, run2 stable box
+          verdict: PASSED
+        - id: US-2.3
+          scenario: stable beats available
+          evidence: only stable box shown, no UPDATE AVAILABLE
+          verdict: PASSED
+        - id: US-2.4
+          scenario: agent or non-terminal -> nothing, stays pending
+          evidence: 'spec list --json under pty and piped: stderr 0 bytes, valid JSON; shown version never set'
+          verdict: PASSED
+        - id: INV-1
+          scenario: notice never installs, downloads or switches
+          evidence: fake npm only @1.0.0-beta.4 (channel), 0 @latest; fake registry saw only dist-tags requests
+          verdict: PASSED
+        - id: INV-2
+          scenario: once per stable version, only npm pre-release older than it
+          evidence: US-1.2/1.3/1.4/1.7/1.8 observed
+          verdict: PASSED
+        - id: INV-3
+          scenario: at most one notice per command, never agent or non-terminal
+          evidence: US-2.1-2.4 observed
+          verdict: PASSED
+        - id: S1
+          scenario: go test ./src/internal/cli/cobra/ -run 'TestRootUpdateNotice/stable' -v
+          evidence: 3/3 PASS (re-run by orchestrator)
+          verdict: PASSED
+        - id: S2
+          scenario: go test ./src/internal/upgrade/ -run TestStableRecord -v
+          evidence: 6/6 PASS incl. never @latest (re-run by orchestrator)
+          verdict: PASSED
+        - id: ADDED NEW:stable-notice
+          scenario: record strictly newer stable from same response, also with no tag; once per version; no install
+          evidence: one request per check; all clauses observed on real binary
+          verdict: PASSED
+        - id: ADDED NEW:us-stable-notice
+          scenario: 5 delta scenarios
+          evidence: mapped to US-1.1, 1.3, 1.4, 1.7/1.8, 2.4, all observed
+          verdict: PASSED
+        - id: MODIFIED BR-UPD-11
+          scenario: exact @version installs; missing tag = no update but stable may be recorded
+          evidence: 'fake npm got @1.0.0-beta.4; missing tag: no install, stable recorded'
+          verdict: PASSED
+        - id: MODIFIED BR-UPD-12
+          scenario: stderr only, one per command in order, mark after write, once per version
+          evidence: order applied>manual>stable>available observed; marked only after successful write
+          verdict: PASSED
+        - id: MODIFIED US-UPD-04
+          scenario: beta user installs channel version; no tag -> nothing installed
+          evidence: beta and no-tag scenarios on real binary; install-failure covered by passing unit tests
+          verdict: PASSED
+    findings:
+        - title: Shared state file reaches native builds
+          detail: PendingNotice does not re-check install method (T2.2 decision); a native binary sharing state with an npm install could show the stable notice.
+        - title: latest tag not checked for a pre-release
+          detail: recordStable does not verify that npm 'latest' is a release version; prevented by the release pipeline channel rule.
+        - title: Shown-once compares raw strings
+          detail: Only reachable with hand-edited state or a rollback of latest.
+        - title: Existing 'available' notice wording for npm
+          detail: Says 'downloaded in the background and applied automatically' for npm installs; unchanged by this spec.
+        - title: Terminal queries in --json output when stdout is a TTY
+          detail: tui.ConfigureColor/lipgloss.HasDarkBackground (commit be76129) writes ESC]11;? and ESC[6n to stdout before command output; piped output is clean. Out of scope.

@@ -1339,3 +1339,188 @@ func TestStateRepair_DirectoryAtStatePathDoesNothing(t *testing.T) {
 		t.Errorf("expected no notice, got %+v", n)
 	}
 }
+
+// --- Stable release notice: recording during the check ---
+
+// recordingExecutor records every command it is asked to run.
+type recordingExecutor struct {
+	calls []string
+}
+
+func (e *recordingExecutor) Run(_ context.Context, name string, arg ...string) error {
+	e.calls = append(e.calls, name+" "+strings.Join(arg, " "))
+	return nil
+}
+
+// newStableNPMFixture is an npm-install service running runningVer whose
+// provider reads dist-tags body from a local registry, following runningVer's channel.
+func newStableNPMFixture(t *testing.T, runningVer, body string, status int) (*npmFixture, *recordingExecutor) {
+	t.Helper()
+	ts := newDistTagsRegistry(t, body, status)
+	f := newNPMFixture(t, &NPMProvider{BaseURL: ts.URL, Client: ts.Client(), Channel: ChannelOf(runningVer)})
+	f.svc.currentVer = runningVer
+	rec := &recordingExecutor{}
+	f.svc.npmInstaller = &NPMInstaller{Executor: rec}
+	return f, rec
+}
+
+func TestStableRecord_NewerStableIsRecordedAndOnlyChannelInstalled(t *testing.T) {
+	f, rec := newStableNPMFixture(t, "1.0.0-beta.3", `{"beta": "1.0.0-beta.4", "latest": "1.0.0"}`, http.StatusOK)
+	if err := f.svc.PerformBackgroundUpdate(context.Background()); err != nil {
+		t.Fatalf("PerformBackgroundUpdate failed: %v", err)
+	}
+	s, _ := f.mgr.Load()
+	if s.StableVersion != "1.0.0" {
+		t.Errorf("expected stable version 1.0.0 recorded, got %q", s.StableVersion)
+	}
+	want := []string{"npm install -g @jeancodogno/specforce-kit@1.0.0-beta.4"}
+	if strings.Join(rec.calls, "|") != strings.Join(want, "|") {
+		t.Errorf("expected only %v to run, got %v", want, rec.calls)
+	}
+	for _, c := range rec.calls {
+		if strings.Contains(c, "@latest") || strings.HasSuffix(c, "@1.0.0") {
+			t.Errorf("the stable version must never be installed, got %q", c)
+		}
+	}
+}
+
+func TestStableRecord_NewerStableRecordedWhenChannelTagMissing(t *testing.T) {
+	f, rec := newStableNPMFixture(t, "1.0.0-beta.3", `{"latest": "1.0.0"}`, http.StatusOK)
+	if err := f.svc.PerformBackgroundUpdate(context.Background()); err != nil {
+		t.Fatalf("a missing channel tag is not a failure, got %v", err)
+	}
+	s, _ := f.mgr.Load()
+	if s.StableVersion != "1.0.0" {
+		t.Errorf("expected stable version 1.0.0 recorded, got %q", s.StableVersion)
+	}
+	if !s.LastCheckedAt.Equal(f.now) {
+		t.Errorf("expected check time persisted, got %v", s.LastCheckedAt)
+	}
+	if len(rec.calls) != 0 {
+		t.Errorf("nothing must be installed, got %v", rec.calls)
+	}
+}
+
+func TestStableRecord_OlderStableIsNotRecorded(t *testing.T) {
+	f, _ := newStableNPMFixture(t, "1.1.0-beta.1", `{"beta": "1.1.0-beta.1", "latest": "1.0.2"}`, http.StatusOK)
+	if err := f.svc.PerformBackgroundUpdate(context.Background()); err != nil {
+		t.Fatalf("PerformBackgroundUpdate failed: %v", err)
+	}
+	if s, _ := f.mgr.Load(); s.StableVersion != "" {
+		t.Errorf("an older stable version must not be recorded, got %q", s.StableVersion)
+	}
+}
+
+func TestStableRecord_StableChannelNeverRecords(t *testing.T) {
+	f, _ := newStableNPMFixture(t, "1.0.0", `{"latest": "1.0.1"}`, http.StatusOK)
+	if err := f.svc.PerformBackgroundUpdate(context.Background()); err != nil {
+		t.Fatalf("PerformBackgroundUpdate failed: %v", err)
+	}
+	if s, _ := f.mgr.Load(); s.StableVersion != "" {
+		t.Errorf("npm installs on the stable channel must not record, got %q", s.StableVersion)
+	}
+}
+
+func TestStableRecord_NativeInstallNeverRecords(t *testing.T) {
+	ts := newDistTagsRegistry(t, `{"beta": "1.0.0-beta.3", "latest": "1.0.0"}`, http.StatusOK)
+	f := newBGFixture(t, &NPMProvider{BaseURL: ts.URL, Client: ts.Client(), Channel: "beta"})
+	f.svc.currentVer = "1.0.0-beta.3"
+	if err := f.svc.PerformBackgroundUpdate(context.Background()); err != nil {
+		t.Fatalf("PerformBackgroundUpdate failed: %v", err)
+	}
+	if s, _ := f.mgr.Load(); s.StableVersion != "" {
+		t.Errorf("native installs must never record, got %q", s.StableVersion)
+	}
+}
+
+func TestStableRecord_ProviderErrorLeavesStableFieldsUnchanged(t *testing.T) {
+	f, rec := newStableNPMFixture(t, "1.0.0-beta.3", `oops`, http.StatusInternalServerError)
+	before := &State{StableVersion: "1.0.1", StableNoticeShownVersion: "1.0.0"}
+	if err := f.mgr.Save(before); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.svc.PerformBackgroundUpdate(context.Background()); err == nil {
+		t.Fatal("expected the registry error to be returned")
+	}
+	s, _ := f.mgr.Load()
+	if s.StableVersion != "1.0.1" || s.StableNoticeShownVersion != "1.0.0" {
+		t.Errorf("a failed check must leave the stable fields unchanged, got %q / %q", s.StableVersion, s.StableNoticeShownVersion)
+	}
+	if len(rec.calls) != 0 {
+		t.Errorf("nothing must be installed, got %v", rec.calls)
+	}
+}
+
+// --- Stable notice selection tests (beta-stable-notice US-1, US-2) ---
+
+func TestNotice_StableLosesToApplied(t *testing.T) {
+	_, svc := newNoticeService(t, "1.0.0-beta.3", &State{
+		AppliedVersion: "v1.0.0-beta.3",
+		StableVersion:  "1.0.0",
+	})
+	if n := svc.PendingNotice(); n.Kind != NoticeApplied {
+		t.Errorf("expected applied notice to beat stable, got %+v", n)
+	}
+}
+
+func TestNotice_StableLosesToManual(t *testing.T) {
+	_, svc := newNoticeService(t, "1.0.0-beta.2", &State{
+		LatestVersion:       "v1.0.0-beta.3",
+		ManualUpdateVersion: "v1.0.0-beta.3",
+		StableVersion:       "1.0.0",
+	})
+	if n := svc.PendingNotice(); n.Kind != NoticeManual {
+		t.Errorf("expected manual notice to beat stable, got %+v", n)
+	}
+}
+
+func TestNotice_StableBeatsAvailable(t *testing.T) {
+	_, svc := newNoticeService(t, "1.0.0-beta.2", &State{
+		LatestVersion: "v1.0.0-beta.3",
+		StableVersion: "1.0.0",
+	})
+	n := svc.PendingNotice()
+	if n.Kind != NoticeStable || n.Version != "1.0.0" {
+		t.Errorf("expected stable notice for 1.0.0 to beat available, got %+v", n)
+	}
+}
+
+func TestNotice_StableShownOncePerVersion(t *testing.T) {
+	mgr, svc := newNoticeService(t, "1.0.0-beta.3", &State{
+		LatestVersion: "v1.0.0-beta.3",
+		StableVersion: "1.0.0",
+	})
+	n := svc.PendingNotice()
+	if n.Kind != NoticeStable || n.Version != "1.0.0" {
+		t.Fatalf("expected stable notice for 1.0.0, got %+v", n)
+	}
+	if err := svc.MarkNoticeShown(n); err != nil {
+		t.Fatalf("MarkNoticeShown: %v", err)
+	}
+	s, _ := mgr.Load()
+	if s.StableNoticeShownVersion != "1.0.0" {
+		t.Errorf("expected StableNoticeShownVersion 1.0.0 persisted, got %q", s.StableNoticeShownVersion)
+	}
+	if n := NewService(mgr, &MockProvider{}, "1.0.0-beta.3").PendingNotice(); n.Kind == NoticeStable {
+		t.Errorf("stable notice must not be pending again for the same version, got %+v", n)
+	}
+
+	// A newer stable version is pending again, once.
+	s.StableVersion = "1.0.1"
+	if err := mgr.Save(s); err != nil {
+		t.Fatal(err)
+	}
+	n = NewService(mgr, &MockProvider{}, "1.0.0-beta.3").PendingNotice()
+	if n.Kind != NoticeStable || n.Version != "1.0.1" {
+		t.Errorf("expected stable notice for 1.0.1, got %+v", n)
+	}
+}
+
+func TestNotice_StableNotShownWhenRunningIsEqualOrNewer(t *testing.T) {
+	for _, running := range []string{"1.0.0", "1.0.1", "1.1.0-beta.1"} {
+		_, svc := newNoticeService(t, running, &State{StableVersion: "1.0.0"})
+		if n := svc.PendingNotice(); n.Kind == NoticeStable {
+			t.Errorf("running %s: expected no stable notice for 1.0.0, got %+v", running, n)
+		}
+	}
+}

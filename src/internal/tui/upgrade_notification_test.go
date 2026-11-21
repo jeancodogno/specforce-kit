@@ -64,3 +64,27 @@ func TestUpdateNotification_Available(t *testing.T) {
 		t.Errorf("available notice must name the latest version, got:\n%s", out)
 	}
 }
+
+func TestRenderStableNotification_ExactSentence(t *testing.T) {
+	withColorState(t, termenv.Ascii, true)
+	out := RenderStableNotification("1.0.0", "beta", "npm install -g @jeancodogno/specforce-kit@latest")
+	if !strings.Contains(out, "STABLE RELEASE AVAILABLE") {
+		t.Errorf("stable notice must have the title STABLE RELEASE AVAILABLE, got:\n%s", out)
+	}
+	// Ignore box borders and line wrapping: keep only the words.
+	var words []string
+	for _, f := range strings.Fields(out) {
+		if strings.ContainsAny(f, "│╭╮╰╯─") {
+			continue
+		}
+		words = append(words, f)
+	}
+	flat := strings.Join(words, " ")
+	want := "Specforce 1.0.0 (stable) is available. You are on the beta channel; to switch, run: npm install -g @jeancodogno/specforce-kit@latest"
+	if !strings.Contains(flat, want) {
+		t.Errorf("stable notice must contain %q, got:\n%s", want, out)
+	}
+	if strings.Contains(strings.ToLower(out), "automatically") {
+		t.Errorf("stable notice must never say automatically, got:\n%s", out)
+	}
+}

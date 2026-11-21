@@ -23,6 +23,22 @@ type NPMProvider struct {
 	Client  *http.Client
 	// Channel is the npm dist-tag to follow (e.g. "beta"); empty means "latest".
 	Channel string
+	// latestStable is the "latest" dist-tag read by the last GetLatestVersion
+	// call; empty when that call failed to fetch the dist-tags.
+	latestStable string
+}
+
+// StableProvider is implemented by providers that also expose the stable
+// version read during their last GetLatestVersion call (from the same response).
+type StableProvider interface {
+	// LatestStable returns the stable version of the last check, or "" if unknown.
+	LatestStable() string
+}
+
+// LatestStable returns the "latest" dist-tag read by the last GetLatestVersion
+// call, or "" when that call could not fetch the dist-tags.
+func (p *NPMProvider) LatestStable() string {
+	return p.latestStable
 }
 
 // NewNPMProvider creates a new NPMProvider with default configuration.
@@ -45,7 +61,9 @@ func ChannelOf(version string) string {
 
 // GetLatestVersion reads the registry dist-tags and returns the version of the
 // provider's channel. A missing tag returns an error wrapping ErrNoChannelTag.
+// The "latest" tag of the same response is kept for LatestStable.
 func (p *NPMProvider) GetLatestVersion(ctx context.Context) (string, error) {
+	p.latestStable = ""
 	channel := p.Channel
 	if channel == "" {
 		channel = defaultChannel
@@ -55,6 +73,7 @@ func (p *NPMProvider) GetLatestVersion(ctx context.Context) (string, error) {
 	if err := FetchJSON(ctx, p.Client, url, &tags); err != nil {
 		return "", fmt.Errorf("failed to fetch npm dist-tags: %w", err)
 	}
+	p.latestStable = tags[defaultChannel]
 	version, ok := tags[channel]
 	if !ok || version == "" {
 		return "", fmt.Errorf("%w: %s", ErrNoChannelTag, channel)

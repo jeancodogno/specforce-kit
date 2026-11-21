@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -56,6 +57,34 @@ func RenderManualUpdateNotification(current, latest, command string) string {
 	content += fmt.Sprintf("  Current: %s\n", current)
 	content += fmt.Sprintf("  Latest:  %s\n\n", versionStyle.Render(latest))
 	content += "  To update, run:\n"
+	content += fmt.Sprintf("  %s", command)
+
+	return boxStyle.Render(content) + "\n"
+}
+
+// RenderStableNotification returns a notice telling a pre-release user that a
+// newer stable version exists, with the exact command to switch channels by hand.
+func RenderStableNotification(stable, channel, command string) string {
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(brandCyan).
+		Padding(0, 1)
+
+	versionStyle := lipgloss.NewStyle().
+		Foreground(brandMint).
+		Bold(true)
+
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(brandCyan).
+		Padding(1, 2).
+		MarginTop(1).
+		MarginBottom(1)
+
+	plain := strings.TrimPrefix(strings.TrimSpace(stable), "v")
+	content := fmt.Sprintf("%s\n\n", titleStyle.Render("STABLE RELEASE AVAILABLE"))
+	content += fmt.Sprintf("  Specforce %s (stable) is available.\n", versionStyle.Render(plain))
+	content += fmt.Sprintf("  You are on the %s channel; to switch, run:\n", channel)
 	content += fmt.Sprintf("  %s", command)
 
 	return boxStyle.Render(content) + "\n"

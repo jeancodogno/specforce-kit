@@ -170,3 +170,73 @@ func testProvider(t *testing.T, p Provider, expected string) {
 		t.Errorf("expected version %s, got %s", expected, version)
 	}
 }
+
+// newCountingDistTagsRegistry is newDistTagsRegistry that also counts requests.
+func newCountingDistTagsRegistry(t *testing.T, body string, status int) (*httptest.Server, *int) {
+	t.Helper()
+	requests := 0
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		if r.URL.Path != "/-/package/@jeancodogno/specforce-kit/dist-tags" {
+			t.Errorf("expected dist-tags path, got %s", r.URL.Path)
+		}
+		w.WriteHeader(status)
+		_, _ = fmt.Fprint(w, body)
+	}))
+	t.Cleanup(ts.Close)
+	return ts, &requests
+}
+
+func TestNPMProvider_StableExposedWithChannelVersion(t *testing.T) {
+	ts, requests := newCountingDistTagsRegistry(t, `{"beta": "1.0.0-beta.3", "latest": "1.0.0"}`, http.StatusOK)
+	p := &NPMProvider{BaseURL: ts.URL, Client: ts.Client(), Channel: "beta"}
+	got, err := p.GetLatestVersion(context.Background())
+	if err != nil {
+		t.Fatalf("GetLatestVersion failed: %v", err)
+	}
+	if got != "1.0.0-beta.3" {
+		t.Errorf("expected channel version 1.0.0-beta.3, got %q", got)
+	}
+	if stable := p.LatestStable(); stable != "1.0.0" {
+		t.Errorf("expected stable 1.0.0, got %q", stable)
+	}
+	if *requests != 1 {
+		t.Errorf("expected exactly one registry request, got %d", *requests)
+	}
+}
+
+func TestNPMProvider_StableExposedWhenChannelTagMissing(t *testing.T) {
+	ts, requests := newCountingDistTagsRegistry(t, `{"latest": "1.0.0"}`, http.StatusOK)
+	p := &NPMProvider{BaseURL: ts.URL, Client: ts.Client(), Channel: "beta"}
+	_, err := p.GetLatestVersion(context.Background())
+	if !errors.Is(err, ErrNoChannelTag) {
+		t.Errorf("expected ErrNoChannelTag, got %v", err)
+	}
+	if stable := p.LatestStable(); stable != "1.0.0" {
+		t.Errorf("expected stable 1.0.0, got %q", stable)
+	}
+	if *requests != 1 {
+		t.Errorf("expected exactly one registry request, got %d", *requests)
+	}
+}
+
+func TestNPMProvider_StableNotExposedOnRegistryError(t *testing.T) {
+	good, _ := newCountingDistTagsRegistry(t, `{"beta": "1.0.0-beta.3", "latest": "1.0.0"}`, http.StatusOK)
+	bad, requests := newCountingDistTagsRegistry(t, `oops`, http.StatusInternalServerError)
+	p := &NPMProvider{BaseURL: good.URL, Client: good.Client(), Channel: "beta"}
+	if _, err := p.GetLatestVersion(context.Background()); err != nil {
+		t.Fatalf("first check failed: %v", err)
+	}
+
+	// A later failed check must not expose the stale stable version.
+	p.BaseURL, p.Client = bad.URL, bad.Client()
+	if _, err := p.GetLatestVersion(context.Background()); err == nil || errors.Is(err, ErrNoChannelTag) {
+		t.Fatalf("expected a registry error, got %v", err)
+	}
+	if stable := p.LatestStable(); stable != "" {
+		t.Errorf("expected no stable version after a registry error, got %q", stable)
+	}
+	if *requests != 1 {
+		t.Errorf("expected exactly one registry request, got %d", *requests)
+	}
+}

@@ -39,6 +39,12 @@ type State struct {
 	// failure records the version as a manual update.
 	VerifyFailVersion string `json:"verify_fail_version,omitempty"`
 	VerifyFailCount   int    `json:"verify_fail_count,omitempty"`
+	// StableVersion is the stable release, strictly newer than the running npm
+	// pre-release, recorded by the last check for the one-time stable notice.
+	StableVersion string `json:"stable_version,omitempty"`
+	// StableNoticeShownVersion is the stable version whose notice was already
+	// shown, so the notice is displayed only once per stable version.
+	StableNoticeShownVersion string `json:"stable_notice_shown_version,omitempty"`
 }
 
 // StateManager handles loading and saving the update state.

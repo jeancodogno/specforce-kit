@@ -154,6 +154,7 @@ func (s *Service) PerformBackgroundUpdate(ctx context.Context) error {
 	if errors.Is(err, ErrNoChannelTag) {
 		// No release for this channel: nothing to do, but the throttle window starts.
 		debugf("check skipped: %v", err)
+		s.recordStable(state)
 		state.LastCheckedAt = s.now()
 		return s.stateManager.Save(state)
 	}
@@ -168,6 +169,7 @@ func (s *Service) PerformBackgroundUpdate(ctx context.Context) error {
 	// Update latest version and last check time
 	state.LatestVersion = latest
 	state.LastCheckedAt = s.now()
+	s.recordStable(state)
 
 	if IsNewer(s.currentVer, latest) {
 		if s.isNPM() {
@@ -201,6 +203,23 @@ func (s *Service) PerformBackgroundUpdate(ctx context.Context) error {
 	}
 
 	return s.stateManager.Save(state)
+}
+
+// recordStable records in state (the caller saves it) the stable version read
+// by the last check when the running version is an npm pre-release and that
+// stable version is strictly newer. It never installs anything.
+func (s *Service) recordStable(state *State) {
+	sp, ok := s.provider.(StableProvider)
+	if !ok || !s.isNPM() || ChannelOf(s.currentVer) == defaultChannel {
+		return
+	}
+	stable := sp.LatestStable()
+	if stable == "" || !IsNewer(s.currentVer, stable) {
+		debugf("stable check: no newer stable version recorded (stable %q, running %s)", stable, s.currentVer)
+		return
+	}
+	state.StableVersion = stable
+	debugf("stable check: recorded newer stable version %s (running %s)", stable, s.currentVer)
 }
 
 // stageAndRecord stages version and records it in state (the caller saves it)
