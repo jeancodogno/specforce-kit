@@ -3,7 +3,7 @@ package agent
 import (
 	"fmt"
 	"io/fs"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
@@ -26,7 +26,7 @@ func NewInstructionManager(kitFS fs.FS, config *core.ProjectConfig) *Instruction
 // GetInstructions fetches instructions for a category and applies variable injection.
 func (m *InstructionManager) GetInstructions(category string) (string, error) {
 	// 1. Fetch from kitFS
-	kitPath := filepath.Join("instructions", category+".md")
+	kitPath := path.Join("instructions", category+".md")
 	data, err := fs.ReadFile(m.kitFS, kitPath)
 	content := ""
 	if err == nil {

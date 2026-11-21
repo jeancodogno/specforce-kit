@@ -48,6 +48,7 @@ const (
 
 // deltaTokenInner is the token grammar accepted inside a delta document:
 // a provisional key (NEW:<key>) or a final identifier.
+// #nosec G101 - regular expression for specification identifiers, not a credential
 const deltaTokenInner = `NEW:[A-Za-z0-9][A-Za-z0-9_-]*|(?:BR|US)-[A-Z]+-\d+`
 
 var deltaRemovedRe = regexp.MustCompile("^[-*]\\s+(?:`|\\*\\*)?\\[(" + deltaTokenInner + ")\\]")

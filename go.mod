@@ -1,6 +1,6 @@
 module github.com/jeancodogno/specforce-kit
 
-go 1.26.4
+go 1.26.11
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0

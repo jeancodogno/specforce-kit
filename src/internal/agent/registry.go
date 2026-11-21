@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 
@@ -112,15 +113,15 @@ func (r *Registry) scanSkills(skillsFS fs.FS) error {
 	})
 }
 
-func (r *Registry) loadSkillMetadata(skillsFS fs.FS, path, skillID string) SkillMetadata {
+func (r *Registry) loadSkillMetadata(skillsFS fs.FS, skillPath, skillID string) SkillMetadata {
 	metadata := SkillMetadata{
 		ID:      skillID,
-		Path:    path,
+		Path:    skillPath,
 		Version: "1.0.0", // Default
 	}
 
 	// Try to load detailed metadata from SKILL.yaml
-	if data, err := fs.ReadFile(skillsFS, filepath.Join(path, "SKILL.yaml")); err == nil {
+	if data, err := fs.ReadFile(skillsFS, path.Join(skillPath, "SKILL.yaml")); err == nil {
 		var skill SkillMetadata
 		if err := yaml.Unmarshal(data, &skill); err == nil {
 			if skill.Name != "" {
@@ -137,9 +138,9 @@ func (r *Registry) loadSkillMetadata(skillsFS fs.FS, path, skillID string) Skill
 	}
 
 	// Try to load from SKILL.md
-	if data, err := fs.ReadFile(skillsFS, filepath.Join(path, "SKILL.md")); err == nil {
+	if data, err := fs.ReadFile(skillsFS, path.Join(skillPath, "SKILL.md")); err == nil {
 		// Try to parse version from Markdown frontmatter
-		bp, err := core.ParseBlueprint(path, data)
+		bp, err := core.ParseBlueprint(skillPath, data)
 		if err == nil {
 			if bp.Metadata.Version != "" {
 				metadata.Version = bp.Metadata.Version
