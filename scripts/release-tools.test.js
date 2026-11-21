@@ -7,6 +7,10 @@ const {
     channelOf,
     publishPackage,
     notesPath,
+    NATIVE_PACKAGES,
+    checkNativeVersions,
+    checkRelease,
+    syncNativeVersions,
 } = require('./release-tools');
 
 // --- Version agreement (US-2) ---
@@ -189,4 +193,190 @@ test('notesPath returns nothing when the notes file is missing', () => {
 test('notesPath returns nothing when the notes file is whitespace only', () => {
     const readFile = fakeReader({ [notesFile('v1.0.0')]: '  \n\t\n' });
     assert.strictEqual(notesPath('v1.0.0', { root: ROOT, readFile }), null);
+});
+
+// --- Native package versions (release-version-optional-deps US-1, US-2) ---
+
+const NATIVE = [
+    '@jeancodogno/specforce-kit-linux-x64',
+    '@jeancodogno/specforce-kit-linux-arm64',
+    '@jeancodogno/specforce-kit-darwin-x64',
+    '@jeancodogno/specforce-kit-darwin-arm64',
+    '@jeancodogno/specforce-kit-win32-x64',
+];
+
+function nativeDeps(version, extra = {}) {
+    const deps = {};
+    for (const name of NATIVE) {
+        deps[name] = version;
+    }
+    return { ...deps, ...extra };
+}
+
+function assertSingleLine(err) {
+    assert.ok(!err.message.includes('\n'), 'message must be a single line');
+}
+
+test('NATIVE_PACKAGES lists the five Makefile platforms', () => {
+    assert.deepStrictEqual(NATIVE_PACKAGES, NATIVE);
+});
+
+test('checkNativeVersions passes when all five native packages are at the version', () => {
+    assert.doesNotThrow(() => checkNativeVersions(nativeDeps('1.0.0'), '1.0.0'));
+});
+
+test('checkNativeVersions fails naming a package at an old version and both versions', () => {
+    const deps = nativeDeps('1.0.0', { '@jeancodogno/specforce-kit-darwin-x64': '0.9.0' });
+    assert.throws(
+        () => checkNativeVersions(deps, '1.0.0'),
+        (err) => {
+            assert.match(err.message, /specforce-kit-darwin-x64/);
+            assert.match(err.message, /0\.9\.0/);
+            assert.match(err.message, /1\.0\.0/);
+            assert.ok(!/linux-x64|win32-x64/.test(err.message), 'only the wrong package is named');
+            assertSingleLine(err);
+            return true;
+        }
+    );
+});
+
+test('checkNativeVersions fails naming a missing package', () => {
+    const deps = nativeDeps('1.0.0');
+    delete deps['@jeancodogno/specforce-kit-win32-x64'];
+    assert.throws(
+        () => checkNativeVersions(deps, '1.0.0'),
+        (err) => {
+            assert.match(err.message, /missing/);
+            assert.match(err.message, /specforce-kit-win32-x64/);
+            assertSingleLine(err);
+            return true;
+        }
+    );
+});
+
+test('checkNativeVersions fails naming an unexpected specforce-kit package', () => {
+    const deps = nativeDeps('1.0.0', { '@jeancodogno/specforce-kit-foo': '1.0.0' });
+    assert.throws(
+        () => checkNativeVersions(deps, '1.0.0'),
+        (err) => {
+            assert.match(err.message, /unexpected/);
+            assert.match(err.message, /specforce-kit-foo/);
+            assertSingleLine(err);
+            return true;
+        }
+    );
+});
+
+test('checkNativeVersions ignores unrelated optional dependencies', () => {
+    const deps = nativeDeps('1.0.0', { fsevents: '^2.3.0' });
+    assert.doesNotThrow(() => checkNativeVersions(deps, '1.0.0'));
+});
+
+test('checkNativeVersions without optionalDependencies names all five packages', () => {
+    assert.throws(
+        () => checkNativeVersions(undefined, '1.0.0'),
+        (err) => {
+            for (const name of NATIVE) {
+                assert.ok(err.message.includes(name), `${name} must be named`);
+            }
+            assertSingleLine(err);
+            return true;
+        }
+    );
+});
+
+test('checkRelease passes when versions and native packages agree', () => {
+    assert.doesNotThrow(() =>
+        checkRelease('v1.0.0', {
+            packageVersion: '1.0.0',
+            builtinVersion: '1.0.0',
+            optionalDependencies: nativeDeps('1.0.0'),
+        })
+    );
+});
+
+test('checkRelease reports a native package mismatch as one line', () => {
+    assert.throws(
+        () =>
+            checkRelease('v1.0.0', {
+                packageVersion: '1.0.0',
+                builtinVersion: '1.0.0',
+                optionalDependencies: nativeDeps('1.0.0', {
+                    '@jeancodogno/specforce-kit-linux-arm64': '0.9.0',
+                }),
+            }),
+        (err) => {
+            assert.match(err.message, /specforce-kit-linux-arm64/);
+            assertSingleLine(err);
+            return true;
+        }
+    );
+});
+
+test('checkRelease still reports a version mismatch first', () => {
+    assert.throws(
+        () =>
+            checkRelease('v1.0.0', {
+                packageVersion: '1.0.0-rc.1',
+                builtinVersion: '1.0.0',
+                optionalDependencies: nativeDeps('1.0.0'),
+            }),
+        /version mismatch/
+    );
+});
+
+function pkgText(obj) {
+    return JSON.stringify(obj, null, 2) + '\n';
+}
+
+test('syncNativeVersions sets all five native packages to the package version', () => {
+    const input = pkgText({ name: 'x', version: '1.1.0', optionalDependencies: nativeDeps('1.0.0') });
+    const out = JSON.parse(syncNativeVersions(input));
+    assert.deepStrictEqual(out.optionalDependencies, nativeDeps('1.1.0'));
+});
+
+test('syncNativeVersions adds a missing native package', () => {
+    const deps = nativeDeps('1.1.0');
+    delete deps['@jeancodogno/specforce-kit-darwin-arm64'];
+    const out = JSON.parse(syncNativeVersions(pkgText({ version: '1.1.0', optionalDependencies: deps })));
+    assert.strictEqual(out.optionalDependencies['@jeancodogno/specforce-kit-darwin-arm64'], '1.1.0');
+    assert.doesNotThrow(() => checkNativeVersions(out.optionalDependencies, '1.1.0'));
+});
+
+test('syncNativeVersions adds optionalDependencies when absent', () => {
+    const out = JSON.parse(syncNativeVersions(pkgText({ version: '1.1.0' })));
+    assert.deepStrictEqual(out.optionalDependencies, nativeDeps('1.1.0'));
+});
+
+test('syncNativeVersions removes an extra specforce-kit package and keeps unrelated entries', () => {
+    const deps = nativeDeps('1.1.0', { '@jeancodogno/specforce-kit-foo': '1.0.0', fsevents: '^2.3.0' });
+    const out = JSON.parse(syncNativeVersions(pkgText({ version: '1.1.0', optionalDependencies: deps })));
+    assert.ok(!('@jeancodogno/specforce-kit-foo' in out.optionalDependencies));
+    assert.strictEqual(out.optionalDependencies.fsevents, '^2.3.0');
+});
+
+test('syncNativeVersions keeps unrelated fields of package.json', () => {
+    const input = { name: 'x', version: '1.1.0', bin: { x: 'index.js' }, license: 'MIT' };
+    const out = JSON.parse(syncNativeVersions(pkgText(input)));
+    assert.strictEqual(out.name, 'x');
+    assert.deepStrictEqual(out.bin, { x: 'index.js' });
+    assert.strictEqual(out.license, 'MIT');
+});
+
+test('syncNativeVersions is idempotent', () => {
+    const input = pkgText({ version: '1.1.0', optionalDependencies: nativeDeps('1.0.0') });
+    const once = syncNativeVersions(input);
+    assert.strictEqual(syncNativeVersions(once), once);
+});
+
+test('syncNativeVersions returns already synced text unchanged', () => {
+    const input = pkgText({ name: 'x', version: '1.1.0', optionalDependencies: nativeDeps('1.1.0') });
+    assert.strictEqual(syncNativeVersions(input), input);
+});
+
+test('syncNativeVersions writes 2-space JSON with a trailing newline', () => {
+    const out = syncNativeVersions(JSON.stringify({ version: '1.1.0' }));
+    assert.ok(out.endsWith('}\n'));
+    assert.ok(!out.endsWith('\n\n'));
+    assert.match(out, /^\{\n  "version": "1\.1\.0",\n  "optionalDependencies": \{\n    "@jeancodogno/);
 });

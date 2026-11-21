@@ -1,16 +1,24 @@
 const fs = require('fs');
 const path = require('path');
+const { syncNativeVersions } = require('./release-tools');
 
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
 const constantsGoPath = path.join(__dirname, '..', 'src', 'internal', 'core', 'constants.go');
 
 try {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    const packageJsonText = fs.readFileSync(packageJsonPath, 'utf8');
+    const packageJson = JSON.parse(packageJsonText);
     const version = packageJson.version;
 
     if (!version) {
         console.error('Error: No version found in package.json');
         process.exit(1);
+    }
+
+    const syncedPackageJson = syncNativeVersions(packageJsonText);
+    if (syncedPackageJson !== packageJsonText) {
+        fs.writeFileSync(packageJsonPath, syncedPackageJson);
+        console.log(`Successfully updated native package versions to "${version}" in package.json`);
     }
 
     let constantsGo = fs.readFileSync(constantsGoPath, 'utf8');

@@ -6,7 +6,8 @@ const { spawnSync } = require('child_process');
  * Release decision tooling used by .github/workflows/release.yml.
  *
  * Subcommands:
- *   check-version <tag>             tag (without "v"), package.json and constants.go must agree
+ *   check-version <tag>             tag (without "v"), package.json and constants.go must agree,
+ *                                   and package.json must list the native packages at that version
  *   channel <version>               prints the npm dist-tag for a version
  *   publish <package-dir> <channel> publishes a package unless that version already exists
  *   notes <tag>                     prints .github/release-notes/<tag>.md when it has content
@@ -41,6 +42,70 @@ function checkVersion(tag, packageVersion, builtinVersion) {
             `version mismatch: tag=${tag} package.json=${packageVersion} built-in=${builtinVersion}`
         );
     }
+}
+
+// Same list as PLATFORMS in the Makefile.
+const NATIVE_PLATFORMS = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64'];
+const NATIVE_PREFIX = '@jeancodogno/specforce-kit-';
+const NATIVE_PACKAGES = NATIVE_PLATFORMS.map((platform) => `${NATIVE_PREFIX}${platform}`);
+
+function isNativeName(name) {
+    return name.startsWith(NATIVE_PREFIX);
+}
+
+// package.json must list exactly the native packages, each at the release version.
+// Other optional dependencies are ignored.
+function checkNativeVersions(optionalDependencies, version) {
+    const deps = optionalDependencies || {};
+    const problems = [];
+    const missing = NATIVE_PACKAGES.filter((name) => !Object.prototype.hasOwnProperty.call(deps, name));
+    if (missing.length > 0) {
+        problems.push(`missing ${missing.join(', ')}`);
+    }
+    const unexpected = Object.keys(deps).filter(
+        (name) => isNativeName(name) && !NATIVE_PACKAGES.includes(name)
+    );
+    if (unexpected.length > 0) {
+        problems.push(`unexpected ${unexpected.join(', ')}`);
+    }
+    const wrong = NATIVE_PACKAGES.filter(
+        (name) => Object.prototype.hasOwnProperty.call(deps, name) && deps[name] !== version
+    ).map((name) => `${name}@${deps[name]}`);
+    if (wrong.length > 0) {
+        problems.push(`wrong version ${wrong.join(', ')}`);
+    }
+    if (problems.length > 0) {
+        throw new Error(
+            `native packages in package.json optionalDependencies do not match ${version}: ${problems.join('; ')}`
+        );
+    }
+}
+
+function checkRelease(tag, { packageVersion, builtinVersion, optionalDependencies }) {
+    checkVersion(tag, packageVersion, builtinVersion);
+    checkNativeVersions(optionalDependencies, packageVersion);
+}
+
+// Returns package.json text with the native packages set to its version: missing
+// ones are added, other specforce-kit packages removed, unrelated entries kept.
+function syncNativeVersions(packageJsonText) {
+    const pkg = JSON.parse(packageJsonText);
+    if (!pkg.version) {
+        throw new Error('no version found in package.json');
+    }
+    const synced = {};
+    for (const [name, value] of Object.entries(pkg.optionalDependencies || {})) {
+        if (!isNativeName(name)) {
+            synced[name] = value;
+        } else if (NATIVE_PACKAGES.includes(name)) {
+            synced[name] = pkg.version;
+        }
+    }
+    for (const name of NATIVE_PACKAGES) {
+        synced[name] = pkg.version;
+    }
+    pkg.optionalDependencies = synced;
+    return `${JSON.stringify(pkg, null, 2)}\n`;
 }
 
 // Mirrors ChannelOf in src/internal/upgrade/provider_npm.go: the first
@@ -144,7 +209,11 @@ function readRepoVersions() {
     if (!match) {
         throw new Error('could not find Version declaration in constants.go');
     }
-    return { packageVersion: packageJson.version, builtinVersion: match[1] };
+    return {
+        packageVersion: packageJson.version,
+        builtinVersion: match[1],
+        optionalDependencies: packageJson.optionalDependencies,
+    };
 }
 
 function requireArgs(args, count, usage) {
@@ -158,8 +227,7 @@ function main(argv) {
     switch (command) {
         case 'check-version': {
             requireArgs(args, 1, 'check-version <tag>');
-            const { packageVersion, builtinVersion } = readRepoVersions();
-            checkVersion(args[0], packageVersion, builtinVersion);
+            checkRelease(args[0], readRepoVersions());
             console.log(`version ok: ${args[0]}`);
             break;
         }
@@ -196,7 +264,11 @@ if (require.main === module) {
 }
 
 module.exports = {
+    NATIVE_PACKAGES,
     checkVersion,
+    checkNativeVersions,
+    checkRelease,
+    syncNativeVersions,
     channelOf,
     publishPackage,
     notesPath,
