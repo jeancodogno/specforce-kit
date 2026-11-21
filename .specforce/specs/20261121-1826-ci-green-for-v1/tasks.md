@@ -36,6 +36,26 @@ lens: Integration
 **Acceptance Check:**
 `$(go env GOPATH)/bin/gosec -fmt=text ./... 2>/dev/null | grep -q 'Issues : 0' && go test ./src/internal/spec/ && echo OK` prints `OK`.
 
+- [x] T1.3: [CODE] Brand asset generator passes the current static security scan
+**Target:** `scripts/brandgen/brand.go`, `scripts/brandgen/main.go`
+**Context:** [US-1]
+
+**Constraints:**
+- Fix, do not suppress: colour channels are masked to 8 bits before conversion (`brand.go:43`), the output folder is created with `0o750` and files are written with `0o600`. The generated asset bytes must stay identical (run the generator into a temporary folder before and after and compare).
+
+**Acceptance Check:**
+`go run github.com/securego/gosec/v2/cmd/gosec@v2.30.0 -fmt=text ./... 2>/dev/null | grep -q 'Issues : 0' && (cd scripts/brandgen && go test ./...) && echo OK` prints `OK` (`scripts/brandgen` is its own Go module).
+
+- [x] T1.4: [CONFIG] Pin the scanner versions used by CI
+**Target:** `Makefile`
+**Context:** [US-1]
+
+**Constraints:**
+- `bootstrap` installs `gosec@v2.30.0`, `govulncheck@v1.10.0` and `gremlins@v0.6.0` instead of `@latest`; no other Makefile change.
+
+**Acceptance Check:**
+`grep -q 'gosec@v2.30.0' Makefile && grep -q 'govulncheck@v1.10.0' Makefile && grep -q 'gremlins@v0.6.0' Makefile && ! grep -q '@latest' Makefile && echo OK` prints `OK`.
+
 ### Phase 2: Windows product defects
 
 - [/] T2.1: [GREEN] Embedded-kit lookups use the embedded file system's path rules
@@ -48,16 +68,16 @@ lens: Integration
 **Acceptance Check:**
 `go test ./src/internal/agent/ ./src/internal/cli/ && GOOS=windows go vet ./src/internal/agent/ ./src/internal/cli/ && ! grep -nE 'fs\.(ReadFile|ReadDir|Stat|Sub|Glob)\([^)]*filepath\.' src/internal/agent/*.go && echo OK` prints `OK` (the Windows proof is S1).
 
-- [/] T2.2: [CODE] Find and fix the cause of the Windows tool-refresh failure
-**Target:** `src/internal/project/refresh_integration_test.go`, plus at most two product files under `src/internal/agent/` or `src/internal/project/` if the cause is a product defect
+- [/] T2.2: [GREEN] Tools-only installation filter accepts native Windows paths
+**Target:** `src/internal/project/refresh_integration_test.go` (diagnostics, done), `src/internal/installer/installer.go`
 **Context:** [US-2]
 
 **Constraints:**
-- Start by adding diagnostics to the test failure message (list the files actually created under the tool folder) and run it in Windows CI. If the cause is a path-separator defect in the installation (the same kind as T2.1), fix it with the same rule; if it is a test-only assumption, fix the test; if it is anything larger, STOP and report the cause (approved scope rule).
-- The test's assertions about refreshed content must not be weakened.
+- Cause (found in CI run `44952829546`: only `.claude/rules/AGENTS.md` was created): `ShouldInstall` compares the mapped path, which uses `\` on Windows, against `/`-terminated tool prefixes and the `.specforce/` prefix. Normalize the path with `filepath.ToSlash` before the prefix checks; keep the absolute-path rule and the `.specforce/` exclusion. Paired RED test: `TestService_UpdateTools_RefreshesAllCategories` (failing on Windows CI); existing `installer` tests must keep passing.
+- The refresh test's assertions must not be weakened.
 
 **Acceptance Check:**
-`go test ./src/internal/project/ && GOOS=windows go vet ./src/internal/project/ && echo OK` prints `OK`; the Windows proof is S1 (`TestService_UpdateTools_RefreshesAllCategories` passes on `windows-latest`). Not verifiable by a local tester beyond the Linux run.
+`go test ./src/internal/installer/ ./src/internal/project/ && GOOS=windows go vet ./src/internal/installer/ ./src/internal/project/ && grep -q 'filepath.ToSlash' src/internal/installer/installer.go && echo OK` prints `OK`; the Windows proof is S1.
 
 ### Phase 3: Portable and isolated tests
 

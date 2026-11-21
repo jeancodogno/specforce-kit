@@ -39,7 +39,7 @@ func build() ([]output, error) {
 // writeAtomic writes data to path via a sibling temp file and rename.
 func writeAtomic(path string, data []byte) error {
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+	if err := os.WriteFile(tmp, data, 0o600); err != nil {
 		_ = os.Remove(tmp)
 		return err
 	}
@@ -75,7 +75,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "brandgen: %v\n", err)
 		return 1
 	}
-	if err := os.MkdirAll(*out, 0o755); err != nil {
+	if err := os.MkdirAll(*out, 0o750); err != nil {
 		_, _ = fmt.Fprintf(stderr, "brandgen: cannot write %s: %v\n", *out, err)
 		return 1
 	}

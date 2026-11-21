@@ -25,6 +25,8 @@ The first continuous integration run on the `1.x` line failed in three places: t
 2. **[Happy Path]** GIVEN the repository WHEN the static security scan runs THEN it reports zero issues, and the one accepted false positive (a pattern for specification identifiers mistaken for a credential) carries a written justification next to it.
 3. **[Happy Path]** GIVEN continuous integration and the release run WHEN they build or test THEN they use the same fixed toolchain version as the module definition (1.26.11).
 4. **[Edge Case]** GIVEN a developer builds from source with an older toolchain WHEN the build starts THEN the toolchain required by the module definition is used (downloaded automatically when allowed) instead of silently building with the vulnerable one.
+5. **[Edge Case]** GIVEN a new release of a scanner (static security scan, vulnerability scan, mutation testing) WHEN continuous integration installs its tools THEN it installs the fixed versions recorded in the repository (gosec v2.30.0, govulncheck v1.10.0, gremlins v0.6.0), so a red security job is always caused by a change in this repository.
+6. **[Edge Case]** GIVEN the repository's developer-only tooling (the brand asset generator) WHEN the static security scan runs THEN it reports no issue there either: generated folders and files are owner-restricted and colour channel conversions cannot overflow.
 
 **Technical Constraints (NFR):**
 - **[Performance]:** No extra CI job; the existing security job must pass in its current time budget.
@@ -38,7 +40,8 @@ The first continuous integration run on the `1.x` line failed in three places: t
 1. **[Happy Path]** GIVEN a Windows machine WHEN `specforce archive instructions` runs THEN the output contains the embedded archiving protocol followed by the project-specific instructions, identical to the Linux output for the same project.
 2. **[Happy Path]** GIVEN a Windows machine WHEN the kit's skills are scanned THEN each skill's name, description and version come from its manifest, as on Linux.
 3. **[Edge Case]** GIVEN an instruction category that does not exist in the kit WHEN instructions are requested THEN only the project-specific instructions are returned on every platform (unchanged behaviour).
-4. **[Edge Case]** GIVEN the installation of a tool's skills on Windows (the refresh scenario of `specforce init` / tool update) WHEN it runs THEN every expected file is created; if the cause of the current Windows failure is a product defect of the same kind (path separators on the embedded kit) it is fixed here, otherwise the work stops and the cause is reported before any further change.
+4. **[Happy Path]** GIVEN a tool refresh on Windows (tools-only installation, as used when updating an existing project's tools) WHEN it runs THEN every tool file the kit maps to the tool folder (for example `.claude/agents`, `.claude/skills`, `.claude/commands`) is created, exactly as on Linux. (Cause found in CI: the tools-only filter compared Windows paths with `\` against tool folder prefixes written with `/`, so nothing was installed.)
+5. **[Edge Case]** GIVEN a tools-only installation on any platform WHEN a mapped path is under `.specforce/` THEN it is still excluded, and paths outside every known tool folder are still skipped (unchanged behaviour).
 
 **Technical Constraints (NFR):**
 - **[Performance]:** No change in command latency.

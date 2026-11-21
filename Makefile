@@ -39,9 +39,9 @@ quality-lived:
 check: lint security test quality
 
 bootstrap:
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	go install golang.org/x/vuln/cmd/govulncheck@latest
-	go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
+	go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0
+	go install golang.org/x/vuln/cmd/govulncheck@v1.10.0
+	go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0
 
 brand-assets:
 	cd scripts/brandgen && go run . -out ../../assets/brand
