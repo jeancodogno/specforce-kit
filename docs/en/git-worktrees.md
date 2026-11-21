@@ -1,10 +1,5 @@
 [ [English](git-worktrees.md) | [Português](../pt/git-worktrees.md) | [Español](../es/git-worktrees.md) ]
 
----
-slug: git-worktrees
-lens: Balanced full-stack
----
-
 # Git Worktree Support
 
 ## Introduction
@@ -34,3 +29,7 @@ The Unified Discovery Engine performs a deep scan of linked worktrees to gather 
 - **Archived Specs:** Previously completed and archived specifications located in `.specforce/archive/**`.
 
 By including both active and archived work, Specforce provides a historical and current context of the project's evolution across all branches.
+
+## Parallel Specs and Module Deltas
+
+When specs in different worktrees change the same module living spec in `.specforce/docs/modules/`, delta sealing keeps them from silently overwriting each other. During planning, `specforce spec delta seal <slug>` records a fingerprint of every module block the delta modifies or removes. If another spec changes one of those blocks first (for example, it is archived and merged into your branch), `specforce spec delta check <slug>` reports a conflict for that item: the delta must be redone against the current module and sealed again before the spec can be archived. See [Module deltas](artifacts.md#6-module-deltas).

@@ -1,36 +1,35 @@
 [ [English](../en/git-worktrees.md) | [Português](git-worktrees.md) | [Español](../es/git-worktrees.md) ]
 
----
-slug: git-worktrees
-lens: Balanced full-stack
----
+# Suporte a Git Worktree
 
-# Git Worktree Support
+## Introdução
 
-## Introduction
+O Desenvolvimento Orientado por Especificação frequentemente envolve trabalhar em várias funcionalidades ou correções de bugs em paralelo, em diferentes branches git. O Specforce simplifica esse fluxo oferecendo suporte nativo a **Git Worktrees**. Esse recurso permite que o console TUI do Specforce descubra e exiba especificações e progresso de worktrees vinculadas, oferecendo uma visão unificada do status de todo o projeto sem a necessidade de trocar de branch constantemente.
 
-Spec-Driven Development often involves working on multiple features or bug fixes in parallel across different git branches. Specforce simplifies this workflow by providing native support for **Git Worktrees**. This feature allows the Specforce TUI console to discover and display specifications and progress from linked worktrees, enabling a unified view of the entire project's status without the need to constantly switch branches.
+## Mecanismo de Descoberta
 
-## Discovery Engine
+O Specforce inclui um Mecanismo de Descoberta Unificado que detecta automaticamente as git worktrees vinculadas ao repositório atual. Esse mecanismo varre o diretório `.git/worktrees` para identificar outras worktrees ativas e seus respectivos caminhos.
 
-Specforce includes a Unified Discovery Engine that automatically detects linked git worktrees associated with the current repository. This engine scans the `.git/worktrees` directory to identify other active worktrees and their respective paths.
+O principal benefício dessa integração é a possibilidade de ver especificações de várias branches (por exemplo, `main`, `feature/X`, `bugfix/Y`) simultaneamente dentro do console TUI do Specforce. Isso dá aos desenvolvedores uma visão global de todo o trabalho em andamento no projeto, facilitando a coordenação e evitando esforços duplicados.
 
-The primary benefit of this integration is the ability to see specifications from multiple branches (e.g., `main`, `feature/X`, `bugfix/Y`) simultaneously within the Specforce TUI console. This provides developers with a global view of all ongoing work across the project, facilitating better coordination and preventing duplicate efforts.
+## Restrições
 
-## Constraints
+Para garantir a integridade dos dados e evitar modificações acidentais entre branches, o Specforce impõe as seguintes restrições:
 
-To ensure data integrity and prevent accidental cross-branch modifications, Specforce enforces the following constraints:
+- **Acesso somente leitura:** Todas as especificações descobertas em git worktrees externas (as que não são o seu diretório de trabalho atual) são estritamente **somente leitura**.
+- **Ações bloqueadas:** Para essas especificações externas, todas as ações que modificam estado são bloqueadas. Isso inclui assumir ou finalizar tarefas, mudar o estado das especificações e quaisquer edições automáticas de arquivos.
+- **Isolamento da Constituição:** O Specforce ignora o diretório `.specforce/docs/` (a Constituição do Projeto) das worktrees externas. Isso garante que a sua implementação atual sempre siga os princípios de arquitetura e engenharia definidos na sua branch local.
 
-- **Read-Only Access:** All specifications discovered from external git worktrees (those other than your current working directory) are strictly **Read-Only**.
-- **Blocked Actions:** For these external specifications, all state-modifying actions are blocked. This includes claiming or finishing tasks, transitioning specification states, and any automated file edits.
-- **Constitution Isolation:** Specforce ignores the `.specforce/docs/` directory (the Project Constitution) from external worktrees. This ensures that your current implementation always adheres to the architectural and engineering principles defined in your local branch.
+## Escopo da Varredura
 
-## Scanning Scope
+O Mecanismo de Descoberta Unificado faz uma varredura profunda das worktrees vinculadas para reunir todos os artefatos de SDD (Spec-Driven Development) relevantes. Os seguintes itens são incluídos na varredura entre worktrees:
 
-The Unified Discovery Engine performs a deep scan of linked worktrees to gather all relevant SDD (Spec-Driven Development) artifacts. The following items are included in the cross-worktree scan:
+- **Especificações ativas:** Todos os arquivos em `.specforce/specs/**` em todas as worktrees descobertas.
+- **Implementações:** Quaisquer arquivos de implementação ou roadmaps atualmente referenciados por especificações ativas.
+- **Especificações arquivadas:** Especificações concluídas e arquivadas anteriormente, localizadas em `.specforce/archive/**`.
 
-- **Active Specs:** All files under `.specforce/specs/**` across all discovered worktrees.
-- **Implementations:** Any implementation files or roadmaps currently referenced by active specifications.
-- **Archived Specs:** Previously completed and archived specifications located in `.specforce/archive/**`.
+Ao incluir tanto o trabalho ativo quanto o arquivado, o Specforce oferece um contexto histórico e atual da evolução do projeto em todas as branches.
 
-By including both active and archived work, Specforce provides a historical and current context of the project's evolution across all branches.
+## Especificações em Paralelo e Deltas de Módulo
+
+Quando especificações em worktrees diferentes alteram a mesma especificação viva de módulo em `.specforce/docs/modules/`, a selagem do delta impede que uma sobrescreva a outra silenciosamente. Durante o planejamento, `specforce spec delta seal <slug>` registra uma impressão digital de cada bloco de módulo que o delta modifica ou remove. Se outra especificação alterar um desses blocos primeiro (por exemplo, ela é arquivada e mesclada na sua branch), `specforce spec delta check <slug>` reporta um conflito para esse item: o delta precisa ser refeito com base no módulo atual e selado de novo antes que a especificação possa ser arquivada. Veja [Deltas de módulo](artifacts.md#6-deltas-de-módulo).

@@ -8,7 +8,7 @@ Welcome to the **Specforce Kit**! This guide will help you set up your environme
 
 - Node.js and NPM (for the recommended installation)
 - Go 1.26+ and Make (if you wish to build from source)
-- Your favorite AI agent (Gemini CLI, Claude Code, KiloCode, etc.)
+- A [supported AI agent](supported-tools.md) (Claude Code, Qwen, Kimi Code, OpenCode, KiloCode, Codex, Antigravity or Cursor)
 
 ## Installation
 
@@ -24,7 +24,7 @@ If you prefer to install from source:
 git clone https://github.com/jeancodogno/specforce-kit.git
 cd specforce-kit
 make build
-make install
+sudo make install   # installs to /usr/local/bin; use "make install PREFIX=$HOME/.local" to avoid sudo
 ```
 
 ### Troubleshooting
@@ -58,7 +58,29 @@ If the automated build failed during installation, check if you have `go` and `m
 #### 4. Automatic Diagnostics
 If the `specforce` command works but fails to find its internal "brain" (the native binary), it will automatically run a diagnostic check and print the exact command you need to run to fix your `PATH`.
 
+## Updates
+
+Specforce keeps itself up to date in the background, following the channel you installed it from:
+
+- **When it checks:** at most once every 6 hours, only when you run an interactive command in a terminal. The check runs detached and never slows the command down; being offline does not cause repeated checks.
+- **Where it looks:** npm installs follow the npm tag of the running channel (for example `beta` for a `1.0.0-beta.x` version, `latest` for stable versions); native installs follow the latest GitHub release. Specforce never downgrades.
+- **When it applies:** npm installs install the exact new version; native binaries are downloaded, verified against the release checksum and swapped in on the next run. The next interactive command shows `(Specforce updated to <version>)` once.
+- **When it cannot:** if the install folder is not writable, or an install or verification fails, nothing is retried in a loop and a **MANUAL UPDATE REQUIRED** notice is shown once for that version, with the exact command:
+
+```bash
+# npm installs
+npm install -g @jeancodogno/specforce-kit@<version>
+
+# native installs: download the release from GitHub, or reinstall from source
+sudo make install
+```
+
+- **Agents are never disturbed:** commands run by agents (`constitution`, `spec`, `implementation`) never start a check or show a notice, and notices are written only to standard error, so agent output (including `--json`) is never polluted.
+- **Diagnostics:** run any command with `DEBUG=1` (for example `DEBUG=1 specforce console`) to print each updater decision to standard error. The per-user updater state lives in `~/.specforce/state.json`.
+
 ## First Steps
+
+Skills are referred to by name below (for example `spf.constitution`). How to call them explicitly depends on your tool: see [Invoking skills](supported-tools.md#invoking-skills). A plain-language request that names the skill works everywhere.
 
 ### 1. Initialize your Project
 
@@ -68,64 +90,68 @@ Navigate to your project directory (new or existing) and initialize Specforce:
 specforce init
 ```
 
-This command will prepare the necessary structure, setting up the state folders (`.specforce/`) and base files for your AI agent.
+Pick your AI tools in the interactive list, or pass their keys directly (for example `specforce init claude cursor`). This creates the `.specforce/` folder, the root `AGENTS.md` rules and the skills of each selected tool.
 
 ### 2. Define the Constitution
 
-The **Constitution** is the foundational set of rules for your project (architecture, UI/UX, security). Instead of polluting your agent's context with dozens of loose rules, Specforce centralizes this in a structured way.
+The **Constitution** is the foundational set of rules for your project (principles, architecture, UI/UX, security, engineering, governance). Instead of polluting your agent's context with dozens of loose rules, Specforce centralizes them in a structured way.
 
-In your terminal, start your AI agent (e.g., `gemini`) and run:
+Start your AI agent and ask, in its chat:
 
 ```text
-/spf:constitution {your project description and tech stack}
+Use spf.constitution to set up the constitution: <your project description and tech stack>
 ```
 
-The agent will ask a few questions to align the project and will create the foundational documents in the `docs/` folder.
+The agent will ask a few questions to align the project and will create the foundational documents in the `.specforce/docs/` folder.
 
 ### 3. Create your First Specification
 
 Every code change in Specforce requires a specification. To add a new feature, ask your agent:
 
 ```text
-/spf:spec {describe the feature you want to build}
+Use spf.spec to plan: <describe the feature you want to build>
 ```
 
-The agent will create the essential artifacts: `requirements.md`, `design.md`, and `tasks.md`.
+The agent creates the artifacts required by the spec size; a `medium` spec, the default size, needs `requirements.md` and `tasks.md` (see [Artifacts](artifacts.md)).
 
 ---
 
-## Workflow: The 4-Step Lifecycle
+## Workflow: The Lifecycle
 
 The Specforce Kit workflow is based on **Spec-Driven Development (SDD)**. In the age of AI, implementation has become a commodity, but architectural design without validation is a major risk.
 
-SDD separates **design** from **implementation**, ensuring that no code is generated on the fly ("vibe coding") without a formal contract.
+SDD separates **design** from **implementation**, ensuring that no code is generated on the fly ("vibe coding") without a formal contract. The development cycle follows a deterministic path. For ready-made workflows, tips and what to do when a step is blocked, see [Workflows & Tips](workflows.md).
 
-The development cycle with AI agents in Specforce follows a deterministic path:
+### 1. Foundation: The Constitution (`spf.constitution`)
+Everything starts with the **Constitution**. Before writing any code, the project needs clear rules on architecture, UI/UX, security and engineering.
+- The agent interacts with you to understand the project's scope, or reads the existing code of a project you are adopting.
+- It documents these decisions in `.specforce/docs/`, which serve as the "laws" for all future implementations.
+- **Advantage:** The agent only loads the documents it needs, saving tokens and preventing hallucinations.
 
-### 1. Foundation: The Constitution (`/spf:constitution`)
-Everything starts with the **Constitution**. Before writing any code, the project needs clear rules on Architecture, UI/UX, and Security.
-- The agent interacts with you to understand the project's scope.
-- It documents these decisions, which will serve as immutable "laws" for all future implementations.
-- **Advantage:** The agent only loads the segments of the constitution it needs, saving tokens and preventing hallucinations.
+### 2. Exploration: Discovery (`spf.discovery`)
+Use discovery to brainstorm an idea, investigate a bug or find a root cause before committing to a plan.
+- Product code stays read-only; disposable evidence (tests, scripts, screenshots) lives in `.specforce/scratch/`.
+- When you are ready, ask the agent to formalize the result into a `proposal.md` that planning reuses.
 
-### 2. The Contract: The Specification (`/spf:spec`)
+### 3. The Contract: The Specification (`spf.spec`)
 Every new feature, fix, or refactor starts here.
-- You explain what you need. The agent translates your needs into 3 artifacts:
+- You explain what you need. The agent writes the artifacts required by the spec size:
   - **Requirements** (the "what")
   - **Design** (the "how", architecturally)
   - **Tasks** (the atomic execution roadmap)
+  - **Module deltas** (how the change affects the module living specs)
 - *Human Action:* You must review and approve this specification. This is your contract with the machine.
 
-### 3. Execution: The Implementation (`/spf:implement`)
+### 4. Execution: The Implementation (`spf.implement`)
 With the approved specification, the agent enters execution mode.
-- The agent strictly follows the task list generated in the previous step.
-- Internal tools, such as [Validation Hooks](configuration.md), ensure the agent doesn't skip tests, linters, or security steps before marking a task as "finished".
+- The agent strictly follows the task list generated in the previous step, then runs an independent QA step that records a verdict for every acceptance criterion.
+- [Validation Hooks](configuration.md) ensure the agent doesn't skip tests, linters, or security steps before marking a task as "finished".
 - *Human Action:* Use the `specforce console` command in another terminal to monitor the agent's progress in real-time.
 
-### 4. Closure: Archiving (`/spf:archive`)
-After the feature is fully coded and tested, the specification needs to be closed.
-- The agent archives the completed specification to keep the environment clean.
-- It follows standardized **Archiving Instructions** to analyze what was done, consolidate Module Living Specs, and update the Global Constitution if new systemic architectural decisions have emerged.
+### 5. Closure: Archiving (`spf.archive`)
+After the feature is fully coded and verified, the specification needs to be closed.
+- The agent applies the module deltas to the living specs in `.specforce/docs/modules/`, updates the Constitution if new systemic decisions emerged, and moves the spec to `.specforce/archive/`.
+- Archiving is refused while tasks are pending, the delta is not applied or the QA verdict is FAILED.
 - You can customize these rules in `config.yaml` to include steps like updating external trackers or specific cleanup tasks.
 
 ---
@@ -141,3 +167,4 @@ In Specforce, roles are clear:
 
 To explore the terminal commands, see the [CLI Reference](cli.md).
 Learn more about the documents generated in this process on the [Artifacts](artifacts.md) page.
+Follow step-by-step workflows and tips in [Workflows & Tips](workflows.md).

@@ -1,101 +1,114 @@
 [ [English](../en/cli.md) | [Português](../pt/cli.md) | [Español](cli.md) ]
 
-# Command Line Interface (CLI)
+# Interfaz de línea de comandos (CLI)
 
-Specforce provides a comprehensive set of terminal commands to manage the software development lifecycle, orchestrate AI agents, and monitor project status.
+Esta página lista todos los comandos y flags de la CLI `specforce`, agrupados por área. Muchos de estos comandos los ejecuta el agente de IA mientras sigue una skill (consulta [Invocar las skills](supported-tools.md#invocar-las-skills)); se documentan aquí para que sepas qué existe y qué hace cada uno.
 
-Below is a complete reference of all existing commands in the Specforce CLI.
+Los comandos que reciben un `<slug>` aceptan el nombre de la carpeta de la especificación (por ejemplo `20261121-0035-csv-export`) o solo su parte legible (`csv-export`). Los flags marcados como `--json` imprimen JSON legible por máquinas, pensado para automatizaciones y agentes.
 
-## Global Commands
+## Global
 
-These commands manage the overall Specforce installation and project initialization.
-
-### `specforce init`
-Initializes a new Specforce project in the current directory. It creates the `.specforce/` state directory and generates default constitution templates inside `docs/`. This is the first command you run when bringing Specforce into an existing or new project.
-
-### `specforce install`
-Handles the global installation of the Specforce framework. This command ensures the `specforce` binary and required assets are correctly set up on your machine.
+### `specforce init [agents...]`
+Inicializa Specforce en el directorio actual: crea la carpeta `.specforce/` (con un `config.yaml` por defecto), el bloque gestionado del `AGENTS.md` raíz y las skills de las herramientas seleccionadas. Sin argumentos, un selector interactivo te permite elegir las herramientas. Con argumentos, las claves de herramienta indicadas (`claude`, `qwen`, `kimi-code`, `open-code`, `kilo-code`, `codex`, `antigravity`, `cursor`) se configuran inmediatamente. Vuelve a ejecutarlo en un proyecto ya inicializado para añadir o quitar herramientas y refrescar las skills instaladas. Con argumentos, cada herramienta instalada que dejes fuera se quita eliminando su carpeta entera (por ejemplo `.claude/`, incluidos tus propios ajustes), sin confirmación; el selector interactivo avisa antes de eliminar. Consulta [Herramientas soportadas](supported-tools.md).
 
 ### `specforce console`
-Launches the **Specforce Console TUI (Text User Interface)**. This is your command center. You can visualize project health, monitor active specifications in real-time, and audit task implementations. It is highly recommended to leave this running in a separate terminal pane while you work.
+Lanza la **Consola de Specforce**, una interfaz de terminal interactiva para explorar las especificaciones, la Constitución y las tareas de implementación, y para seguir el progreso en tiempo real (incluidas las especificaciones de [Git worktrees](git-worktrees.md) vinculados). Déjala abierta en un panel de terminal aparte mientras tu agente trabaja.
 
 ---
 
-## Discovery Commands
+## Flags globales y entorno
 
-Conversational exploration and technical research.
+- **`-v`, `--version`**: imprime la versión instalada (`specforce version <x.y.z>`).
+- **`-h`, `--help`**: muestra la ayuda de cualquier comando o grupo.
+- **`--dev`**: usa la carpeta local `kit/` en lugar del kit incrustado en el binario. Pensado solo para quienes contribuyen al kit.
+- **`DEBUG=1`**: variable de entorno que escribe diagnósticos en la salida de error estándar, incluida cada decisión de actualización automática (consulta [Actualizaciones](getting-started.md#actualizaciones)).
 
-### `spf.discovery` (Agent Command)
-**Usage:** `/spf:discovery {topic}`
-
-Purely conversational and read-only mode for feature brainstorming or diagnostic investigation. 
-- **Read-Only:** Forbidden from modifying the codebase or any project artifacts.
-- **Expert Personas:** Switches between "Senior Product Architect" (Brainstorming) and "Senior Systems Engineer" (Detective).
-- **Project Alignment:** Automatically reads Constitution documents (`.specforce/docs/`) for context.
+### `specforce completion <shell>`
+Genera el script de autocompletado de shell para `bash`, `zsh`, `fish` o `powershell`. Ejecuta `specforce completion <shell> --help` para ver los pasos de instalación de cada shell.
 
 ---
 
-## Constitution Commands
+## Constitución
 
-Manage the foundational rules and guidelines (the "Constitution") of your project.
+### `specforce constitution status [--json]`
+Muestra el estado de completitud de los documentos de la Constitución del proyecto en `.specforce/docs/` (principles, architecture, ui-ux, security, engineering, governance y modules).
 
-### `specforce constitution status`
-Evaluates and displays the completeness status of the project's constitution documents (like `architecture.md`, `security.md`, etc.). It helps ensure the system has enough context for AI agents to work properly.
-
-### `specforce constitution artifact <name>`
-Retrieves the specific context, templates, and injected instructions for a given constitution artifact. This is often used internally by AI agents to fetch the right rules when they need them.
+### `specforce constitution artifact <name> [--json]`
+Muestra los detalles de un artefacto de la Constitución: su propósito, su plantilla y sus instrucciones. Los agentes lo usan para obtener las reglas correctas cuando escriben o actualizan ese documento.
 
 ---
 
-## Archive Commands
+## Especificación
 
-Handle the feature archiving process and instructions.
+### `specforce spec init <slug> [--type feature|bug] [--size small|medium|large|complex] [--json]`
+Crea una nueva carpeta de especificación `.specforce/specs/<timestamp>-<slug>/` con sus metadatos `spec.yaml`.
+- `--type`: `feature` (por defecto) o `bug`. Las especificaciones de bug usan las variantes de bug de los requisitos y del diseño.
+- `--size`: `small`, `medium` (por defecto), `large` o `complex`. El tamaño decide qué artefactos son obligatorios (consulta [Artefactos](artifacts.md)).
 
-### `specforce archive instructions`
-Muestra el conjunto completo de instrucciones para archivar una feature. Esto incluye los metadatos de la constitución (descripciones de todos los documentos de la constitución), reglas clave de archivado (como consolidar las living specs de módulos) y cualquier instrucción personalizada definida en `config.yaml`. Este comando es utilizado principalmente por los agentes de IA para garantizar que sigan el protocolo correcto de archivado.
+### `specforce spec list [--json]`
+Lista todas las especificaciones activas.
+
+### `specforce spec status <slug> [--json]`
+Muestra la completitud de una especificación: qué artefactos requiere su tamaño, cuáles existen, los errores de validación y los avisos no bloqueantes de las tareas.
+
+### `specforce spec artifact <name> [--json]`
+Muestra las instrucciones y la plantilla de un artefacto de especificación (por ejemplo `requirements`, `design`, `tasks`, `bug-requirements`, `bug-design`), incluidas las instrucciones del proyecto de [`config.yaml`](configuration.md). Los agentes lo usan antes de escribir cada artefacto.
+
+### `specforce spec resize <slug> --size <size> [--json]`
+Cambia el tamaño de una especificación existente. Promoverla marca los artefactos recién requeridos como faltantes y bloquea la implementación hasta que existan; degradarla relaja la validación y conserva en disco los archivos existentes.
+
+### `specforce spec audit <slug> [flags]`
+Actualiza el estado de la auditoría de refinamiento guardado en `spec.yaml`, que usa la skill de planificación mientras comprueba la coherencia entre artefactos.
+- `--valid` / `--invalid`: marca la especificación como válida o inválida.
+- `--error <msg>`: añade un mensaje de error de coherencia.
+- `--clear`: borra todos los errores de coherencia.
+- `--iteration <n>`: establece el número de la iteración de refinamiento actual.
+- `--json`: salida legible por máquinas.
+
+### `specforce spec archive <slug> [--force]`
+Finaliza una especificación completada y mueve su carpeta a `.specforce/archive/`. Se niega cuando:
+- todavía hay tareas pendientes;
+- una especificación `medium`, `large` o `complex` tiene un delta que no está `applied` (o declarado `none`); las especificaciones `small` informan `exempt`;
+- el informe de QA guardado es `FAILED` (se listan los criterios fallidos).
+
+Una especificación sin informe de QA se archiva con un aviso visible. `--force` anula solo la comprobación de tareas pendientes; nunca se salta la comprobación del delta ni un veredicto de QA `FAILED`. Un rechazo deja el sistema de archivos intacto.
 
 ---
 
-## Specification Commands
+## Delta
 
-Handle the lifecycle of feature specifications, from inception to archiving.
-
-### `specforce spec init <slug>`
-Scaffolds a new feature directory inside `.specforce/specs/<slug>/` and creates the base templates for `requirements.md`, `design.md`, and `tasks.md`.
-
-### `specforce spec list`
-Displays a high-level list of all currently active feature specifications being worked on.
-
-### `specforce spec status <slug>`
-Reports on the completeness and validation status of a specific feature's artifacts (Requirements, Design, Tasks).
-
-### `specforce spec artifact <name>`
-Retrieves the instructions and templates associated with a specific spec artifact (e.g., `requirements`, `design`, `tasks`). Used by agents to ensure they follow formatting rules and business logic constraints.
-
-### `specforce spec archive <slug>`
-Finaliza y archiva una especificación de funcionalidad completada. Mueve la carpeta de la spec a `.specforce/archive/` y cierra el ciclo de la iteración. Las specs de tamaño `medium` o mayor requieren un delta aplicado (véase `specforce spec delta check`) o `delta.impact: none` en sus metadatos. `--force` nunca omite esta verificación.
+El delta describe los cambios que una especificación hace en las living specs de módulo de `.specforce/docs/modules/`. El archivado exige que el delta esté aplicado, sea none o esté exento.
 
 ### `specforce spec delta check <slug> [--json]`
-Informa si el delta de la spec (los cambios propuestos a las living specs de los módulos) ha sido aplicado. Solo lectura. El estado del informe es uno de:
-- `none`: la spec declara `delta.impact: none` (sin impacto en módulos).
-- `exempt`: una spec `small` sin delta; no necesita ninguno.
+Informa si el delta de la especificación (los cambios propuestos a las living specs de módulo) se ha aplicado. Solo lectura. El estado del informe es uno de:
+- `none`: la especificación declara `delta.impact: none` (sin impacto en módulos).
+- `exempt`: una especificación `small` sin delta; no lo necesita.
 - `missing`: se requiere un delta pero no se ha escrito.
-- `pending`: el delta existe, pero sus cambios aún no se reflejan en los módulos.
+- `pending`: existe un delta pero sus cambios todavía no se reflejan en los módulos.
 - `applied`: los módulos ya coinciden con el delta.
 - `invalid`: el delta está mal formado o entra en conflicto con los módulos actuales.
 
 ### `specforce spec delta seal <slug> [--json]`
-Sella el delta de la spec registrando las huellas de los bloques de módulo en los que se basa, de modo que las ediciones manuales posteriores en esos bloques se detecten como conflictos de base.
+Sella el delta de la especificación registrando las huellas (fingerprints) de los bloques de módulo en los que se basa, de modo que las ediciones manuales posteriores de esos bloques se detecten como conflictos de base.
 
 ---
 
-## Implementation Commands
+## Implementación y QA
 
-Track and update the execution of the atomic tasks defined in a specification.
+### `specforce implementation status <slug> [--json]`
+Muestra la hoja de ruta de implementación de una especificación (a partir de `tasks.md`): si está lista, los artefactos que faltan para su tamaño, cada tarea con su estado y sus restricciones, las mitigaciones de la hoja de ruta, las instrucciones `implementation` del proyecto y, cuando existe, el estado de QA guardado.
 
-### `specforce implementation status <slug>`
-Loads and displays the sequential implementation roadmap (from `tasks.md`) for a given feature. It shows which tasks are pending, in-progress, or finished.
+### `specforce implementation update <slug> --task <id>[,<id>...] --status <status>`
+Actualiza el estado de una o más tareas. `--task` acepta IDs separados por comas o puede repetirse (`--task T1.1 --task T1.2`). `--status` es `pending`, `in-progress` o `finished`.
 
-### `specforce implementation update <slug> --task <id> --status <status>`
-The heartbeat of the execution phase. This command updates the status of a specific task (e.g., from `pending` to `finished`).
-**Note:** When marking a task as `finished`, Specforce automatically triggers any pre-configured Validation Hooks (like linting and testing) to ensure quality before officially changing the state.
+Cuando el estado es `finished`, Specforce ejecuta primero los [hooks de validación](configuration.md#3-hooks-de-validación-quality-gates) configurados, una vez por lote y sin duplicados: `on_task_finished`, más `on_phase_finished` cuando una tarea es la última de su fase y `on_all_tasks_finished` cuando es la última de la hoja de ruta. Un hook que falla bloquea la actualización. Cuando todas las tareas del lote llevan el token `[RED]` en su título, solo se omiten los hooks `on_task_finished`, con un aviso que los nombra; los hooks de fase y de todas las tareas se siguen ejecutando.
+
+### `specforce implementation qa record <slug>`
+Registra el informe de QA independiente de una especificación. Lee el informe como JSON desde la entrada estándar (criterios con escenario, evidencia y veredicto `PASSED`, `FAILED` o `NOT-VERIFIABLE`, más los hallazgos fuera de alcance), lo valida, deriva el estado global (`FAILED` cuando algún criterio falló y `PASSED` en caso contrario) y reemplaza el informe anterior en `spec.yaml`. Una entrada inválida se rechaza sin cambiar el informe guardado. La skill de implementación lo usa después del paso de QA.
+
+---
+
+## Archivado
+
+### `specforce archive instructions`
+Muestra el protocolo de archivado completo: la descripción de cada documento de la Constitución, las reglas centrales del archivado (aplicar el delta a las living specs de módulo, actualizar la Constitución) y las instrucciones `archive` del proyecto de `config.yaml`. La skill de archivado lo sigue antes de ejecutar `specforce spec archive`.

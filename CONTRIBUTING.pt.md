@@ -1,65 +1,72 @@
-# Contributing to Specforce Kit
+# Contribuindo com o Specforce Kit
 
-First off, thank you for considering contributing to Specforce Kit! It's people like you that make Specforce a great tool for the entire AI-Engineering community.
+Antes de tudo, obrigado por considerar contribuir com o Specforce Kit! São pessoas como você que fazem do Specforce uma ótima ferramenta para toda a comunidade de Engenharia com IA.
 
-## 🚀 Our Philosophy: Spec-First
-We drink our own champagne. **All new features, bug fixes, or architectural changes in this repository MUST follow the Spec-Driven Development (SDD) lifecycle.**
+## 🚀 Nossa Filosofia: Especificação Primeiro
+Nós usamos o que construímos. **Todas as novas funcionalidades, correções de bugs ou mudanças arquiteturais neste repositório DEVEM seguir o ciclo de vida do Desenvolvimento Orientado por Especificação (SDD).** As skills são citadas pelo nome a seguir; veja [Invocando skills](docs/pt/supported-tools.md#invocando-skills) para a sintaxe da sua ferramenta de IA.
 
-1.  **Specification:** Every change starts with a Spec via your AI agent (`/spf:spec`).
-2.  **Implementation:** Once approved, we implement using the Specforce roadmap (`/spf:implement`).
-3.  **Verification & Archive:** Automated tests and manual TUI verification are mandatory before closing the loop (`/spf:archive`).
-
----
-
-## 🐛 Reporting Issues
-
-### Bug Reports
-- Use the GitHub Issue tracker.
-- Describe the expected behavior vs. actual behavior.
-- Provide a minimal reproduction script or steps.
-- Include your OS and Specforce version (`specforce version`).
-
-### Feature Requests
-- We love new ideas! Please open an issue to discuss the "Why" and "Value" before diving into technical details.
+1.  **Especificação:** Toda mudança começa com uma especificação feita pelo seu agente de IA (`spf.spec`).
+2.  **Implementação:** Depois de aprovada, implementamos seguindo o roadmap do Specforce (`spf.implement`).
+3.  **Verificação e Arquivamento:** Testes automatizados e verificação manual na TUI são obrigatórios antes de fechar o ciclo (`spf.archive`).
 
 ---
 
-## 🛠 Pull Request Process
+## 🐛 Reportando Problemas
 
-1.  **Fork and Branch:** Create a feature branch from `main`.
-2.  **Create a Spec:** Use your preferred AI agent (Claude Code, Cursor, etc.) and run the `/spf:spec {description}` slash command to generate the `requirements.md`, `design.md`, and `tasks.md`.
-3.  **Implement:** Use the `/spf:implement` command to let the agent execute the tasks.
-4.  **Code Standards:**
-    - Language: Go 1.26+
-    - Formatting: `gofmt` is mandatory.
-    - Linting: Must pass `golangci-lint`.
-    - Standards: Adhere to our project Constitution.
-5.  **Tests:** All new logic must have unit tests. Regression tests are required for bug fixes.
-6.  **Archive & Commit:** Run `/spf:archive` to update the global Constitution. Use [Conventional Commits](https://www.conventionalcommits.org/) (e.g., `feat:`, `fix:`, `docs:`).
-7.  **Submit:** Open a PR against the `main` branch. Ensure the CI pipeline passes.
+### Relatos de Bug
+- Use o Issue tracker do GitHub.
+- Descreva o comportamento esperado vs. o comportamento atual.
+- Forneça um script ou passos mínimos de reprodução.
+- Inclua seu sistema operacional e a versão do Specforce (`specforce --version`).
+
+### Pedidos de Funcionalidade
+- Adoramos ideias novas! Abra uma issue para discutir o "Porquê" e o "Valor" antes de entrar nos detalhes técnicos.
 
 ---
 
-## 🤖 Kit Development (New Agent Support)
+## 🛠 Processo de Pull Request
 
-Specforce Kit is built to be model-agnostic. We welcome contributions that add support for new AI agents or improve existing ones.
-
-### What is a Kit?
-A Kit is a set of instructions, rules, and tool mappings that allow an AI agent to interact with the Specforce framework. These are stored in hidden directories to ensure native discovery by the agents (e.g., `.claude/`, `.gemini/`, `.kilocode/`, etc.).
-
-### Creating a New Kit
-1.  **Define the Instructions:** Create the necessary markdown files (e.g., `SKILL.md`, `commands.md`) that teach the agent how to call `specforce` CLI commands via the slash commands (`/spf:spec`, `/spf:implement`, etc.).
-2.  **Ensure Context Segmentation:** Make sure the new agent integration respects our **Segmented Constitution** model, loading only the necessary architecture, UI/UX, or security rules when needed, rather than dumping everything into the context window.
+1.  **Fork e Branch:** Crie uma branch de funcionalidade a partir da `main`.
+2.  **Crie uma Especificação:** Use seu agente de IA preferido (Claude Code, Cursor etc.) e peça, por exemplo, "Use spf.spec para planejar: {descrição}". Ele gera os artefatos exigidos pelo tamanho da especificação (`requirements.md`, `design.md`, `tasks.md` e os deltas de módulo). Use o `spf.discovery` antes quando o problema ou a causa raiz ainda não estiverem claros.
+3.  **Implemente:** Peça "Use spf.implement para implementar {especificação}" para deixar o agente executar as tarefas e rodar a etapa de QA independente.
+4.  **Padrões de Código:**
+    - Linguagem: Go 1.26+
+    - Formatação: `gofmt` é obrigatório.
+    - Linting: Deve passar no `golangci-lint`.
+    - Padrões: Siga a Constituição do projeto (`.specforce/docs/`).
+5.  **Testes:** Toda lógica nova deve ter testes unitários. Testes de regressão são obrigatórios para correções de bugs.
+6.  **Arquivamento e Commit:** Peça "Use spf.archive para arquivar {especificação}" para atualizar as especificações vivas dos módulos e a Constituição. Use [Conventional Commits](https://www.conventionalcommits.org/) (ex.: `feat:`, `fix:`, `docs:`).
+7.  **Envie:** Abra um PR contra a branch `main`. Garanta que o pipeline de CI passe.
 
 ---
 
-## 🏗 Development Environment
+## 🤖 Desenvolvimento de Kits (Suporte a Novos Agentes)
 
-### Prerequisites
+O Specforce Kit foi construído para ser agnóstico a modelos. Contribuições que adicionem suporte a novos agentes de IA ou melhorem os existentes são bem-vindas.
+
+### O que é um Kit?
+O Kit é o conjunto de skills que ensina um agente de IA a trabalhar com o framework Specforce, mais o mapeamento que as instala no diretório oculto de cada ferramenta para descoberta nativa (ex.: `.claude/skills/`, `.cursor/skills/`, `.kilocode/skills/`). Ele é embutido no binário:
+
+- **Blueprints de skills:** `src/internal/agent/kit/skills/<id>/SKILL.yaml` (por exemplo `spf-spec/SKILL.yaml`). Cada blueprint é traduzido no `SKILL.md` nativo de cada ferramenta suportada durante o `specforce init`.
+- **Manifesto de ferramentas:** `src/internal/agent/kit/kit.yaml` declara todas as ferramentas suportadas: seu `name`, `description`, diretório `target` e os `mappings` das categorias que ela recebe (ex.: `skills`).
+
+### Adicionando uma Nova Ferramenta
+1.  **Registre o diretório:** Adicione o diretório oculto da ferramenta (ex.: `.newagent/`) à slice `ToolPrefixes` em `src/internal/core/constants.go`.
+2.  **Defina o mapeamento:** Adicione uma entrada de ferramenta em `src/internal/agent/kit/kit.yaml` com seu `name`, `description`, `target` e `mappings`. Use a sobrescrita de `target` no nível do mapeamento e a expansão de variáveis de ambiente (ex.: `${VAR:-DEFAULT}`) quando a ferramenta precisar de arquivos fora da sua pasta padrão.
+3.  **Escritas globais (opcional):** Se a ferramenta exigir arquivos fora da raiz do projeto, declare `security: { global_write: true }` na sua entrada do `kit.yaml` (veja a entrada `codex`) e documente esse local.
+4.  **Garanta a Segmentação de Contexto:** Certifique-se de que a nova integração respeite o nosso modelo de **Constituição Segmentada**, carregando apenas as regras necessárias de arquitetura, UI/UX ou segurança quando preciso, em vez de despejar tudo na janela de contexto.
+
+Para mudar o que as skills dizem, edite os blueprints `SKILL.yaml`; nunca edite os arquivos gerados dentro das pastas das ferramentas. Durante o desenvolvimento, execute a CLI com `--dev` a partir da raiz do repositório para carregar o kit de `src/internal/agent/kit/` em vez da cópia embutida no binário (veja a [Referência da CLI](docs/pt/cli.md)).
+
+---
+
+## 🏗 Ambiente de Desenvolvimento
+
+### Pré-requisitos
 - Go 1.26+
 - Make
 
-### Setup
+### Configuração
 ```bash
 git clone https://github.com/jeancodogno/specforce-kit.git
 cd specforce-kit
@@ -67,15 +74,15 @@ make build
 make install
 ```
 
-### Running Tests
+### Executando os Testes
 ```bash
 make test
 ```
 
 ---
 
-## 📜 Code of Conduct
-By participating in this project, you agree to abide by our project's Code of Conduct and maintain a professional and respectful environment for all contributors.
+## 📜 Código de Conduta
+Ao participar deste projeto, você concorda em seguir o Código de Conduta do projeto e em manter um ambiente profissional e respeitoso para todas as pessoas que contribuem.
 
 ---
-<p align="center">Let's build the future of AI-Orchestrated Engineering together.</p>r.</p>
+<p align="center">Vamos construir juntos o futuro da Engenharia Orquestrada por IA.</p>

@@ -31,7 +31,7 @@
 
 > **A Camada de Orquestração para Engenharia Nativa de IA.**
 
-O Specforce Kit é um framework de nível profissional projetado para coordenar agentes de IA (Claude Code, Cursor, KiloCode) através do **Desenvolvimento Orientado por Especificação (SDD - Spec-Driven Development)**. Ele fornece os **Kits**, a **Constituição** e as **Ferramentas de Orquestração** padronizadas necessárias para transformar a IA de um assistente "baseado em vibes" em uma força de engenharia determinística.
+O Specforce Kit é um framework de nível profissional projetado para coordenar agentes de IA (Claude Code, Cursor, Codex, KiloCode e outros) através do **Desenvolvimento Orientado por Especificação (SDD - Spec-Driven Development)**. Ele fornece as **Skills**, a **Constituição** e as **Ferramentas de Orquestração** padronizadas necessárias para transformar a IA de um assistente "baseado em vibes" em uma força de engenharia determinística.
 
 ---
 
@@ -52,48 +52,52 @@ O Specforce foi projetado para ser a **camada de orquestração invisível**. El
 ### Principais Diferenciais:
 
 - **Constituição Segmentada**: Em vez de um único prompt massivo, as regras são divididas em domínios especializados (Arquitetura, UI/UX, Segurança). O agente carrega apenas o contexto exato de que precisa, mantendo os custos de tokens baixos e reduzindo alucinações.
+- **Especificações com Tamanho e Deltas de Módulo**: Mudanças pequenas precisam apenas de uma lista de tarefas; as maiores acrescentam requisitos, design e um delta que mantém as especificações vivas dos módulos atualizadas.
+- **QA Independente**: Após a implementação, um testador que não escreveu nenhum código verifica cada critério de aceitação; um veredito de falha bloqueia o arquivamento.
 - **Hooks de Verificação Dinâmica**: Execute testes, linters ou scripts personalizados automaticamente antes que um agente seja autorizado a marcar uma tarefa como finalizada.
 - **Suporte a Git Worktree**: Descubra e visualize nativamente especificações em múltiplas branches git simultaneamente, sem trocar de contexto.
 - **Instruções Sensíveis ao Contexto**: Injete regras e restrições específicas dinamicamente com base no artefato ou fase em que o agente está trabalhando.
-- **Agnóstico a Ferramentas e IDEs**: Traga o Desenvolvimento Orientado por Especificação diretamente para o seu terminal. Funciona perfeitamente com sua IDE favorita e agentes de IA baseados em CLI (Gemini, Claude, Cursor, KiloCode, etc).
+- **Agnóstico a Ferramentas**: A Constituição e as especificações ficam em `.specforce/`, não em arquivos específicos de ferramentas, então você pode trocar de ferramenta de IA sem perder o contexto do projeto.
 - **Rápido e Sem Dependências**: Distribuído como um único binário, sem necessidade de configurações pesadas de Python ou ecossistemas forçados para iniciar seu projeto.
 
 ---
 
-## 🤖 Uso pelo Agente (Comandos Slash)
+## 🤖 Uso pelo Agente (Skills)
 
-O Specforce interage perfeitamente com seu agente de IA preferido através de comandos slash simples. Aqui está o fluxo de trabalho padrão:
+O Specforce instala suas skills nativamente na sua ferramenta de IA. Peça uma skill pelo nome, em linguagem natural, no chat do seu agente; a sintaxe explícita de cada ferramenta está em [Invocando skills](docs/pt/supported-tools.md#invocando-skills). Este é o ciclo de vida padrão:
 
-### 1. Descoberta (`/spf:discovery`)
-**Comando:** `/spf:discovery {ideia ou relatório de erro}`
+### 1. A Constituição (`spf.constitution`)
+**Exemplo:** "Use spf.constitution para configurar a constituição: {descrição do projeto e stack}"
 
-A fase inicial de exploração. Use isso para debater novas funcionalidades ou investigar problemas técnicos sem modificar nenhum arquivo.
-- **Exploração Somente Leitura:** O agente é estritamente proibido de escrever código ou artefatos. Ele se concentra em pesquisa, análise de causa raiz e estratégia técnica.
-- **Personas Especialistas:** Alterna automaticamente entre "Arquiteto de Produto Sênior" (Brainstorming) e "Engenheiro de Sistemas Sênior" (Detetive) com base na sua entrada.
-- **Alinhamento com o Projeto:** Lê a Constituição do seu projeto (`.specforce/docs/`) para garantir que todas as ideias estejam alinhadas com seus princípios e arquitetura.
-
-### 2. A Constituição (`/spf:constitution`)
-**Comando:** `/spf:constitution {descrição do projeto}`
-
-O primeiro passo em qualquer projeto. Isso gera a Constituição do seu projeto, contendo todas as regras, princípios, diretrizes de UI/UX, arquitetura, segurança e memória do agente.
-- **Agnóstico a Ferramentas e Segmentado:** Em vez de despejar regras em arquivos específicos de ferramentas (como `.clauderc` ou `.gemini/GEMINI.md`) ou manter tudo no contexto, o Specforce mantém seus próprios arquivos de memória especializados e segmentados. O agente carrega apenas o que precisa. Você pode trocar de ferramenta (ex: de Gemini CLI para Claude Code) e a memória do projeto permanece completamente intacta.
+O primeiro passo em qualquer projeto. Isso gera a Constituição do seu projeto em `.specforce/docs/`: princípios, arquitetura, UI/UX, segurança, engenharia, governança e especificações dos módulos de domínio (`modules/`).
+- **Segmentada:** O Specforce mantém seus próprios documentos especializados em vez de arquivos de regras específicos de ferramentas. O agente carrega apenas o que precisa, e o contexto permanece intacto quando você troca de ferramenta.
 - **Configuração Interativa:** Descreva sua ideia de projeto e stack. O agente fará perguntas esclarecedoras para ajudá-lo a tomar decisões fundamentais.
-- **Flexível:** Execute uma vez para configurar, ou execute novamente a qualquer momento para atualizar a constituição. Você pode usá-lo em ideias novas ou apontá-lo para um projeto existente para analisar e documentar sua arquitetura atual.
+- **Flexível:** Execute uma vez para configurar, ou execute novamente a qualquer momento para atualizar a constituição. Você pode usá-la em ideias novas ou apontá-la para um projeto existente para analisar e documentar sua arquitetura atual.
 
-### 2. Criando uma Spec (`/spf:spec`)
-**Comando:** `/spf:spec {descrição do que adicionar ou modificar}`
+### 2. Descoberta (`spf.discovery`)
+**Exemplo:** "Use spf.discovery para investigar: {ideia ou relato de bug}"
 
-Pronto para construir? O agente esclarecerá seus requisitos e gerará três documentos principais: `requirements.md`, `design.md` e `tasks.md`.
+A fase de exploração. Use-a para fazer brainstorming de novas funcionalidades ou investigar problemas técnicos antes de se comprometer com um plano.
+- **Somente Leitura para o Código do Produto:** O agente nunca edita seus arquivos existentes. As evidências descartáveis (testes, scripts, capturas de tela) ficam em `.specforce/scratch/`.
+- **Consultiva:** O agente dá opiniões, trade-offs e escolhas recomendadas, e encontra a causa raiz de bugs.
+- **Formalização:** Quando estiver pronto, peça para formalizar o resultado em uma proposta que o planejamento reaproveita.
 
-### 3. Implementação (`/spf:implement`)
-**Comando:** `/spf:implement`
+### 3. Criando uma Especificação (`spf.spec`)
+**Exemplo:** "Use spf.spec para planejar: {descrição do que adicionar ou modificar}"
 
-Após validar os documentos de especificação gerados, execute este comando. O agente seguirá estritamente as tarefas planejadas na spec para implementar a funcionalidade, garantindo desvio zero do design acordado.
+Pronto para construir? O agente esclarece seus requisitos e escreve os artefatos exigidos pelo tamanho da especificação: `requirements.md`, `design.md`, `tasks.md` e os deltas de módulo. Você os revisa e aprova.
 
-### 4. Arquivamento (`/spf:archive`)
-**Comando:** `/spf:archive`
+### 4. Implementação (`spf.implement`)
+**Exemplo:** "Use spf.implement para implementar {especificação}"
 
-Assim que a implementação estiver totalmente concluída e verificada, este comando analisa o que precisa ser atualizado na Constituição global do projeto com base na nova implementação e arquiva a spec concluída. Ele segue **Instruções de Arquivamento** padronizadas que garantem que as lições aprendidas sejam capturadas no memorial do projeto e qualquer limpeza específica do projeto seja realizada.
+Depois que você aprova a especificação, o agente segue rigorosamente as tarefas planejadas, executa seus hooks de verificação e termina com uma etapa de QA independente que registra um veredito para cada critério de aceitação.
+
+### 5. Arquivamento (`spf.archive`)
+**Exemplo:** "Use spf.archive para arquivar {especificação}"
+
+Assim que a implementação estiver concluída e verificada, o agente aplica os deltas de módulo às especificações vivas (`.specforce/docs/modules/`), atualiza a Constituição se necessário e arquiva a especificação. O arquivamento é recusado enquanto houver tarefas pendentes, o delta não estiver aplicado ou o QA tiver falhado.
+
+Para fluxos e dicas que cobrem bugs, redimensionamento, mudanças após a implementação, QA com falha e outros casos especiais, veja [Fluxos de Trabalho e Dicas](docs/pt/workflows.md).
 
 ---
 
@@ -102,7 +106,7 @@ Assim que a implementação estiver totalmente concluída e verificada, este com
 Enquanto o Specforce potencializa seus agentes de IA, os humanos interagem principalmente através de dois comandos de terminal:
 
 ### 1. Inicialização do Projeto
-Configure a governança e os kits de agentes para o seu projeto.
+Configure a governança e as skills dos agentes para o seu projeto.
 ```bash
 specforce init
 ```
@@ -117,9 +121,8 @@ specforce console
 
 ## 🛠️ Agentes de IA e Ferramentas Suportadas
 
-O Specforce Kit foi projetado para ser agnóstico a ferramentas, mas vem com kits pré-construídos e suporte nativo a comandos slash para os assistentes de codificação de IA mais populares:
+O Specforce Kit foi projetado para ser agnóstico a ferramentas e instala suas skills nativamente para os assistentes de programação com IA mais populares:
 
-- **Gemini CLI** (Google)
 - **Claude Code** (Anthropic)
 - **Qwen** (Alibaba)
 - **Kimi Code** (Moonshot AI)
@@ -127,6 +130,7 @@ O Specforce Kit foi projetado para ser agnóstico a ferramentas, mas vem com kit
 - **KiloCode**
 - **Codex**
 - **Antigravity**
+- **Cursor**
 
 *Não vê sua ferramenta favorita? Aceitamos PRs para adicionar novos kits!*
 
@@ -141,12 +145,13 @@ O Specforce Kit foi projetado para ser agnóstico a ferramentas, mas vem com kit
 npm i -g @jeancodogno/specforce-kit
 ```
 
-**A partir do Código Fonte (Requer Go 1.26+ e Make)**
+**A partir do Código-Fonte (Requer Go 1.26+ e Make)**
 ```bash
 git clone https://github.com/jeancodogno/specforce-kit.git
 cd specforce-kit
 make build
-make install
+# Binary 'specforce' is created in the root.
+# You can move it to your PATH manually or run it from here.
 ```
 
 ---
@@ -155,12 +160,13 @@ make install
 
 Para um mergulho mais profundo no Specforce Kit, confira nossa documentação oficial:
 
-- [Primeiros Passos e Fluxo de Trabalho](docs/pt/getting-started.md): Configuração do ambiente, primeiros passos e o ciclo de vida recomendado do Desenvolvimento Orientado por Especificação.
-- [Suporte a Git Worktree](docs/pt/git-worktrees.md): Guia para descoberta de especificações entre branches, console unificado e restrições de apenas leitura.
-- [Artefatos](docs/pt/artifacts.md): Detalhes sobre os arquivos gerados (Constituição, Requisitos, Design, Tarefas).
+- [Primeiros Passos e Fluxo de Trabalho](docs/pt/getting-started.md): Configuração do ambiente, primeiros passos, atualizações e o ciclo de vida recomendado do Desenvolvimento Orientado por Especificação.
+- [Fluxos de Trabalho e Dicas](docs/pt/workflows.md): Fluxos passo a passo, dicas e o que fazer quando uma etapa fica bloqueada.
+- [Suporte a Git Worktree](docs/pt/git-worktrees.md): Guia para descoberta de especificações entre branches, console unificado e restrições de somente leitura.
+- [Artefatos](docs/pt/artifacts.md): Os arquivos gerados (Constituição, Requisitos, Design, Tarefas), tamanhos de especificação, deltas de módulo e o relatório de QA.
 - [Configuração](docs/pt/configuration.md): Guia para personalizar hooks e instruções.
-- [Referência da CLI](docs/pt/cli.md): Uso do terminal e comandos slash.
-- [Ferramentas Suportadas](docs/pt/supported-tools.md): Lista de agentes de IA e assistentes de codificação suportados nativamente.
+- [Referência da CLI](docs/pt/cli.md): Todos os comandos e flags do terminal.
+- [Ferramentas Suportadas](docs/pt/supported-tools.md): Agentes de IA suportados nativamente e como invocar as skills em cada um.
 
 ---
 
@@ -178,14 +184,14 @@ export PATH="$(npm config get prefix)/bin:$PATH"
 **Correção para Windows:**
 Certifique-se de que `%AppData%\npm` esteja em suas variáveis de ambiente.
 
-Para uma resolução de problemas mais detalhada, veja [Primeiros Passos: Resolução de Problemas](docs/pt/getting-started.md#troubleshooting).
+Para uma resolução de problemas mais detalhada, veja [Primeiros Passos: Solução de problemas](docs/pt/getting-started.md#solução-de-problemas).
 
 ---
 
 ## 🤝 Contribuindo
-Contribuições são bem-vindas! Veja nosso [CONTRIBUTING.md](CONTRIBUTING.md) para aprender como adicionar suporte para novos agentes de IA ou melhorar os kits existentes.
+Contribuições são bem-vindas! Veja nosso [CONTRIBUTING.pt.md](CONTRIBUTING.pt.md) para aprender como adicionar suporte para novos agentes de IA ou melhorar os kits existentes.
 
 ---
 
 ## 📜 Licença
-O Specforce Kit é lançado sob a **Licença MIT**. Veja [LICENSE](LICENSE) para detalhes.
+Lançado sob a **Licença MIT**. Veja [LICENSE](LICENSE) para detalhes.

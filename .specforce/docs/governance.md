@@ -36,3 +36,7 @@
 - **Consistency:** Filenames must remain identical across language folders.
 - **Navigation:** Root `README.md` and regional versions MUST contain a language selector at the top.
 - **Verification:** All internal links in documentation MUST be verified and relative to the current language folder during any restructuring.
+- **Translation Parity:** A change to an English page MUST update its Portuguese and Spanish versions in the same change.
+- **Human vs. Agent Actions:** In user documentation, every step the reader performs MUST be labeled as either a terminal command or an agent chat request. Commands the agent runs on its own appear only as explanation (prose or a collapsed "behind the scenes" block), never as a step.
+- **Chat First:** User documentation MUST NOT ask the reader to run a terminal check for state the agent already reports (task status, delta state, QA results) or to choose a value the agent decides (such as the spec size).
+- **Concrete Examples:** Example chat requests MUST be concrete (a named feature, bug or spec slug), not bare placeholders.

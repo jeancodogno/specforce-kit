@@ -1,37 +1,55 @@
 [ [English](../en/configuration.md) | [Português](../pt/configuration.md) | [Español](configuration.md) ]
 
-# Specforce Configuration
+# Configuración de Specforce
 
-Configuring Specforce's internal behavior is done through the `.specforce/config.yaml` file. With it, you add layers of intelligence, security, and standardization that apply invisibly to your AI agents.
+El comportamiento de Specforce se configura en el archivo `.specforce/config.yaml` (creado por `specforce init`). Con él añades reglas del proyecto, variables compartidas y barreras de calidad que se aplican automáticamente a tus agentes de IA.
 
-## 1. Context-Aware Instructions
+## 1. Instrucciones según el contexto
 
-Instead of repeating rules ("Remember to use BDD") in every prompt, you can configure them to be injected automatically at the exact moment the agent works on a specific artifact.
+En lugar de repetir reglas ("Recuerda usar BDD") en cada prompt, puedes configurarlas para que se inyecten automáticamente en el momento exacto en que el agente trabaja en un artefacto o en una fase concreta.
 
-In `config.yaml`:
+En `config.yaml`:
 
 ```yaml
 instructions:
   requirements:
     - "Always use BDD GIVEN/WHEN/THEN syntax for acceptance criteria."
     - "Ensure accessibility is always mentioned if UI is involved."
+  bug-requirements:
+    - "Always include the exact error message in the evidence section."
   design:
     - "Always evaluate security impacts for new API routes."
+  tasks:
+    - "Structure every phase as [RED] test tasks followed by [GREEN] implementation tasks."
   implementation:
     - "Do not bypass TypeScript typings. Use Type Guards."
   archive:
-    - "Consolide siempre las living specs de módulos con las lecciones aprendidas."
+    - "Always consolidate module living specs with lessons learned."
     - "Summarize any technical debt introduced during implementation."
 ```
 
-## 2. Inyección de Variables en Instrucciones
+### Claves de instrucción aceptadas
 
-Para que las instrucciones sean aún más potentes, puedes definir variables a nivel de proyecto en el bloque `context`. Estas variables pueden inyectarse en cualquier instrucción o plantilla de artefacto utilizando la sintaxis `{{nombre_de_variable}}`.
+| Clave | Se aplica cuando |
+|---|---|
+| `requirements` | el agente escribe `requirements.md` (especificaciones de funcionalidad y de bug) |
+| `bug-requirements` | el agente escribe el `requirements.md` de una especificación de bug |
+| `design` | el agente escribe `design.md` (especificaciones de funcionalidad y de bug) |
+| `bug-design` | el agente escribe el `design.md` de una especificación de bug |
+| `tasks` | el agente escribe `tasks.md` |
+| `implementation` | el agente carga la hoja de ruta para implementarla |
+| `archive` | el agente archiva una especificación |
+
+**Las claves genéricas y las específicas se combinan.** Cuando el agente trabaja en un artefacto variante como `bug-requirements`, recibe primero las instrucciones de la clave genérica (`requirements`) y después las de la clave específica (`bug-requirements`); una regla listada en ambas aparece una sola vez. Lo mismo se aplica a `design` y `bug-design`.
+
+## 2. Inyección de variables en las instrucciones
+
+Para que las instrucciones sean todavía más potentes, puedes definir variables a nivel de proyecto en el bloque `context`. Después, estas variables pueden inyectarse en cualquier instrucción o plantilla de artefacto usando la sintaxis `{{variable_name}}`.
 
 En `config.yaml`:
 
 ```yaml
-# Variables de contexto global
+# Global context variables
 context:
   project_name: "Specforce Kit"
   tech_stack: "Go, React, PostgreSQL"
@@ -39,20 +57,22 @@ context:
 
 instructions:
   tasks:
-    - "Recuerda: el código se fusionará en la rama {{primary_branch}}."
-    - "Toda nueva funcionalidad en {{project_name}} debe respetar el stack {{tech_stack}}."
+    - "Remember: the code will be merged into the {{primary_branch}} branch."
+    - "Every new feature in {{project_name}} must respect the {{tech_stack}} stack."
 ```
 
 ### ¿Por qué usar variables?
-- **Fuente Única de Verdad:** Actualiza el nombre del proyecto o el stack una sola vez, y todas las instrucciones orientadas al agente se mantendrán sincronizadas.
-- **Plantillas Reutilizables:** Usa el mismo conjunto de instrucciones en diferentes proyectos cambiando solo el bloque `context`.
-- **Consistencia:** Asegura que los agentes siempre tengan datos del proyecto correctos y no alucinados.
+- **Fuente única de verdad:** actualiza el nombre del proyecto o el stack una sola vez, y todas las instrucciones dirigidas al agente se mantienen sincronizadas.
+- **Plantillas reutilizables:** usa el mismo conjunto de instrucciones en distintos proyectos cambiando solo el bloque `context`.
+- **Consistencia:** garantiza que los agentes siempre tengan datos del proyecto correctos y no alucinados.
 
-## 3. Validation Hooks (Quality Gates)
+Nunca pongas secretos (tokens, contraseñas, claves) en `context` ni en `instructions`: estos valores se muestran al agente. Guarda los secretos en archivos de entorno.
 
-Hooks are external commands executed by Specforce before or after a state transition. Their main use is to act as **Quality Gates** to prevent the agent from finishing tasks if the code is inadequate.
+## 3. Hooks de validación (Quality Gates)
 
-In `config.yaml`:
+Los hooks son comandos externos que Specforce ejecuta cuando el agente marca tareas como finalizadas. Su uso principal es actuar como **Quality Gates** (barreras de calidad) que impiden que el agente finalice tareas mientras el código no sea adecuado.
+
+En `config.yaml`:
 
 ```yaml
 hooks:
@@ -65,21 +85,25 @@ hooks:
     - "npm run e2e-tests"
 ```
 
-### Supported Hooks:
-- **`on_task_finished`**: Triggered after each individual task is completed.
-- **`on_phase_finished`**: Triggered after all tasks in a specific Phase (H3) are completed.
-- **`on_all_tasks_finished`**: Triggered after the entire implementation roadmap is completed.
+### Hooks soportados:
+- **`on_task_finished`**: se dispara cada vez que se marcan tareas como finalizadas.
+- **`on_phase_finished`**: se dispara cuando una tarea finalizada es la última de su Fase (encabezado H3 en `tasks.md`).
+- **`on_all_tasks_finished`**: se dispara cuando una tarea finalizada es la última de la hoja de ruta.
 
-### How does it work?
-1. The agent attempts to mark a task from its specification as finished.
-2. Specforce pauses the agent and executes `npm run lint` and `npm run test`.
-3. **If successful (exit 0):** The task is marked as finished.
-4. **If failed:** The transition is blocked, and the error log is returned to the agent so it can fix the bug before trying to proceed.
+### ¿Cómo funciona?
+1. El agente marca una o más tareas como finalizadas (`specforce implementation update <slug> --task <ids> --status finished`).
+2. Antes de cambiar cualquier estado, Specforce ejecuta los hooks aplicables una sola vez para todo el lote, sin duplicados (en el ejemplo anterior, `npm run lint` y `npm run test`).
+3. **Si todos los hooks terminan con código 0:** las tareas se marcan como finalizadas.
+4. **Si algún hook termina con un código distinto de cero:** la transición se bloquea y la salida del hook se devuelve al agente para que pueda corregir el problema antes de volver a intentarlo.
 
-### Essential Tips for Hooks:
-- **Be Fast and Silent:** Use fast and silent commands (`--silent`, `--quiet`).
-- **Filter the Output:** Do not dump thousands of log lines into the agent's context. Use focused tools or filters like `grep` to send only specific errors. Example: `golangci-lint run --out-format=line-number` or `npm run test --silent | grep -A 10 "FAIL"`.
+Tareas test-first: cuando todas las tareas del lote llevan `[RED]` en su título, solo se omiten los hooks `on_task_finished` (con un aviso que los nombra); los hooks de fase y de todas las tareas se siguen ejecutando. Consulta [Artefactos](artifacts.md#8-tareas-test-first-red).
+
+### Consejos esenciales para los hooks:
+- **Un comando por entrada:** cada entrada se divide por espacios y se ejecuta directamente, no a través de un shell, así que las tuberías (`|`), las redirecciones y `&&` no se interpretan. Pon las tuberías en un script o en un target de `make` y llama a eso en su lugar (por ejemplo `make test-quiet`).
+- **Los hooks de un mismo lote se ejecutan a la vez:** no hagas que un hook dependa del resultado de otro.
+- **Sé rápido y silencioso:** usa comandos rápidos y silenciosos (`--silent`, `--quiet`).
+- **Filtra la salida:** no vuelques miles de líneas de log en el contexto del agente. Dentro de tu script, envía solo los errores relevantes, p. ej. `golangci-lint run --out-format=line-number` o `npm run test --silent | grep -A 10 "FAIL"`.
 
 ---
 
-By combining *Context-Aware Instructions* and *Validation Hooks*, you create an unbreakable "guardrail" for your team and your AI agents.
+Combinando las *Instrucciones según el contexto* y los *Hooks de validación*, creas una "barandilla" irrompible para tu equipo y tus agentes de IA.

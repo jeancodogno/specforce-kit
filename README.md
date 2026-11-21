@@ -31,13 +31,13 @@
 
 > **The Orchestration Layer for AI-Native Engineering.**
 
-Specforce Kit is a professional-grade framework designed to coordinate AI agents (Claude Code, Cursor, KiloCode) through **Spec-Driven Development (SDD)**. It provides the standardized **Kits**, **Constitution**, and **Orchestration Tools** required to transform AI from a "vibe-based" assistant into a deterministic engineering force.
+Specforce Kit is a professional-grade framework designed to coordinate AI agents (Claude Code, Cursor, Codex, KiloCode and more) through **Spec-Driven Development (SDD)**. It provides the standardized **Skills**, **Constitution**, and **Orchestration Tools** required to transform AI from a "vibe-based" assistant into a deterministic engineering force.
 
 ---
 
 ## 🧠 Philosophy
 
-In the age of AI, implementation is a commodity, but design is a liability. **Implementation without a specification is strictly forbidden in Specforce.** 
+In the age of AI, implementation is a commodity, but design is a liability. **Implementation without a specification is strictly forbidden in Specforce.**
 
 Spec-Driven Development (SDD) decouples design from implementation. A specification acts as a strict contract between human designers and machine executors. By doing so, we prevent "vibe coding" - the accumulation of ad-hoc, unverified decisions - ensuring your system remains coherent, secure, and maintainable no matter which AI agent writes the code.
 
@@ -52,48 +52,52 @@ Specforce is designed to be the **invisible orchestration layer**. It brings pre
 ### Key Strengths:
 
 - **Segmented Constitution**: Instead of a single massive prompt, rules are broken down into specialized domains (Architecture, UI/UX, Security). The agent only loads the exact context it needs, keeping token costs low and reducing hallucinations.
+- **Sized Specs & Module Deltas**: Small changes need only a task list; larger ones add requirements, design and a delta that keeps the module living specs up to date.
+- **Independent QA**: After implementation, a tester that wrote no code checks every acceptance criterion; a failed verdict blocks archiving.
 - **Dynamic Verification Hooks**: Run tests, linters, or custom scripts automatically before an agent is allowed to mark a task as finished.
 - **Git Worktree Support**: Natively discover and view specifications across multiple git branches simultaneously without switching contexts.
 - **Context-Aware Instructions**: Inject specific rules and constraints dynamically based on the artifact or phase the agent is currently working on.
-- **Tool & IDE Agnostic**: Bring Spec-Driven Development directly to your terminal. Works flawlessly with your favorite IDE and CLI-based AI agents (Gemini, Claude, Cursor, KiloCode, etc).
+- **Tool Agnostic**: The Constitution and specs live in `.specforce/`, not in tool-specific files, so you can switch AI tools without losing project context.
 - **Lightning Fast & Zero Dependencies**: Distributed as a single binary, requiring no heavy Python setups or forced ecosystems to bootstrap your project.
 
 ---
 
-## 🤖 Agent Usage (Slash Commands)
+## 🤖 Agent Usage (Skills)
 
-Specforce interacts seamlessly with your preferred AI agent via simple slash commands. Here is the standard workflow:
+Specforce installs its skills natively in your AI tool. Ask for a skill by name, in plain language, in your agent's chat; the explicit syntax for each tool is in [Invoking skills](docs/en/supported-tools.md#invoking-skills). Here is the standard lifecycle:
 
-### 1. Discovery (`/spf:discovery`)
-**Command:** `/spf:discovery {idea or bug report}`
+### 1. The Constitution (`spf.constitution`)
+**Example:** "Use spf.constitution to set up the constitution: {project description and stack}"
 
-The early exploration phase. Use this to brainstorm new features or investigate technical issues without modifying any files.
-- **Read-Only Exploration:** The agent is strictly forbidden from writing code or artifacts. It focuses on research, root cause analysis, and technical strategy.
-- **Expert Personas:** Automatically switches between "Senior Product Architect" (Brainstorming) and "Senior Systems Engineer" (Detective) based on your input.
-- **Project Alignment:** Reads your project's Constitution (`.specforce/docs/`) to ensure all ideas align with your principles and architecture.
-
-### 2. The Constitution (`/spf:constitution`)
-**Command:** `/spf:constitution {project description}`
-
-The first step in any project. This generates your project's Constitution, containing all rules, principles, UI/UX guidelines, architecture, security, and domain module specifications. 
-- **Tool Agnostic & Segmented:** Instead of dumping rules into tool-specific files (like `.clauderc` or `.gemini/GEMINI.md`) or keeping everything in context, Specforce maintains its own specialized, segmented specification files. The agent only loads what it needs. You can switch tools (e.g., from Gemini CLI to Claude Code) and the project context remains completely intact.
+The first step in any project. This generates your project's Constitution in `.specforce/docs/`: principles, architecture, UI/UX, security, engineering, governance and domain module specifications (`modules/`).
+- **Segmented:** Specforce keeps its own specialized documents instead of tool-specific rule files. The agent only loads what it needs, and the context stays intact when you switch tools.
 - **Interactive Setup:** Describe your project idea and stack. The agent will ask clarifying questions to help you make foundational decisions.
 - **Flexible:** Run it once to set up, or rerun it anytime to update the constitution. You can use it on brand new ideas or point it at an existing project to analyze and document its current architecture.
 
-### 2. Creating a Spec (`/spf:spec`)
-**Command:** `/spf:spec {description of what to add or modify}`
+### 2. Discovery (`spf.discovery`)
+**Example:** "Use spf.discovery to investigate: {idea or bug report}"
 
-Ready to build? The agent will clarify your requirements and generate three core documents: `requirements.md`, `design.md`, and `tasks.md`.
+The exploration phase. Use this to brainstorm new features or investigate technical issues before committing to a plan.
+- **Read-Only for Product Code:** The agent never edits your existing files. Disposable evidence (tests, scripts, screenshots) lives in `.specforce/scratch/`.
+- **Consultative:** The agent gives opinions, trade-offs and recommended picks, and finds root causes for bugs.
+- **Formalization:** When you are ready, ask it to formalize the result into a proposal that planning reuses.
 
-### 3. Implementation (`/spf:implement`)
-**Command:** `/spf:implement`
+### 3. Creating a Spec (`spf.spec`)
+**Example:** "Use spf.spec to plan: {description of what to add or modify}"
 
-After you validate the generated spec documents, execute this command. The agent will strictly follow the planned tasks in the spec to implement the feature, ensuring zero drift from the agreed design.
+Ready to build? The agent clarifies your requirements and writes the artifacts required by the spec size: `requirements.md`, `design.md`, `tasks.md` and the module deltas. You review and approve them.
 
-### 4. Archiving (`/spf:archive`)
-**Command:** `/spf:archive`
+### 4. Implementation (`spf.implement`)
+**Example:** "Use spf.implement to implement {spec}"
 
-Once implementation is fully complete and verified, this command synthesizes domain living specifications (`.specforce/docs/modules/`), analyzes what needs to be updated in the project's global Constitution, and archives the completed spec. It follows standardized **Archiving Instructions** that ensure as-built reality is captured into living specs and any project-specific cleanup is performed.
+After you approve the spec, the agent strictly follows the planned tasks, runs your verification hooks, and finishes with an independent QA step that records a verdict for every acceptance criterion.
+
+### 5. Archiving (`spf.archive`)
+**Example:** "Use spf.archive to archive {spec}"
+
+Once implementation is complete and verified, the agent applies the module deltas to the living specs (`.specforce/docs/modules/`), updates the Constitution if needed, and archives the spec. Archiving is refused while tasks are pending, the delta is not applied, or QA failed.
+
+For workflows and tips covering bugs, resizing, changes after implementation, failed QA and other edge cases, see [Workflows & Tips](docs/en/workflows.md).
 
 ---
 
@@ -102,7 +106,7 @@ Once implementation is fully complete and verified, this command synthesizes dom
 While Specforce powers your AI agents, humans interact primarily through two terminal commands:
 
 ### 1. Project Initialization
-Set up the governance and agent kits for your project.
+Set up the governance and agent skills for your project.
 ```bash
 specforce init
 ```
@@ -117,9 +121,8 @@ specforce console
 
 ## 🛠️ Supported AI Agents & Tools
 
-Specforce Kit is designed to be tool-agnostic but comes with pre-built kits and native slash command support for the most popular AI coding assistants:
+Specforce Kit is designed to be tool-agnostic and installs its skills natively for the most popular AI coding assistants:
 
-- **Gemini CLI** (Google)
 - **Claude Code** (Anthropic)
 - **Qwen** (Alibaba)
 - **Kimi Code** (Moonshot AI)
@@ -127,6 +130,7 @@ Specforce Kit is designed to be tool-agnostic but comes with pre-built kits and 
 - **KiloCode**
 - **Codex**
 - **Antigravity**
+- **Cursor**
 
 *Don't see your favorite tool? We welcome PRs to add new kits!*
 
@@ -141,12 +145,12 @@ Specforce Kit is designed to be tool-agnostic but comes with pre-built kits and 
 npm i -g @jeancodogno/specforce-kit
 ```
 
-**From Source (Requires Go 1.24+ & Make)**
+**From Source (Requires Go 1.26+ & Make)**
 ```bash
 git clone https://github.com/jeancodogno/specforce-kit.git
 cd specforce-kit
 make build
-# Binary 'specforce' is created in the root. 
+# Binary 'specforce' is created in the root.
 # You can move it to your PATH manually or run it from here.
 ```
 
@@ -156,12 +160,13 @@ make build
 
 For a deeper dive into Specforce Kit, check out our official documentation:
 
-- [Getting Started & Workflow](docs/en/getting-started.md): Environment setup, first steps, and the recommended Spec-Driven Development lifecycle.
+- [Getting Started & Workflow](docs/en/getting-started.md): Environment setup, first steps, updates, and the recommended Spec-Driven Development lifecycle.
+- [Workflows & Tips](docs/en/workflows.md): Step-by-step workflows, tips and what to do when a step is blocked.
 - [Git Worktree Support](docs/en/git-worktrees.md): Guide to cross-branch specification discovery, unified console, and read-only constraints.
-- [Artifacts](docs/en/artifacts.md): Details about the generated files (Constitution, Requirements, Design, Tasks).
+- [Artifacts](docs/en/artifacts.md): The generated files (Constitution, Requirements, Design, Tasks), spec sizes, module deltas and the QA report.
 - [Configuration](docs/en/configuration.md): Guide to customize hooks and instructions.
-- [CLI Reference](docs/en/cli.md): Terminal and slash command usage.
-- [Supported Tools](docs/en/supported-tools.md): List of natively supported AI agents and coding assistants.
+- [CLI Reference](docs/en/cli.md): Every terminal command and flag.
+- [Supported Tools](docs/en/supported-tools.md): Natively supported AI agents and how to invoke skills in each one.
 
 ---
 
@@ -189,4 +194,4 @@ We welcome contributions! See our [CONTRIBUTING.md](CONTRIBUTING.md) to learn ho
 ---
 
 ## 📜 License
-Specforce Kit is released under the **MIT License**. See [LICENSE](LICENSE) for details.pecforce Kit is released under the **MIT License**. See [LICENSE](LICENSE) for details.
+Released under the **MIT License**. See [LICENSE](LICENSE) for details.
