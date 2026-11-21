@@ -41,6 +41,10 @@ time_logs:
         sessions:
             - started_at: 2026-11-21T21:35:36.857063532Z
               completed_at: 2026-11-21T21:41:10.17992296Z
+    T3.5:
+        sessions:
+            - started_at: 2026-11-21T22:13:20.871450819Z
+              completed_at: 2026-11-21T22:13:52.062175616Z
     T4.1:
         sessions:
             - started_at: 2026-11-21T21:35:36.857063724Z

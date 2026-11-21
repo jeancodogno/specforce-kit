@@ -39,20 +39,39 @@ func TestHandleArchiveInstructions(t *testing.T) {
 
 	// Capture stdout
 	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
+	r, w, pipeErr := os.Pipe()
+	if pipeErr != nil {
+		t.Fatalf("os.Pipe failed: %v", pipeErr)
+	}
 	os.Stdout = w
+	restored := false
+	restore := func() {
+		if !restored {
+			restored = true
+			os.Stdout = oldStdout
+		}
+	}
+	defer restore()
+
+	// Drain the pipe concurrently so large output cannot block the writer.
+	var buf bytes.Buffer
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _ = io.Copy(&buf, r)
+	}()
 
 	err := e.HandleArchiveInstructions(context.Background(), ui)
 
 	_ = w.Close()
-	os.Stdout = oldStdout
+	restore()
+	<-done
+	_ = r.Close()
 
 	if err != nil {
 		t.Fatalf("HandleArchiveInstructions failed: %v", err)
 	}
 
-	var buf bytes.Buffer
-	_, _ = io.Copy(&buf, r)
 	output := buf.String()
 
 	// Assertions

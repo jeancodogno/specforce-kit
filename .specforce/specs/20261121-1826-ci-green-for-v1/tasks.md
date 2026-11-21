@@ -128,6 +128,16 @@ lens: Integration
 **Acceptance Check:**
 `go test -count=1 ./src/internal/core/ && GOOS=windows go vet ./src/internal/core/ && ! grep -q '/nonexistent/root' src/internal/core/config_test.go && echo OK` prints `OK`.
 
+- [x] T3.5: [CODE] Archive instructions test drains captured output concurrently
+**Target:** `src/internal/cli/archive_test.go`
+**Context:** [US-3], [US-2]
+
+**Constraints:**
+- Found in CI run `44954510860`: once T2.1 loads the full protocol (~8 KB), the test deadlocks on Windows because it writes to an `os.Pipe` that is only read after the handler returns (the Windows pipe buffer is smaller than the output). Read the pipe in a goroutine started before calling the handler; keep both content assertions unchanged.
+
+**Acceptance Check:**
+`go test -count=1 -run TestHandleArchiveInstructions ./src/internal/cli/ && GOOS=windows go vet ./src/internal/cli/ && echo OK` prints `OK`; the Windows proof is S1.
+
 ### Phase 4: Constitution
 
 - [x] T4.1: [DOCS] User-state isolation rule names both home variables
