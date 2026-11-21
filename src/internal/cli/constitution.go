@@ -76,7 +76,7 @@ func (e *Executor) HandleConstitutionStatus(ctx context.Context, ui core.UI, jso
 
 	// TUI Mode
 	if tui.IsTTY() {
-		tui.PrintBranding()
+		tui.PrintHeader()
 	}
 
 	fmt.Println("\n" + tui.HeaderStyle.Render("CONSTITUTION COMPLETENESS REPORT"))
@@ -136,7 +136,7 @@ func (e *Executor) HandleConstitutionArtifact(ctx context.Context, ui core.UI, s
 
 	// TUI Mode
 	if tui.IsTTY() {
-		tui.PrintBranding()
+		tui.PrintHeader()
 	}
 
 	fmt.Println("\n" + tui.HeaderStyle.Render("CONSTITUTION ARTIFACT: "+strings.ToUpper(art.Slug)))

@@ -1,0 +1,233 @@
+slug: 20261121-1826-ci-green-for-v1
+name: 20261121-1826-ci-green-for-v1
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T21:34:56.776896842Z
+              completed_at: 2026-11-21T21:41:10.179921619Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T21:34:56.776898063Z
+              completed_at: 2026-11-21T21:41:10.179922118Z
+    T1.3:
+        sessions:
+            - started_at: 2026-11-21T21:58:10.951450046Z
+              completed_at: 2026-11-21T22:01:06.170360931Z
+    T1.4:
+        sessions:
+            - started_at: 2026-11-21T21:58:10.951450651Z
+              completed_at: 2026-11-21T22:01:06.170361521Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-21T21:34:56.77689837Z
+              completed_at: 2026-11-21T22:23:25.620770787Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857062263Z
+              completed_at: 2026-11-21T22:23:25.620771403Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857062914Z
+              completed_at: 2026-11-21T21:41:10.179922364Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.85706314Z
+              completed_at: 2026-11-21T21:41:10.179922651Z
+    T3.3:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857063336Z
+              completed_at: 2026-11-21T21:41:10.179922806Z
+    T3.4:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857063532Z
+              completed_at: 2026-11-21T21:41:10.17992296Z
+    T3.5:
+        sessions:
+            - started_at: 2026-11-21T22:13:20.871450819Z
+              completed_at: 2026-11-21T22:13:52.062175616Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-21T21:35:36.857063724Z
+              completed_at: 2026-11-21T21:41:10.179923109Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-21T22:29:26Z
+    criteria:
+        - id: US-1.1
+          scenario: No reachable vulnerability
+          evidence: 'govulncheck@v1.10.0: No vulnerabilities found'
+          verdict: PASSED
+        - id: US-1.2
+          scenario: gosec 0 issues, one justified suppression
+          evidence: 'gosec@v2.30.0 Issues : 0; #nosec G101 with reason'
+          verdict: PASSED
+        - id: US-1.3
+          scenario: Same toolchain in go.mod, CI and release
+          evidence: go 1.26.11; ci.yml 4/4, release.yml 2/2 setup-go; CI log go1.26.11
+          verdict: PASSED
+        - id: US-1.4
+          scenario: Older toolchain not used silently
+          evidence: GOTOOLCHAIN=local go1.26.8 refuses; auto switches to 1.26.11
+          verdict: PASSED
+        - id: US-1.5
+          scenario: Scanner versions pinned
+          evidence: Makefile gosec@v2.30.0 govulncheck@v1.10.0 gremlins@v0.6.0
+          verdict: PASSED
+        - id: US-1.6
+          scenario: brandgen passes gosec
+          evidence: masking, 0o750/0o600, gosec 0
+          verdict: PASSED
+        - id: US-2.1
+          scenario: archive instructions include protocol on Windows
+          evidence: path.Join; cli package ok on Windows in 44955661590
+          verdict: PASSED
+        - id: US-2.2
+          scenario: Skill metadata on Windows
+          evidence: path.Join in registry.go; agent ok on Windows
+          verdict: PASSED
+        - id: US-2.3
+          scenario: Unknown category returns project-only instructions
+          evidence: only the join changed; agent tests pass on 3 OS
+          verdict: PASSED
+        - id: US-2.4
+          scenario: Tools-only refresh on Windows
+          evidence: filepath.ToSlash; refresh test ok on Windows
+          verdict: PASSED
+        - id: US-2.5
+          scenario: .specforce excluded, unknown paths skipped
+          evidence: installer tests unchanged and pass
+          verdict: PASSED
+        - id: US-3.1
+          scenario: Isolated HOME and USERPROFILE
+          evidence: setTestHome and paired Setenv
+          verdict: PASSED
+        - id: US-3.2
+          scenario: Native separators and resolved paths
+          evidence: FromSlash, EvalSymlinks; macOS and Windows green
+          verdict: PASSED
+        - id: US-3.3
+          scenario: Portable hooks
+          evidence: test-binary helper + go no-such-command; spec ok on 3 OS
+          verdict: PASSED
+        - id: US-3.4
+          scenario: Windows-only permission skips with reason
+          evidence: GOOS-guarded helpers with exact reason
+          verdict: PASSED
+        - id: US-3.5
+          scenario: Impossible config root
+          evidence: root below regular file; error expected
+          verdict: PASSED
+        - id: US-3.6
+          scenario: All CI jobs pass
+          evidence: run 44955661590 7/7 success
+          verdict: PASSED
+        - id: US-4.1
+          scenario: Rule names both home variables and allowed Windows skips
+          evidence: engineering.md amended (permission bits, symlinks, shell scripts)
+          verdict: PASSED
+        - id: US-4.2
+          scenario: Other Windows skips violate the rule
+          evidence: rule text states it
+          verdict: PASSED
+        - id: T1.1
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T1.2
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T1.3
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T1.4
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T2.1
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T2.2
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T3.1
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T3.2
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T3.3
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T3.4
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T3.5
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: T4.1
+          scenario: Acceptance check
+          evidence: OK (re-run by QA)
+          verdict: PASSED
+        - id: S1
+          scenario: CI green for last pushed head
+          evidence: 44955661590 success at f7a58be, 7/7 jobs
+          verdict: PASSED
+        - id: S1-win
+          scenario: Formerly failing Windows tests pass
+          evidence: 61 FAIL before; all 11 packages ok on Windows
+          verdict: PASSED
+        - id: S1-skip
+          scenario: Only allowed Windows skips
+          evidence: CI runs go test without -v on Windows, so skip lines are not printed; code review shows only permission-bit, symlink, shell-script and /dev/shm capability skips
+          verdict: NOT-VERIFIABLE
+        - id: S1-mac
+          scenario: WritableInstallDir test passes on macOS
+          evidence: upgrade package ok on macOS
+          verdict: PASSED
+        - id: S2
+          scenario: archive instructions carry the protocol
+          evidence: grep -c Execution Protocol = 1
+          verdict: PASSED
+        - id: INV-1
+          scenario: Linux and macOS behaviour unchanged
+          evidence: product changes are no-ops on Unix
+          verdict: PASSED
+        - id: INV-2
+          scenario: No real-profile access
+          evidence: all HOME setters use TempDir
+          verdict: PASSED
+        - id: INV-3
+          scenario: No tag while red
+          evidence: no tags created
+          verdict: PASSED
+        - id: AUDIT-1
+          scenario: No weakened assertion
+          evidence: 0 SKIP on Linux -v, 760 tests pass
+          verdict: PASSED
+        - id: AUDIT-5
+          scenario: brandgen bytes identical
+          evidence: diff -r identical, matches assets/brand
+          verdict: PASSED
+    findings:
+        - title: CI shows no per-test output on macOS/Windows
+          detail: ci.yml runs go test ./... without -v on non-ubuntu runners, so Windows skip reasons are not visible in CI logs.
+        - title: main_test.go sets HOME without USERPROFILE
+          detail: src/cmd/specforce/main_test.go:72,123; harmless because those tests skip on Windows first.
+        - title: Hook helper fails on paths with spaces
+          detail: createHookScript fails when the test binary path contains whitespace, because hook commands are split on spaces.
+        - title: Node 20 action deprecation
+          detail: actions/checkout@v4 and actions/setup-go@v5 target the deprecated Node 20 runtime.

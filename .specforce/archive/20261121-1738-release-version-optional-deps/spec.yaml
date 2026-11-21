@@ -1,0 +1,53 @@
+slug: 20261121-1738-release-version-optional-deps
+name: 20261121-1738-release-version-optional-deps
+type: feature
+size: small
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T20:38:18.557480642Z
+              completed_at: 2026-11-21T20:40:27.594300366Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T20:38:18.557481476Z
+              completed_at: 2026-11-21T20:40:27.59430094Z
+    T1.3:
+        sessions:
+            - started_at: 2026-11-21T20:38:18.557481627Z
+              completed_at: 2026-11-21T20:40:27.594301185Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-21T20:41:29Z
+    criteria:
+        - id: T1.1
+          scenario: RED tests exist for every listed case
+          evidence: 'test file inspected: all check and sync cases present, in-memory only'
+          verdict: PASSED
+        - id: T1.2
+          scenario: all tests pass; check-version prints version ok
+          evidence: '35/35 pass; version ok: v1.0.0-beta.3'
+          verdict: PASSED
+        - id: T1.3
+          scenario: sync then cmp then check-version prints OK
+          evidence: 'replayed in scratch by QA; run in the real repo by the orchestrator: package.json unchanged, version ok, constants.go unchanged'
+          verdict: PASSED
+        - id: US-1
+          scenario: wrong/missing/extra/none natives exit 1 with one Error line naming them; unrelated ignored; all-correct passes; version-mismatch message intact
+          evidence: scratch probes with exit codes and messages
+          verdict: PASSED
+        - id: US-2
+          scenario: sync to 1.0.0-rc.1 fixes natives and constants.go, keeps format, idempotent, check-version passes
+          evidence: scratch diff and cmp
+          verdict: PASSED
+        - id: REG
+          scenario: existing tests pass; names equal Makefile PLATFORMS
+          evidence: 35 pass; Makefile PLATFORMS matches NATIVE_PACKAGES
+          verdict: PASSED
+    findings:
+        - title: sync-version always rewrites constants.go
+          detail: Content stays identical; pre-existing behaviour.
+        - title: Any @jeancodogno/specforce-kit-* optional dependency is treated as native
+          detail: A future sibling package with that prefix would be flagged as unexpected.

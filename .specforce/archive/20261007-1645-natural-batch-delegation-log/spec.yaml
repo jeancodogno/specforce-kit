@@ -1,0 +1,13 @@
+slug: 20261007-1645-natural-batch-delegation-log
+name: 20261007-1645-natural-batch-delegation-log
+type: feature
+size: small
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-10-07T19:45:45.07897795Z
+              completed_at: 2026-10-07T19:47:23.744360125Z
+    T1.2:
+        sessions:
+            - started_at: 2026-10-07T19:45:45.078978638Z
+              completed_at: 2026-10-07T19:47:23.744360425Z

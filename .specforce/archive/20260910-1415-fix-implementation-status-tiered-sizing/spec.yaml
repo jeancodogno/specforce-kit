@@ -1,0 +1,33 @@
+slug: 20260910-1415-fix-implementation-status-tiered-sizing
+name: 20260910-1415-fix-implementation-status-tiered-sizing
+type: bug
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-09-10T17:27:04.189124982Z
+              completed_at: 2026-09-10T17:29:56.961642784Z
+    T1.2:
+        sessions:
+            - started_at: 2026-09-10T17:27:04.189131666Z
+              completed_at: 2026-09-10T17:29:56.96164309Z
+    T2.1:
+        sessions:
+            - started_at: 2026-09-10T17:30:00.935895063Z
+              completed_at: 2026-09-10T17:32:38.120126348Z
+    T2.2:
+        sessions:
+            - started_at: 2026-09-10T17:30:00.935895298Z
+              completed_at: 2026-09-10T17:32:38.120127131Z
+    T3.1:
+        sessions:
+            - started_at: 2026-09-10T17:32:42.831899155Z
+              completed_at: 2026-09-10T17:37:20.793453304Z
+    T3.2:
+        sessions:
+            - started_at: 2026-09-10T17:32:42.831899429Z
+              completed_at: 2026-09-10T17:37:20.79345363Z
+refinement:
+    iteration_count: 0
+    last_audit_at: 2026-09-10T17:17:02.817824986Z
+    is_valid: false

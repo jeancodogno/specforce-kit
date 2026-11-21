@@ -26,7 +26,7 @@ func ListActiveSpecs(ctx context.Context, projectRoot string) ([]SpecInfo, error
 		return nil, err
 	}
 
-	var specs []SpecInfo
+	specs := []SpecInfo{}
 	for _, entry := range entries {
 		// Ignore hidden directories and non-directories
 		if entry.IsDir() && entry.Name()[0] != '.' {

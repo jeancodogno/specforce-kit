@@ -24,7 +24,7 @@ func TestSkillNameBug(t *testing.T) {
 	// Command with empty metadata name
 	commandYAML := "description: Test Command Description\ncontent: |\n  # Command Content\n"
 	_ = os.WriteFile(filepath.Join(commandsDir, "archive.yaml"), []byte(commandYAML), 0644)
-	
+
 	// kit.yaml
 	kitYAML := "tools:\n  kimi-code:\n    target: .kimi/\n    mappings:\n      commands:\n        - path: skills/spf-*\n          name: SKILL\n          ext: .md\n"
 	_ = os.WriteFile(filepath.Join(kitDir, "kit.yaml"), []byte(kitYAML), 0644)
@@ -39,13 +39,13 @@ func TestSkillNameBug(t *testing.T) {
 
 	// Filename is SKILL.md as expected
 	cmdMD := filepath.Join(projectRoot, ".kimi/skills/spf-archive/SKILL.md")
-	
+
 	data, err := os.ReadFile(cmdMD)
 	if err != nil {
 		t.Fatalf("failed to read generated file %s: %v", cmdMD, err)
 	}
 	content := string(data)
-	
+
 	if strings.Contains(content, "name: SKILL") {
 		t.Errorf("BUG STILL PRESENT: Header name is 'SKILL', expected a unique name (e.g., spf.archive). Content: %q", content)
 	}
@@ -68,7 +68,7 @@ func TestHeaderNameUniqueness(t *testing.T) {
 	// Two different blueprints
 	_ = os.WriteFile(filepath.Join(commandsDir, "cmd1.yaml"), []byte("name: duplicate\ncontent: 1"), 0644)
 	_ = os.WriteFile(filepath.Join(commandsDir, "cmd2.yaml"), []byte("name: duplicate\ncontent: 2"), 0644)
-	
+
 	// kit.yaml
 	kitYAML := "tools:\n  test-agent:\n    target: .test/\n    mappings:\n      commands:\n        - path: cmds\n          ext: .md\n"
 	_ = os.WriteFile(filepath.Join(kitDir, "kit.yaml"), []byte(kitYAML), 0644)

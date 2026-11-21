@@ -1,0 +1,45 @@
+slug: 20260827-1515-living-module-specs-refinement
+name: 20260827-1515-living-module-specs-refinement
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-08-27T18:18:36.972244954Z
+              completed_at: 2026-08-27T18:20:35.010213001Z
+    T1.2:
+        sessions:
+            - started_at: 2026-08-27T18:18:36.972245664Z
+              completed_at: 2026-08-27T18:20:35.010213174Z
+    T1.3:
+        sessions:
+            - started_at: 2026-08-27T18:18:36.972245824Z
+              completed_at: 2026-08-27T18:20:35.010213259Z
+    T2.1:
+        sessions:
+            - started_at: 2026-08-27T18:20:38.192334988Z
+              completed_at: 2026-08-27T18:21:37.311618013Z
+    T2.2:
+        sessions:
+            - started_at: 2026-08-27T18:20:38.192336324Z
+              completed_at: 2026-08-27T18:21:37.311618622Z
+    T2.3:
+        sessions:
+            - started_at: 2026-08-27T18:20:38.192336832Z
+              completed_at: 2026-08-27T18:21:37.31161895Z
+    T3.1:
+        sessions:
+            - started_at: 2026-08-27T18:21:42.449962355Z
+              completed_at: 2026-08-27T18:22:19.311412215Z
+    T4.1:
+        sessions:
+            - started_at: 2026-08-27T18:27:10.698514337Z
+              completed_at: 2026-08-27T18:28:07.8363204Z
+    T4.2:
+        sessions:
+            - started_at: 2026-08-27T18:27:10.698516421Z
+              completed_at: 2026-08-27T18:28:07.836320743Z
+    T4.3:
+        sessions:
+            - started_at: 2026-08-27T18:28:10.480849486Z
+              completed_at: 2026-08-27T18:28:24.298365205Z

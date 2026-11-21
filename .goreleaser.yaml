@@ -18,14 +18,21 @@ builds:
       - arm64
     main: ./src/cmd/specforce/main.go
     binary: specforce
+    flags:
+      - -trimpath
+    mod_timestamp: "{{ .CommitTimestamp }}"
     ldflags:
-      - -s -w -X main.version={{.Version}}
+      - -s -w -X github.com/jeancodogno/specforce-kit/src/internal/core.Version={{.Version}}
 
 archives:
   - formats:
       - binary
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     allow_different_binary_count: true
+
+release:
+  prerelease: auto
+  replace_existing_artifacts: true
 
 snapshot:
   version_template: "{{ .Tag }}-next"

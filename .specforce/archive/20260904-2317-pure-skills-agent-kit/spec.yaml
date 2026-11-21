@@ -1,0 +1,53 @@
+slug: 20260904-2317-pure-skills-agent-kit
+name: 20260904-2317-pure-skills-agent-kit
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-09-05T02:23:42.527594631Z
+              completed_at: 2026-09-05T02:27:15.095466482Z
+            - started_at: 2026-09-05T02:27:15.095466762Z
+              completed_at: 2026-09-05T02:33:55.902604399Z
+    T1.2:
+        sessions:
+            - started_at: 2026-09-05T02:23:42.527597626Z
+              completed_at: 2026-09-05T02:27:15.095467619Z
+            - started_at: 2026-09-05T02:27:15.095467717Z
+              completed_at: 2026-09-05T02:33:55.902605229Z
+    T1.3:
+        sessions:
+            - started_at: 2026-09-05T02:23:42.527598628Z
+              completed_at: 2026-09-05T02:27:15.095468162Z
+            - started_at: 2026-09-05T02:27:15.09546826Z
+              completed_at: 2026-09-05T02:33:55.902605619Z
+    T1.4:
+        sessions:
+            - started_at: 2026-09-05T02:23:42.527599538Z
+              completed_at: 2026-09-05T02:27:15.095468666Z
+            - started_at: 2026-09-05T02:27:15.095468762Z
+              completed_at: 2026-09-05T02:33:55.902606119Z
+    T2.1:
+        sessions:
+            - started_at: 2026-09-05T02:34:00.084043403Z
+              completed_at: 2026-09-05T02:38:42.74905251Z
+    T2.2:
+        sessions:
+            - started_at: 2026-09-05T02:34:00.084044726Z
+              completed_at: 2026-09-05T02:38:42.74905536Z
+    T2.3:
+        sessions:
+            - started_at: 2026-09-05T02:34:00.084045279Z
+              completed_at: 2026-09-05T02:38:42.74905565Z
+    T2.4:
+        sessions:
+            - started_at: 2026-09-05T02:34:00.084045741Z
+              completed_at: 2026-09-05T02:38:42.749055937Z
+    T3.1:
+        sessions:
+            - started_at: 2026-09-05T02:38:46.642993428Z
+              completed_at: 2026-09-05T02:40:28.019864111Z
+    T3.2:
+        sessions:
+            - started_at: 2026-09-05T02:38:46.642999046Z
+              completed_at: 2026-09-05T02:40:28.019864717Z

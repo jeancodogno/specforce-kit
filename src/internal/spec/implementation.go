@@ -8,18 +8,23 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
 
 type ImplementationTask struct {
-	ID           string   `json:"id"`
-	Title        string   `json:"title"`
-	State        string   `json:"state"`
-	Target       string   `json:"target"`
-	Context      string   `json:"context"`
-	ActionSteps  []string `json:"action_steps"`
-	Verification string   `json:"verification"`
+	ID           string        `json:"id"`
+	Title        string        `json:"title"`
+	State        string        `json:"state"`
+	Target       string        `json:"target"`
+	Context      string        `json:"context"`
+	Constraints  []string      `json:"constraints"`
+	Verification string        `json:"verification"`
+	TotalTime    time.Duration `json:"total_time"`
+	IsWorking    bool          `json:"is_working"`
+	ParallelWith []string      `json:"parallel_with"`
+	IsParallel   bool          `json:"is_parallel"`
 }
 
 type Phase struct {
@@ -37,6 +42,14 @@ type ImplementationReport struct {
 	Phases                []Phase              `json:"phases"`
 	ExecutionStrategy     string               `json:"execution_strategy"`
 	PreemptiveMitigations string               `json:"preemptive_mitigations"`
+	TotalTime             time.Duration        `json:"total_time"`
+	QA                    *QASummary           `json:"qa,omitempty"`
+	QAError               string               `json:"qa_error,omitempty"`
+}
+
+// IsRedTask reports whether a task title carries the exact, case-sensitive [RED] token.
+func IsRedTask(title string) bool {
+	return strings.Contains(title, "[RED]")
 }
 
 // Tasks returns a flat list of tasks across all phases for backward compatibility.
@@ -71,9 +84,11 @@ func FindProjectRoot() (string, error) {
 	return "", fmt.Errorf(".specforce directory not found")
 }
 
-// CheckTriadArtifacts verifies if requirements.md, design.md, and tasks.md exist.
+// CheckTriadArtifacts verifies the existence of requirements.md, design.md and tasks.md.
 func CheckTriadArtifacts(projectRoot, slug string) (bool, []string) {
+	slug = ResolveSlug(projectRoot, slug)
 	required := []string{"requirements.md", "design.md", "tasks.md"}
+
 	missing := []string{}
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
@@ -89,6 +104,7 @@ func CheckTriadArtifacts(projectRoot, slug string) (bool, []string) {
 
 // GetContextFiles returns absolute paths for all files in the spec directory and global docs.
 func GetContextFiles(projectRoot, slug string) ([]string, error) {
+	slug = ResolveSlug(projectRoot, slug)
 	files := []string{}
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
@@ -127,6 +143,8 @@ func ParseTasks(ctx context.Context, projectRoot, slug string) (*ImplementationR
 		return nil, err
 	}
 
+	slug = ResolveSlug(projectRoot, slug)
+
 	tasksPath, err := core.SecurePath(projectRoot, filepath.Join(".specforce", "specs", slug, "tasks.md"))
 	if err != nil {
 		return nil, fmt.Errorf("security: %w", err)
@@ -142,13 +160,22 @@ func ParseTasks(ctx context.Context, projectRoot, slug string) (*ImplementationR
 		Phases: []Phase{},
 	}
 
+	meta, _ := LoadMetadata(projectRoot, slug)
+
 	extractStrategyAndMitigations(content, report)
 
-	if err := extractTasksFromContent(ctx, content, report); err != nil {
+	if err := extractTasksFromContent(ctx, content, report, meta); err != nil {
 		return nil, err
 	}
 
+	evaluateTaskReadiness(report)
+
 	report.Status = calculateReportStatus(report.Tasks())
+
+	// Calculate total report time
+	for _, t := range report.Tasks() {
+		report.TotalTime += t.TotalTime
+	}
 
 	return report, nil
 }
@@ -160,27 +187,32 @@ func extractStrategyAndMitigations(content []byte, report *ImplementationReport)
 		report.ExecutionStrategy = strings.TrimSpace(string(strategyMatch[1]))
 	}
 
-	mitigationsRegex := regexp.MustCompile(`(?s)## 3\. Pre-emptive Mitigations\n(.*?)(?:\n##|$)`)
+	mitigationsRegex := regexp.MustCompile(`(?s)## \d+\. Pre-emptive Mitigations\n(.*?)(?:\n##|$)`)
 	mitigationsMatch := mitigationsRegex.FindSubmatch(content)
 	if len(mitigationsMatch) > 1 {
 		report.PreemptiveMitigations = strings.TrimSpace(string(mitigationsMatch[1]))
 	}
 }
 
-func extractTasksFromContent(ctx context.Context, content []byte, report *ImplementationReport) error {
+func extractTasksFromContent(ctx context.Context, content []byte, report *ImplementationReport, meta *Metadata) error {
 	phaseHeaderRegex := regexp.MustCompile(`(?m)^### Phase (\d+): (.*)$`)
-	taskHeaderRegex := regexp.MustCompile(`(?m)^#{3,4} (T[\d.]+): (.*)$`)
+	taskHeaderRegex := regexp.MustCompile(`(?m)^(#{3,4}|- \[[ xX/]?\]) (T[\d.]+): (.*)$`)
 
 	phaseMatches := phaseHeaderRegex.FindAllSubmatchIndex(content, -1)
 	taskMatches := taskHeaderRegex.FindAllSubmatchIndex(content, -1)
 
+	seenTasks := make(map[string]bool)
 	for _, tm := range taskMatches {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		task := parseTaskBlock(content, tm, taskMatches, phaseMatches)
-		
+		task := parseTaskBlock(content, tm, taskMatches, phaseMatches, meta)
+		if seenTasks[task.ID] {
+			continue
+		}
+		seenTasks[task.ID] = true
+
 		// Find or create phase
 		currentPhaseIdx := findPhaseIdxForTask(content, tm[0], phaseMatches, report)
 		report.Phases[currentPhaseIdx].Tasks = append(report.Phases[currentPhaseIdx].Tasks, task)
@@ -189,48 +221,116 @@ func extractTasksFromContent(ctx context.Context, content []byte, report *Implem
 	return nil
 }
 
-func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int) ImplementationTask {
+func parseTaskBlock(content []byte, tm []int, taskMatches, phaseMatches [][]int, meta *Metadata) ImplementationTask {
+	prefix := string(content[tm[2]:tm[3]])
 	task := ImplementationTask{
-		ID:    string(content[tm[2]:tm[3]]),
-		Title: strings.TrimSpace(string(content[tm[4]:tm[5]])),
+		ID:    string(content[tm[4]:tm[5]]),
+		Title: strings.TrimSpace(string(content[tm[6]:tm[7]])),
 	}
 
-	// Find the absolute next header (could be Phase or Task or ##)
+	nextHeaderPos := findNextHeaderPos(content, tm[0], tm[1], taskMatches, phaseMatches)
+	taskBlock := content[tm[0]:nextHeaderPos]
+
+	task.State = extractField(taskBlock, `\*\*State:\*\* \x60?\[([^\]\x60\n]*)\]\x60?`)
+	isChecklist := strings.HasPrefix(prefix, "- [")
+	if task.State == "" && isChecklist {
+		task.State = mapCheckboxToState(prefix)
+	}
+
+	if meta != nil {
+		task.TotalTime = meta.GetTaskDuration(task.ID)
+		if strings.ToUpper(task.State) == "IN-PROGRESS" {
+			task.IsWorking = true
+		}
+	}
+
+	task.Target = extractField(taskBlock, `\*\*Target:\*\* \x60?([^\x60\n]*)\x60?`)
+	task.Context = extractField(taskBlock, `\*\*Context:\*\* \x60?([^\x60\n]*)\x60?`)
+
+	parallelStr := extractField(taskBlock, `\*\*Parallel With:\*\* (T[\d.]+(?:,\s*T[\d.]+)*)`)
+	if parallelStr != "" {
+		parts := strings.Split(parallelStr, ",")
+		for _, p := range parts {
+			task.ParallelWith = append(task.ParallelWith, strings.TrimSpace(p))
+		}
+		task.IsParallel = true
+	}
+
+	// Try Acceptance Check first, fallback to Verification (TDD)
+	task.Verification = extractField(taskBlock, `(?s)\*\*Acceptance Check:\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
+	if task.Verification == "" {
+		task.Verification = extractField(taskBlock, `(?s)\*\*Verification \(TDD\):\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
+	}
+
+	task.Constraints = extractConstraints(taskBlock)
+
+	return task
+}
+
+// extractConstraints returns the "- " items under **Constraints:** or the legacy **Action Steps:** heading.
+// It always returns a non-nil slice so the JSON field is an empty array when the block is absent.
+func extractConstraints(taskBlock []byte) []string {
+	constraints := []string{}
+	inBlock := false
+	inFence := false
+	for _, line := range strings.Split(string(taskBlock), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") {
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			continue
+		}
+		switch {
+		case strings.HasPrefix(trimmed, "**Constraints:**"), strings.HasPrefix(trimmed, "**Action Steps:**"):
+			inBlock = true
+		case strings.HasPrefix(trimmed, "**"):
+			inBlock = false
+		case inBlock && strings.HasPrefix(trimmed, "- ") && !strings.HasPrefix(trimmed, "- ["):
+			if item := strings.TrimSpace(strings.TrimPrefix(trimmed, "- ")); item != "" {
+				constraints = append(constraints, item)
+			}
+		}
+	}
+	return constraints
+}
+
+func findNextHeaderPos(content []byte, taskStart, taskEnd int, taskMatches, phaseMatches [][]int) int {
 	nextHeaderPos := len(content)
 	for _, nextTm := range taskMatches {
-		if nextTm[0] > tm[0] && nextTm[0] < nextHeaderPos {
+		if nextTm[0] > taskStart && nextTm[0] < nextHeaderPos {
 			nextHeaderPos = nextTm[0]
 			break
 		}
 	}
 	for _, pm := range phaseMatches {
-		if pm[0] > tm[0] && pm[0] < nextHeaderPos {
+		if pm[0] > taskStart && pm[0] < nextHeaderPos {
 			nextHeaderPos = pm[0]
 			break
 		}
 	}
 	nextSectionRegex := regexp.MustCompile(`(?m)^## `)
-	sectionMatch := nextSectionRegex.FindIndex(content[tm[1]:])
+	sectionMatch := nextSectionRegex.FindIndex(content[taskEnd:])
 	if sectionMatch != nil {
-		absSectionPos := tm[1] + sectionMatch[0]
+		absSectionPos := taskEnd + sectionMatch[0]
 		if absSectionPos < nextHeaderPos {
 			nextHeaderPos = absSectionPos
 		}
 	}
-	
-	taskBlock := content[tm[0]:nextHeaderPos]
-	task.State = extractField(taskBlock, `\*\*State:\*\* \x60?\[([^\]\x60\n]*)\]\x60?`)
-	task.Target = extractField(taskBlock, `\*\*Target:\*\* \x60?([^\x60\n]*)\x60?`)
-	task.Context = extractField(taskBlock, `\*\*Context:\*\* \x60?([^\x60\n]*)\x60?`)
-	task.Verification = extractField(taskBlock, `(?s)\*\*Verification \(TDD\):\*\*\n(.*?)(?:\n\n|\n###|\n##|$)`)
+	return nextHeaderPos
+}
 
-	actionStepsRegex := regexp.MustCompile(`(?m)^- (.*)$`)
-	actionMatches := actionStepsRegex.FindAllSubmatch(taskBlock, -1)
-	for _, am := range actionMatches {
-		task.ActionSteps = append(task.ActionSteps, string(am[1]))
+func mapCheckboxToState(prefix string) string {
+	char := prefix[3:4]
+	switch strings.ToLower(char) {
+	case "x":
+		return "FINISHED"
+	case "/":
+		return "IN-PROGRESS"
+	default:
+		return "PENDING"
 	}
-
-	return task
 }
 
 func findPhaseIdxForTask(content []byte, taskStart int, phaseMatches [][]int, report *ImplementationReport) int {
@@ -273,7 +373,7 @@ func calculateReportStatus(tasks []ImplementationTask) string {
 		if st != "FINISHED" {
 			allFinished = false
 		}
-		if st != "PENDING" && st != "" {
+		if st != "PENDING" && st != "READY" && st != "" {
 			allPending = false
 		}
 	}
@@ -293,4 +393,62 @@ func extractField(block []byte, pattern string) string {
 		return strings.TrimSpace(string(match[1]))
 	}
 	return ""
+}
+
+func evaluateTaskReadiness(report *ImplementationReport) {
+	activePhaseIdx := getActivePhaseIdx(report)
+	if activePhaseIdx == -1 {
+		return // all finished
+	}
+
+	evaluateTasksInPhase(&report.Phases[activePhaseIdx])
+}
+
+func getActivePhaseIdx(report *ImplementationReport) int {
+	for i, p := range report.Phases {
+		phaseFinished := true
+		for _, t := range p.Tasks {
+			if strings.ToUpper(t.State) != "FINISHED" {
+				phaseFinished = false
+				break
+			}
+		}
+		if !phaseFinished {
+			return i
+		}
+	}
+	return -1
+}
+
+func evaluateTasksInPhase(phase *Phase) {
+	for i := range phase.Tasks {
+		task := &phase.Tasks[i]
+		if strings.ToUpper(task.State) != "PENDING" {
+			continue
+		}
+
+		if isTaskReady(task, phase.Tasks[:i]) {
+			task.State = "READY"
+		}
+	}
+}
+
+func isTaskReady(task *ImplementationTask, precedingTasks []ImplementationTask) bool {
+	for _, precTask := range precedingTasks {
+		if strings.ToUpper(precTask.State) != "FINISHED" {
+			if !isTaskParallel(task, precTask.ID) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isTaskParallel(task *ImplementationTask, precTaskID string) bool {
+	for _, pID := range task.ParallelWith {
+		if pID == precTaskID {
+			return true
+		}
+	}
+	return false
 }

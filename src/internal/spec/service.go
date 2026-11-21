@@ -3,7 +3,10 @@ package spec
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
@@ -17,6 +20,8 @@ type ConfigProvider interface {
 type Service struct {
 	registry       *Registry
 	configProvider ConfigProvider
+	auditor        Auditor
+	projectRoot    string
 }
 
 // NewService creates a new instance of the spec service.
@@ -24,7 +29,153 @@ func NewService(registry *Registry, configProvider ConfigProvider) *Service {
 	return &Service{
 		registry:       registry,
 		configProvider: configProvider,
+		auditor:        NewAuditor("."), // Default project root
+		projectRoot:    ".",
 	}
+}
+
+// SetProjectRoot updates the project root for the service and its components.
+func (s *Service) SetProjectRoot(root string) {
+	s.projectRoot = root
+	s.auditor = NewAuditor(root)
+}
+
+// ResizeSpec updates the size classification of an existing specification.
+func (s *Service) ResizeSpec(ctx context.Context, slug string, size SpecSize) (*Metadata, error) {
+	if !ValidateSize(size) {
+		return nil, fmt.Errorf("invalid spec size: %s. Supported: small, medium, large, complex", size)
+	}
+
+	slug = ResolveSlug(s.projectRoot, slug)
+	specDir := filepath.Join(s.projectRoot, ".specforce", "specs", slug)
+	if fi, err := os.Stat(specDir); err != nil || !fi.IsDir() {
+		return nil, fmt.Errorf("specification %q not found", slug)
+	}
+
+	meta, err := LoadMetadata(s.projectRoot, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load spec metadata: %w", err)
+	}
+
+	meta.Size = size
+	if err := SaveMetadata(s.projectRoot, slug, meta); err != nil {
+		return nil, fmt.Errorf("failed to save spec metadata: %w", err)
+	}
+
+	return meta, nil
+}
+
+// RefineSpec manages the automated refinement loop pass.
+func (s *Service) RefineSpec(ctx context.Context, slug string, ui core.UI) error {
+	slug = ResolveSlug(s.projectRoot, slug)
+	meta, err := LoadMetadata(s.projectRoot, slug)
+	if err != nil {
+		return err
+	}
+
+	const maxIterations = 3
+	if meta.Refinement.IterationCount >= maxIterations {
+		if ui != nil {
+			ui.Warn("Maximum refinement iterations reached.")
+		}
+		return nil
+	}
+
+	iter := meta.Refinement.IterationCount + 1
+	if ui != nil {
+		ui.SubTask(fmt.Sprintf("Refinement Pass %d/%d...", iter, maxIterations))
+	}
+
+	// 1. Run Audit
+	errors, err := s.auditor.Audit(ctx, slug)
+	if err != nil {
+		return fmt.Errorf("audit failed: %w", err)
+	}
+
+	if len(errors) == 0 {
+		meta.Refinement.IsValid = true
+		meta.Refinement.Errors = nil
+		return SaveMetadata(s.projectRoot, slug, meta)
+	}
+
+	// 2. Persist Errors
+	meta.Refinement.Errors = nil
+	for _, e := range errors {
+		msg := fmt.Sprintf("[%s] %s: %s", strings.ToUpper(e.Artifact), e.Code, e.Message)
+		meta.Refinement.Errors = append(meta.Refinement.Errors, msg)
+	}
+	meta.Refinement.IsValid = false
+
+	// 3. Increment Counter
+	meta.Refinement.IterationCount = iter
+	meta.Refinement.LastAuditAt = time.Now().UTC()
+
+	if err := SaveMetadata(s.projectRoot, slug, meta); err != nil {
+		return err
+	}
+
+	if ui != nil {
+		ui.Warn(fmt.Sprintf("Found %d coherence errors. Re-invoking agents...", len(errors)))
+	}
+
+	return nil
+}
+
+// BuildCorrectionPayload creates a surgical prompt for an agent to fix a specific coherence error.
+func (s *Service) BuildCorrectionPayload(ctx context.Context, slug string, ce CoherenceError) (string, error) {
+	slug = ResolveSlug(s.projectRoot, slug)
+	
+	// 1. Read the target artifact's current content
+	targetPath := filepath.Join(s.projectRoot, ".specforce", "specs", slug, ce.Artifact+".md")
+	// #nosec G304 - internal spec file
+	targetContent, err := os.ReadFile(targetPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read target artifact %s: %w", ce.Artifact, err)
+	}
+
+	// 2. Read requirements for source of truth context if needed
+	reqPath := filepath.Join(s.projectRoot, ".specforce", "specs", slug, "requirements.md")
+	// #nosec G304 - internal spec file
+	reqData, err := os.ReadFile(reqPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read requirements.md: %w", err)
+	}
+
+	// 3. Extract relevant requirement snippet if context is a US tag
+	sourceContext := ce.Context
+	if strings.HasPrefix(ce.Context, "## [US-") {
+		lines := strings.Split(string(reqData), "\n")
+		var snippet []string
+		found := false
+		for _, line := range lines {
+			if strings.HasPrefix(line, ce.Context) {
+				found = true
+			} else if found && strings.HasPrefix(line, "## ") {
+				break
+			}
+			if found {
+				snippet = append(snippet, line)
+			}
+		}
+		if len(snippet) > 0 {
+			sourceContext = strings.Join(snippet, "\n")
+		}
+	}
+
+	// 4. Build the payload
+	payload := fmt.Sprintf(`### SURGICAL CORRECTION REQUIRED
+Artifact: %s.md
+Error Code: %s
+Message: %s
+
+### SOURCE OF TRUTH (CONTEXT)
+%s
+
+### CURRENT TARGET CONTENT
+%s
+`, ce.Artifact, ce.Code, ce.Message, sourceContext, string(targetContent))
+
+	return payload, nil
 }
 
 // GetArtifact retrieves a specific artifact by name, injecting custom project instructions if present.
@@ -37,9 +188,10 @@ func (s *Service) GetArtifact(ctx context.Context, name string) (*Artifact, erro
 	if s.configProvider != nil {
 		conf, err := s.configProvider.GetConfig(ctx)
 		if err == nil && conf != nil {
-			if rules, ok := conf.Instructions[name]; ok && len(rules) > 0 {
-				custom := "\n\n## Project Specific Instructions\n- " + strings.Join(rules, "\n- ")
-				art.Instruction += custom
+			rules := s.resolveInstructions(conf, name)
+			if len(rules) > 0 {
+				custom := "## Project Specific Instructions\n- " + strings.Join(rules, "\n- ") + "\n\n"
+				art.Instruction = custom + art.Instruction
 			}
 		}
 	}
@@ -49,8 +201,32 @@ func (s *Service) GetArtifact(ctx context.Context, name string) (*Artifact, erro
 
 // GetImplementationStatus retrieves the status and details for implementing a specific feature.
 func (s *Service) GetImplementationStatus(ctx context.Context, projectRoot, slug string) (*ImplementationReport, error) {
+	slug = ResolveSlug(projectRoot, slug)
+
 	// 1. Check artifacts
-	ok, missing := CheckTriadArtifacts(projectRoot, slug)
+	missing := []string{}
+	if s.registry != nil {
+		meta, err := LoadMetadata(projectRoot, slug)
+		if err != nil {
+			meta = &Metadata{
+				Slug: slug,
+				Name: slug,
+				Type: "feature",
+				Size: SpecSizeMedium,
+			}
+		}
+
+		specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
+		artifacts := s.registry.ListForTypeAndSize(meta.Type, meta.Size)
+		for _, art := range artifacts {
+			fileName := art.Name + ".md"
+			if _, err := os.Stat(filepath.Join(specDir, fileName)); os.IsNotExist(err) {
+				missing = append(missing, fileName)
+			}
+		}
+	} else {
+		_, missing = CheckTriadArtifacts(projectRoot, slug)
+	}
 
 	// 2. Parse tasks
 	report, err := ParseTasks(ctx, projectRoot, slug)
@@ -59,8 +235,15 @@ func (s *Service) GetImplementationStatus(ctx context.Context, projectRoot, slug
 	}
 
 	report.MissingArtifacts = missing
-	if !ok {
+	if len(missing) > 0 {
 		report.Status = "blocked"
+	}
+
+	// 2b. QA summary (never fails the call)
+	if qaMeta, qerr := LoadMetadata(projectRoot, slug); qerr != nil {
+		report.QAError = qerr.Error()
+	} else {
+		report.QA = SummarizeQA(qaMeta.QA)
 	}
 
 	// 3. Get context files
@@ -88,10 +271,20 @@ func (s *Service) GetStatus(ctx context.Context, projectRoot string, slug string
 }
 
 // UpdateTaskStatus handles task status updates with event hooks.
-func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug, taskID, status string) error {
+// It discards the list of skipped hooks; see UpdateTaskStatusDetailed.
+func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug string, taskIDs []string, status string) error {
+	_, err := s.UpdateTaskStatusDetailed(ctx, projectRoot, slug, taskIDs, status)
+	return err
+}
+
+// UpdateTaskStatusDetailed updates task statuses and returns the per-task hooks
+// skipped because every task in the batch is a [RED] task.
+func (s *Service) UpdateTaskStatusDetailed(ctx context.Context, projectRoot, slug string, taskIDs []string, status string) ([]string, error) {
+	slug = ResolveSlug(projectRoot, slug)
+
 	// 1. Only run hooks if status is "finished"
 	if strings.ToLower(status) != "finished" {
-		return updateTaskStatusFile(projectRoot, slug, taskID, status)
+		return nil, updateTaskStatusesFile(projectRoot, slug, taskIDs, status)
 	}
 
 	// 2. Load Config
@@ -103,44 +296,79 @@ func (s *Service) UpdateTaskStatus(ctx context.Context, projectRoot, slug, taskI
 	}
 
 	// 3. Collect Hooks
-	hooks := s.collectHooksForTask(ctx, projectRoot, slug, taskID, config)
+	hooks, skipped := s.collectHooksForBatch(ctx, projectRoot, slug, taskIDs, config)
 
 	// 4. Execute Hooks
 	if len(hooks) > 0 {
 		if _, err := core.ExecuteHooks(ctx, hooks); err != nil {
-			return fmt.Errorf("hooks failed: %w", err)
+			return nil, fmt.Errorf("hooks failed: %w", err)
 		}
 	}
 
 	// 5. Update File
-	return updateTaskStatusFile(projectRoot, slug, taskID, status)
+	if err := updateTaskStatusesFile(projectRoot, slug, taskIDs, status); err != nil {
+		return nil, err
+	}
+	return skipped, nil
 }
 
-func (s *Service) collectHooksForTask(ctx context.Context, projectRoot, slug, taskID string, config *core.ProjectConfig) []string {
-	var hooks []string
-	if config == nil {
-		return hooks
+func (s *Service) collectHooksForBatch(ctx context.Context, projectRoot, slug string, taskIDs []string, config *core.ProjectConfig) ([]string, []string) {
+	if config == nil || len(taskIDs) == 0 {
+		return nil, nil
 	}
 
-	// Always add task finished hook
-	hooks = append(hooks, config.Hooks.OnTaskFinished...)
-
-	// Use ParseTasks to determine if this is the last task in a phase or spec
 	report, err := ParseTasks(ctx, projectRoot, slug)
-	if err != nil {
-		return hooks
+
+	var rawHooks, skipped []string
+	if err == nil && report != nil && allRedTasks(report, taskIDs) {
+		skipped = dedupeHooks(config.Hooks.OnTaskFinished)
+	} else {
+		rawHooks = append(rawHooks, config.Hooks.OnTaskFinished...)
 	}
 
-	isLastInPhase, isLastInSpec := s.checkTaskPosition(report, taskID)
-
-	if isLastInPhase {
-		hooks = append(hooks, config.Hooks.OnPhaseFinished...)
+	if err == nil && report != nil {
+		for _, taskID := range taskIDs {
+			isLastInPhase, isLastInSpec := s.checkTaskPosition(report, taskID)
+			if isLastInPhase {
+				rawHooks = append(rawHooks, config.Hooks.OnPhaseFinished...)
+			}
+			if isLastInSpec {
+				rawHooks = append(rawHooks, config.Hooks.OnAllTasksFinished...)
+			}
+		}
 	}
-	if isLastInSpec {
-		hooks = append(hooks, config.Hooks.OnAllTasksFinished...)
-	}
 
-	return hooks
+	return dedupeHooks(rawHooks), skipped
+}
+
+func dedupeHooks(rawHooks []string) []string {
+	var deduplicated []string
+	seen := make(map[string]bool, len(rawHooks))
+	for _, hook := range rawHooks {
+		if hook != "" && !seen[hook] {
+			seen[hook] = true
+			deduplicated = append(deduplicated, hook)
+		}
+	}
+	return deduplicated
+}
+
+// allRedTasks reports whether every task id in the batch exists and has a [RED] title.
+func allRedTasks(report *ImplementationReport, taskIDs []string) bool {
+	if len(taskIDs) == 0 {
+		return false
+	}
+	titles := make(map[string]string)
+	for _, t := range report.Tasks() {
+		titles[t.ID] = t.Title
+	}
+	for _, id := range taskIDs {
+		title, ok := titles[id]
+		if !ok || !IsRedTask(title) {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Service) checkTaskPosition(report *ImplementationReport, taskID string) (bool, bool) {
@@ -154,4 +382,52 @@ func (s *Service) checkTaskPosition(report *ImplementationReport, taskID string)
 		}
 	}
 	return false, false
+}
+
+func (s *Service) inferBaseType(name string) string {
+	baseTypes := []string{"requirements", "design", "tasks", "implementation", "archive"}
+	bestMatch := ""
+	bestIndex := -1
+
+	for _, bt := range baseTypes {
+		idx := strings.LastIndex(name, bt)
+		if idx > bestIndex {
+			bestIndex = idx
+			bestMatch = bt
+		}
+	}
+
+	return bestMatch
+}
+
+func (s *Service) resolveInstructions(conf *core.ProjectConfig, name string) []string {
+	var combined []string
+	seen := make(map[string]bool)
+
+	// 1. Get Generic Instructions
+	baseType := s.inferBaseType(name)
+	if baseType != "" {
+		if generic, ok := conf.Instructions[baseType]; ok {
+			for _, rule := range generic {
+				if !seen[rule] {
+					combined = append(combined, rule)
+					seen[rule] = true
+				}
+			}
+		}
+	}
+
+	// 2. Get Specific Instructions (if name is different from baseType)
+	if name != baseType {
+		if specific, ok := conf.Instructions[name]; ok {
+			for _, rule := range specific {
+				if !seen[rule] {
+					combined = append(combined, rule)
+					seen[rule] = true
+				}
+			}
+		}
+	}
+
+	return combined
 }

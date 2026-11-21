@@ -1,0 +1,169 @@
+slug: 20261117-1045-qa-scenarios-section
+name: 20261117-1045-qa-scenarios-section
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-17T13:50:34.995175646Z
+              completed_at: 2026-11-17T13:53:25.559050967Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-17T13:50:34.995176725Z
+              completed_at: 2026-11-17T13:51:55.962664944Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-17T13:52:02.502066324Z
+              completed_at: 2026-11-17T13:53:25.5590516Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-17T13:52:02.50206779Z
+              completed_at: 2026-11-17T13:53:25.559052006Z
+    T2.3:
+        sessions:
+            - started_at: 2026-11-17T13:52:02.50206833Z
+              completed_at: 2026-11-17T13:53:25.55905237Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-17T13:52:02.502068793Z
+              completed_at: 2026-11-17T13:53:25.559052696Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-17T13:59:16.584381732Z
+              completed_at: 2026-11-17T13:59:46.098269908Z
+    T4.2:
+        sessions:
+            - started_at: 2026-11-17T13:59:16.58438232Z
+              completed_at: 2026-11-17T13:59:46.098272794Z
+delta:
+    impact: modules
+    modules:
+        - module: agent-kit
+          base_hashes:
+            BR-KIT-20: 8befc891dcac54a45b36c6bbbb5716dc5ad386d9bf3054dfe94283624d717f24
+            US-KIT-17: 9f59aed181010aba9c269fb746397349a0381c7d9b2970c3fa8857ee6b049564
+          id_map:
+            "NEW:qa-runs-scenarios": BR-KIT-38
+            "NEW:us-qa-scenarios": US-KIT-31
+        - module: spec-management
+          id_map:
+            "NEW:mitigations-by-title": BR-SPEC-15
+            "NEW:us-mitigations-by-title": US-SPEC-11
+qa:
+    status: PASSED
+    run: 2
+    recorded_at: 2026-11-17T14:02:41Z
+    criteria:
+        - id: US-1.1
+          scenario: large/complex roadmap has post-phase scenario section, no verification phase
+          evidence: tasks.yaml:20 rule 9 + template :67-74; no VERIFY in tasks.yaml; TaskBlueprint subtest PASS (directive)
+          verdict: PASSED
+        - id: US-1.2
+          scenario: medium optional if runnable artifact
+          evidence: tasks.yaml:20,:68; spf-spec SKILL.yaml:104 (directive)
+          verdict: PASSED
+        - id: US-1.3
+          scenario: small omits section
+          evidence: tasks.yaml:20,:68; spf-spec SKILL.yaml:104 (directive)
+          verdict: PASSED
+        - id: US-1.4
+          scenario: scenarios not counted as tasks
+          evidence: 'TestParseTasks_ScenarioSectionNotCountedAsTasks PASS; template-format scratch roadmap: no task pollution, is_valid true'
+          verdict: PASSED
+        - id: US-2.1
+          scenario: no verification-only tasks
+          evidence: tasks.yaml:21 rule 10; manifest tests PASS (directive)
+          verdict: PASSED
+        - id: US-2.2
+          scenario: task acceptance check scoped
+          evidence: tasks.yaml:10 rule 3 unchanged
+          verdict: PASSED
+        - id: US-2.3
+          scenario: audit removes/converts and names removals
+          evidence: spf-spec SKILL.yaml:104; SpecAuditVerificationOnly PASS
+          verdict: PASSED
+        - id: US-3.1
+          scenario: qa runs every scenario, one row per S-id
+          evidence: spf-implement SKILL.yaml:155,161,165; ImplementScenarioRows PASS
+          verdict: PASSED
+        - id: US-3.2
+          scenario: 'no section: derive from requirements'
+          evidence: spf-implement SKILL.yaml:161
+          verdict: PASSED
+        - id: US-3.3
+          scenario: 'unrunnable: NOT-VERIFIABLE with reason'
+          evidence: spf-implement SKILL.yaml:165
+          verdict: PASSED
+        - id: US-3.4
+          scenario: FAILED scenario enters correction cycle
+          evidence: SKILL.yaml:165 same verdicts + :169 correction cycle
+          verdict: PASSED
+        - id: US-4.1
+          scenario: legacy VERIFY phase valid, tasks ordinary
+          evidence: TestParseTasks_LegacyVerifyPhaseStaysValid PASS; scratch legacy roadmap valid; tasks.go unchanged
+          verdict: PASSED
+        - id: US-4.2
+          scenario: no new verification warnings
+          evidence: 'legacy fixture: no warnings'
+          verdict: PASSED
+        - id: US-5.1
+          scenario: '## 4. mitigations shown'
+          evidence: S3 fixture shows risk line; unit subtest PASS
+          verdict: PASSED
+        - id: US-5.2
+          scenario: '## 3. unchanged'
+          evidence: legacy3 fixture exact line; legacy unit test PASS
+          verdict: PASSED
+        - id: US-5.3
+          scenario: absent empty / following section no leak
+          evidence: nomit empty; mitfirst only mitigation line; unit subtests PASS
+          verdict: PASSED
+        - id: ADDED NEW:qa-runs-scenarios
+          scenario: qa tier runs scenarios with fallback
+          evidence: spf-implement SKILL.yaml:155,161,165; installed copies verbatim
+          verdict: PASSED
+        - id: ADDED NEW:us-qa-scenarios
+          scenario: with/without/cannot-run
+          evidence: as US-3.1..3.3
+          verdict: PASSED
+        - id: MODIFIED BR-KIT-20
+          scenario: blueprint rules
+          evidence: tasks.yaml:10,20,21; YAML parses
+          verdict: PASSED
+        - id: MODIFIED US-KIT-17
+          scenario: large/small/human-judgment
+          evidence: tasks.yaml:10,20,21 (directive)
+          verdict: PASSED
+        - id: ADDED NEW:mitigations-by-title
+          scenario: any number, stop at next section, empty if absent
+          evidence: 'implementation.go:190 regex; fixtures ##10, ##3+##5, EOF, absent'
+          verdict: PASSED
+        - id: ADDED NEW:us-mitigations-by-title
+          scenario: renumbered/legacy/followed
+          evidence: as US-5.1..5.3
+          verdict: PASSED
+        - id: S1
+          scenario: CLI serves new blueprint
+          evidence: make build; grep -c 'Black-box Scenarios' = 2; grep -c '[VERIFY]' = 0
+          verdict: PASSED
+        - id: S2
+          scenario: own roadmap valid, 8 tasks
+          evidence: is_valid true; tasks T1.1..T4.2, no S-id
+          verdict: PASSED
+        - id: S3
+          scenario: mitigations visible after scenario section
+          evidence: preemptive_mitigations = risk line only
+          verdict: PASSED
+    findings:
+        - title: Unnumbered mitigations heading not recognized
+          detail: '''## Pre-emptive Mitigations'' without a number yields empty mitigations (implementation.go:190 requires a number). All templates number sections.'
+        - title: T-id checkbox inside scenario section becomes a task
+          detail: Scenario isolation relies on blueprint guidance, per the no-parser-change anti-goal.
+        - title: 'Mitigations terminator also matches ### subheadings'
+          detail: 'Pre-existing ''(?:\n##|$)'' cuts the block at any ### inside mitigations.'
+        - title: Batch with a RED task blocks its non-RED sibling
+          detail: Finishing T1.1 (guard test) with T1.2 (RED) failed the make test hook because the RED tests were failing; T1.1 had to wait for the GREEN batch.
+        - title: specforce init touches files outside skills
+          detail: Refreshing skills via init appends a blank line to AGENTS.md and recreates .claude/rules/AGENTS.md symlink; the implementer reverted both.
+        - title: Template scenario format differs from guard-test format
+          detail: Template uses unindented bold fields; guard test uses indented items. Both parse correctly.

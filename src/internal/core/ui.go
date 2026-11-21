@@ -9,6 +9,9 @@ type UI interface {
 	
 	// SubTask logs a smaller unit of work.
 	SubTask(message string)
+
+	// LogSubTask logs a styled sub-task (Ghost Protocol style).
+	LogSubTask(message string)
 	
 	// Spinner management
 	StartSpinner(message string)

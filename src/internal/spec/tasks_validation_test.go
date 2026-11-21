@@ -1,0 +1,577 @@
+package spec
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"reflect"
+	"testing"
+)
+
+type validateTasksTestCase struct {
+	name     string
+	content  string
+	expected []string
+}
+
+func TestValidateTasks(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	slug := "test-feature"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatalf("failed to create spec dir: %v", err)
+	}
+
+	tasksPath := filepath.Join(specDir, "tasks.md")
+	tests := getValidateTasksTestCases()
+	runValidateTasksTests(t, tmpDir, slug, tasksPath, tests)
+}
+
+func runValidateTasksTests(t *testing.T, tmpDir, slug, tasksPath string, tests []validateTasksTestCase) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := os.WriteFile(tasksPath, []byte(tt.content), 0644); err != nil {
+				t.Fatalf("failed to write tasks.md: %v", err)
+			}
+
+			errors, err := ValidateTasks(context.Background(), tmpDir, slug)
+			if err != nil {
+				t.Fatalf("ValidateTasks failed: %v", err)
+			}
+			if !reflect.DeepEqual(errors, tt.expected) {
+				t.Errorf("got %q, want %q", errors, tt.expected)
+			}
+		})
+	}
+}
+
+func getValidateTasksTestCases() []validateTasksTestCase {
+	tests := []validateTasksTestCase{}
+	tests = append(tests, getHappyPathCases()...)
+	tests = append(tests, getHierarchyErrorCases()...)
+	tests = append(tests, getFieldAndPhaseErrorCases()...)
+	tests = append(tests, getDensityErrorCases()...)
+	tests = append(tests, getParallelTaskErrorCases()...)
+	return tests
+}
+
+func getParallelTaskErrorCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		getUnknownParallelTaskErrorCase(),
+		getCrossPhaseParallelTaskErrorCase(),
+		getAsymmetricCrossPhaseParallelTaskErrorCase(),
+		getTargetIsolationConflictErrorCase(),
+	}
+}
+
+func getUnknownParallelTaskErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Unknown Parallel Task",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T9.9
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Task T1.1 (line 2) references unknown parallel task T9.9",
+		},
+	}
+}
+
+func getCrossPhaseParallelTaskErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Cross Phase Parallel Task",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T2.1
+**Acceptance Check:**
+Check it
+### Phase 2: Phase Two
+- [ ] T2.1: Second Task
+**Target:** API
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T1.1
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Task T1.1 (line 2) references parallel task T2.1 from a different phase",
+			"Task T2.1 (line 12) references parallel task T1.1 from a different phase",
+		},
+	}
+}
+
+func getAsymmetricCrossPhaseParallelTaskErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Asymmetric Cross Phase Parallel Task",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T2.1
+**Acceptance Check:**
+Check it
+### Phase 2: Phase Two
+- [ ] T2.1: Second Task
+**Target:** API
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Task T1.1 (line 2) references parallel task T2.1 from a different phase",
+			"Task T2.1 (line 12) references parallel task T1.1 from a different phase",
+		},
+	}
+}
+
+func getTargetIsolationConflictErrorCase() validateTasksTestCase {
+	return validateTasksTestCase{
+		name: "Target Isolation Conflict",
+		content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** src/common.go
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T1.2
+**Acceptance Check:**
+Check it
+- [ ] T1.2: Second Task
+**Target:** src/common.go
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Parallel With:** T1.1
+**Acceptance Check:**
+Check it`,
+		expected: []string{
+			"Parallel conflict: T1.1 and T1.2 both target \"src/common.go\"",
+		},
+	}
+}
+
+func getHappyPathCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Happy Path",
+			content: `### Phase 1: Setup
+- [ ] T1.1: Init
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Run init
+- Verify output
+**Acceptance Check:**
+Check files`,
+			expected: nil,
+		},
+		{
+			name: "Implicit Parallel Symmetry",
+			content: `### Phase 1: Setup
+- [ ] T1.1: Task 1
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do this
+- Do that
+**Parallel With:** T1.2
+**Acceptance Check:**
+Check files
+- [ ] T1.2: Task 2
+**Target:** API
+**Context:** US-1
+**Action Steps:**
+- Do this
+- Do that
+**Acceptance Check:**
+Check files`,
+			expected: nil,
+		},
+	}
+}
+
+func getDensityErrorCases() []validateTasksTestCase {
+	return append(append(getLeanAcceptedCases(), getLeanBlockAcceptedCases()...), getLeanRejectedCases()...)
+}
+
+func getLeanAcceptedCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "No step list accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Context:** US-1
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+		{
+			name: "Constraints heading accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Context:** US-1
+**Constraints:**
+- Only one constraint
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+		{
+			name: "Legacy Action Steps heading with one item accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Legacy Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Only one step
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+	}
+}
+
+func getLeanBlockAcceptedCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Empty constraints block accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Empty Task
+**Target:** CLI
+**Context:** US-1
+**Constraints:**
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+		{
+			name: "Mixed headings across tasks accepted",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Legacy Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Step
+**Acceptance Check:**
+Verify
+- [ ] T1.2: Lean Task
+**Target:** API
+**Context:** US-1
+**Constraints:**
+- Constraint
+**Acceptance Check:**
+Verify`,
+			expected: nil,
+		},
+	}
+}
+
+func getLeanRejectedCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Missing Acceptance Check still rejected",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Context:** US-1`,
+			expected: []string{
+				"Task T1.1 (line 2) is missing mandatory **Acceptance Check:** section",
+			},
+		},
+		{
+			name: "Missing Target still rejected",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Context:** US-1
+**Acceptance Check:**
+Verify`,
+			expected: []string{
+				"Task T1.1 (line 2) is missing mandatory **Target:** field",
+			},
+		},
+		{
+			name: "Missing Context still rejected for non-small",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Lean Task
+**Target:** CLI
+**Acceptance Check:**
+Verify`,
+			expected: []string{
+				"Task T1.1 (line 2) is missing mandatory **Context:** field",
+			},
+		},
+	}
+}
+
+func getHierarchyErrorCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Task Before Phase",
+			content: `- [ ] T1.1: Early Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Acceptance Check:**
+Check it`,
+			expected: []string{
+				"Task T1.1 (line 1) found before any Phase definition",
+				"Task T1.1 (line 1) does not match the parent Phase 0",
+				"No valid Phase (### Phase N: Name) found in tasks.md",
+			},
+		},
+		{
+			name: "Phase ID Out of Sequence",
+			content: `### Phase 2: Wrong Order`,
+			expected: []string{
+				"Phase ID 2 (line 1) is out of sequence, expected 1",
+				"Phase 2 (line 1) has no tasks",
+			},
+		},
+		{
+			name: "Task Phase Mismatch",
+			content: `### Phase 1: Phase One
+- [ ] T2.1: Wrong Phase Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Acceptance Check:**
+Check it`,
+			expected: []string{"Task T2.1 (line 2) does not match the parent Phase 1"},
+		},
+		{
+			name: "Task Sequence Gap",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: First Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Acceptance Check:**
+Check it
+- [ ] T1.3: Gapped Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Do something
+- Step 2
+**Acceptance Check:**
+Check it`,
+			expected: []string{"Task sequence gap at line 10: expected T1.2, found T1.3"},
+		},
+	}
+}
+
+func getFieldAndPhaseErrorCases() []validateTasksTestCase {
+	return []validateTasksTestCase{
+		{
+			name: "Missing Mandatory Fields",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Minimal Task`,
+			expected: []string{
+				"Task T1.1 (line 2) is missing mandatory **Target:** field",
+				"Task T1.1 (line 2) is missing mandatory **Context:** field",
+				"Task T1.1 (line 2) is missing mandatory **Acceptance Check:** section",
+			},
+		},
+		{
+			name: "Empty Phase",
+			content: `### Phase 1: Empty
+### Phase 2: Next
+- [ ] T2.1: Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+- Step
+- Step 2
+**Acceptance Check:**
+Verify`,
+			expected: []string{"Phase 1 (line 1) has no tasks"},
+		},
+		{
+			name: "Action items under Verification header",
+			content: `### Phase 1: Phase One
+- [ ] T1.1: Task
+**Target:** CLI
+**Context:** US-1
+**Action Steps:**
+**Acceptance Check:**
+- Step that looks like action step but is under verification`,
+			expected: nil,
+		},
+	}
+}
+
+func TestValidateTasks_SmallSpec(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-small-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	slug := "small-feature"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatalf("failed to create spec dir: %v", err)
+	}
+
+	// Set size to small in spec.yaml
+	if err := os.WriteFile(filepath.Join(specDir, "spec.yaml"), []byte("type: feature\nsize: small\n"), 0644); err != nil {
+		t.Fatalf("failed to write spec.yaml: %v", err)
+	}
+
+	tasksPath := filepath.Join(specDir, "tasks.md")
+
+	t.Run("Small spec allows single action step and no context", func(t *testing.T) {
+		content := `### Phase 1: Setup
+- [ ] T1.1: Quick Task
+**Target:** src/pkg/file.go
+**Action Steps:**
+- Single action step is sufficient for small
+**Acceptance Check:**
+Check files`
+		if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		errors, err := ValidateTasks(context.Background(), tmpDir, slug)
+		if err != nil {
+			t.Fatalf("ValidateTasks failed: %v", err)
+		}
+		if len(errors) != 0 {
+			t.Errorf("expected no validation errors for small spec, got: %v", errors)
+		}
+	})
+
+	t.Run("Small spec with empty action steps is accepted", func(t *testing.T) {
+		content := `### Phase 1: Setup
+- [ ] T1.1: Empty Steps Task
+**Target:** src/pkg/file.go
+**Action Steps:**
+**Acceptance Check:**
+Check files`
+		if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		errors, err := ValidateTasks(context.Background(), tmpDir, slug)
+		if err != nil {
+			t.Fatalf("ValidateTasks failed: %v", err)
+		}
+		if len(errors) != 0 {
+			t.Errorf("expected no validation errors, got: %v", errors)
+		}
+	})
+}
+
+type warningCase struct {
+	name     string
+	content  string
+	warnings []string
+}
+
+func warningCases() []warningCase {
+	fence := "```"
+	return []warningCase{
+		{
+			name: "fenced code block flagged",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/b.go`\n**Context:** US-1\n**Constraints:**\n- keep it\n" + fence + "go\nfunc X() {}\n" + fence + "\n**Acceptance Check:**\nVerify",
+			warnings: []string{"Task T1.1 (line 2) contains a fenced code block"},
+		},
+		{
+			name: "four distinct paths flagged",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go`, `c/three.go` and `d/four.go`\n**Acceptance Check:**\nVerify",
+			warnings: []string{"Task T1.1 (line 2) cites 4 distinct file paths (limit 3)"},
+		},
+		{
+			name: "three distinct paths not flagged",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go` and `c/three.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "repeated paths count once",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Action Steps:**\n- `a/one.go` `a/one.go` `b/two.go` `c/three.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "backtick tokens with spaces or without slash are not paths",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- `x y/z` `foo` `go test ./...` `b/two.go` `c/three.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "bullets under other bold headings are not constraints",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go`\n**Notes:**\n- see `c/three.go`\n- see `d/four.go`\n**Parallel With:**\n- also `e/five.go`\n**Acceptance Check:**\nVerify",
+			warnings: nil,
+		},
+		{
+			name: "fourth path inside constraints still flagged before other headings",
+			content: "### Phase 1: P\n- [ ] T1.1: Task\n**Target:** `a/one.go`\n**Context:** US-1\n**Constraints:**\n- touch `b/two.go`, `c/three.go` and `d/four.go`\n**Notes:**\n- see `e/five.go`\n**Acceptance Check:**\nVerify",
+			warnings: []string{"Task T1.1 (line 2) cites 4 distinct file paths (limit 3)"},
+		},
+	}
+}
+
+func TestValidateTasksReport_Warnings(t *testing.T) {
+	tmpDir := t.TempDir()
+	slug := "warn-feature"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	tasksPath := filepath.Join(specDir, "tasks.md")
+
+	tests := warningCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := os.WriteFile(tasksPath, []byte(tt.content), 0644); err != nil {
+				t.Fatal(err)
+			}
+			report, err := ValidateTasksReport(context.Background(), tmpDir, slug)
+			if err != nil {
+				t.Fatalf("ValidateTasksReport failed: %v", err)
+			}
+			if len(report.Errors) != 0 {
+				t.Errorf("warnings must not appear as errors, got errors %q", report.Errors)
+			}
+			if !reflect.DeepEqual(report.Warnings, tt.warnings) {
+				t.Errorf("warnings: got %q, want %q", report.Warnings, tt.warnings)
+			}
+			errs, err := ValidateTasks(context.Background(), tmpDir, slug)
+			if err != nil || len(errs) != 0 {
+				t.Errorf("ValidateTasks wrapper must return only errors, got %q (%v)", errs, err)
+			}
+		})
+	}
+}

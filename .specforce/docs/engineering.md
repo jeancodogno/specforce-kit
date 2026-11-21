@@ -8,7 +8,6 @@
 - **Embedded Registry Pattern:** Components discovered via metadata MUST be managed by a centralized `Registry` type. This registry should be initialized once (usually with an `fs.FS`) and passed as a dependency to other services or UI components.
 - **Agent-Specific Artifact Mapping:** To support diverse AI coding agents with differing directory conventions, the framework MUST use centralized `kit.yaml` (kit-level) and `mapping.yaml` (legacy/blueprint-level) files. These files translate internal Specforce artifact paths to the native hidden directory names of each supported agent (e.g., `.kimi/`, `.claude/`).
 - **Automated Platform Configuration:** The framework MUST automatically set up environment-specific discovery rules for supported agents during project initialization or refresh. This includes:
-    - Creating `.gemini/settings.json` with the correct `fileName` context mapping.
     - Creating relative symbolic links (e.g., `.agent/rules/AGENTS.md -> ../../AGENTS.md`) to expose global project rules to agents that use standardized rules directories.
     - Ensuring all symlinks are relative to maintain project portability.
 - **Generic Wildcard Expansion:** Mapping configurations in `kit.yaml` MUST support the `*` wildcard in both `path` and `name` fields. The system MUST replace the `*` with the artifact's slug (source filename without extension).
@@ -25,7 +24,36 @@
     - **Agent Command Flatness:** For OpenCode and KiloCode, commands MUST be stored directly in a flat `commands/` subfolder using the `spf.*` prefix to ensure correct discovery by those agents.
 - **Generated Markdown Files:** Any automatically generated documentation files (e.g., `AGENTS.md`) MUST use explicit start and end markers (e.g., `<!-- SPECFORCE_AGENTS_START -->` and `<!-- SPECFORCE_AGENTS_END -->`) to delimit the framework-managed content. The update logic MUST preserve any user-written content located outside these markers.
 - **Service Layer Pattern:** Domain services MUST be initialized with their dependencies (filesystems, registries, etc.) and expose UI-agnostic methods. They MUST depend on the `core.UI` interface for reporting progress and logging, ensuring they remain decoupled from specific frontend implementations.
-- **Instruction Injection Pattern:** Services responsible for generating or displaying agent-facing content (e.g., Spec artifacts, Implementation reports) MUST merge global instructions from `core.ProjectConfig` into their output. This ensures that the orchestration loop respects project-specific constraints without modifying the core Specforce protocol.
+- **Instruction Injection Pattern:** Services responsible for generating or displaying agent-facing content (e.g., Spec artifacts, Implementation reports) MUST merge global instructions from `core.ProjectConfig` into their output.
+    - **Prominence-First Mandate:** Instructions merged from project configuration MUST be prepended (placed at the top) of the base instructions. This ensures project-specific constraints receive maximum attention and weight from LLMs.
+- **Mission Brief Delegation Pattern:** When delegating complex sub-tasks to subagents, the orchestrator MUST construct a structured "Mission Brief" Markdown envelope. This ensures that global project constraints are never lost during agent handoffs. The envelope MUST follow this exact structure:
+    ```markdown
+    # MISSION BRIEF: {Task_Title}
+    Description: {Task_Description}
+
+    ## 1. MANDATED SKILLS (USE THESE SKILLS)
+    - {Skill_Name}: {Purpose}
+
+    ## 2. PROJECT RULES (MAXIMUM PRIORITY)
+    - {Prepended rules from ProjectConfig/AGENTS.md}
+
+    ## 3. SHARED CONTEXT (FEATURE SPECIFICS)
+    - DESIGN DECISIONS: {Context_Summary}
+    - CODEBASE INSIGHTS: {Symbol_Anchors}
+    - DEPENDENCY DATA: {Upstream_Artifact_Content}
+
+    ---
+    ## 4. BASE INSTRUCTIONS
+    {Atomic_Instruction_Set}
+    ```
+- **Coherence Gate Verification Pattern:** Before concluding a planning session, the orchestrator MUST perform a cross-artifact audit to ensure structural and logical alignment:
+    - **Requirement Coverage:** Every Functional Requirement `[US-X]` in `requirements.md` MUST have at least one corresponding task in `tasks.md`.
+    - **Logical Flow:** Technical decisions made in `design.md` MUST be reflected in the `tasks.md` action steps.
+    - **Drift Detection:** If a gap is found, the orchestrator MUST output a specific `[COHERENCE_ERROR]` marker and block the session conclusion.
+- **Specialized Agent Persona Pattern:** For implementation and verification, orchestrators SHOULD delegate to specialized personas rather than generic experts:
+    - **Implementation:** `specforce-developer` (TDD-focused).
+    - **Verification:** `specforce-qa` (Adversarial/BDD-focused).
+    - **Traceability:** Delegation transitions MUST be logged as `[DELEGATION] -> {persona_name}`.
 - **Hook-Based Verification Gating:** Critical state transitions (e.g., marking a task as `FINISHED`) MUST be gated by project-defined external hooks. If a hook fails (non-zero exit code), the transition MUST be blocked, the original state MUST NOT be modified, and the CLI command MUST exit with a non-zero status code to support shell command chaining.
 - **Interactive Confirmation Gating:** Irreversible or high-impact operations (e.g., overwriting existing tool instructions or deleting specs) MUST be gated by an explicit `Confirm` prompt via the `core.UI` interface. The system MUST NOT proceed without affirmative user consent (Sim/Yes).
 - **DTO Pattern (Data Transfer Objects):** Services SHOULD use explicit structs (DTOs) for complex input configurations or output reports. This maintains a stable contract between the CLI/TUI layer and the domain logic.
@@ -35,7 +63,8 @@
     - **Explicit Error Ignoring (Tests):** In test files, if an error from a function like `os.RemoveAll` or `os.Chdir` is safe to ignore, use `_ =` to make the omission explicit and satisfy linting requirements.
 - **Permission Hardening:** All I/O operations MUST use the most restrictive permissions possible:
     - **Directories:** Use `0750` for all directory creation (`os.MkdirAll`).
-    - **Files:** Use `0600` for all sensitive or system-internal files (e.g., config, tasks, implementation reports). Use `0644` only where public read access by external tools is strictly required.
+    - **Files:** Use `0600` for all sensitive or system-internal files (e.g., config, tasks, implementation reports, upgrade state). Use `0644` only where public read access by external tools is strictly required.
+- **Static Analysis & Justification:** Security scans (`gosec`, `govulncheck`) MUST be clean of critical and high findings. Global linter exclusions (e.g., in `Makefile`) are strictly forbidden. Any false positive (e.g., G304 path traversal) MUST be handled via granular, source-level justifications using `#nosec` comments that explicitly link the safety to a specific architectural pattern (e.g., "Path validated by core.SecurePath").
 
 - **Automated Native Builds:** To support users installing from Git or source, the `package.json` MUST include `prepare` and `postinstall` scripts (e.g., `"prepare": "make build || true"`) that attempt to build the native binary automatically. These scripts MUST use the `|| true` guard to ensure the installation process is not blocked if build tools (Go/Make) are missing.
 - **Environment Diagnostics Pattern:** CLI entry points or proxies (e.g., `index.js`) MUST NOT fail silently when a native binary is missing. Instead, they MUST execute a stylized diagnostic check that:
@@ -45,12 +74,18 @@
     - Adheres to the "Ghost in the Machine" aesthetic using consistent ANSI colors (Mint Green for success/fixes, Error Red for failures).
 
 - **Instruction-Driven Agent Pattern:** Agent command definitions (`.yaml`) SHOULD NOT contain complex, hardcoded logic or multi-step instructions. Instead, they MUST trigger a dedicated Specforce CLI command (e.g., `specforce archive instructions`) to retrieve a dynamic instruction set. This allows the framework to inject global context (Constitution), core kit rules, and project-specific overrides from `config.yaml` without updating the agent's definition.
-- **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST update the project's `.specforce/docs/memorial.md` with lessons learned, established precedents, and critical architectural decisions discovered during the implementation.
+- **Knowledge-First Archival:** The feature archival process MUST include a "Knowledge Harvesting" phase. Before a specification is archived, the agent or developer MUST consolidate lessons learned, established precedents, and critical architectural decisions discovered during the implementation into the affected module living specs (`.specforce/docs/modules/<slug>.md`), applying the spec's module deltas, and update the Constitution when a project-wide rule changed.
+- **Output Channel Discipline:** Standard output of any command is reserved for that command's own output, which agents may parse (e.g., `--json`). Incidental messages (update notices, hints, diagnostics) MUST be written to standard error, only when standard output is a terminal and the command is not annotated as an agent command, and never from code that runs before command parsing. Debug traces are gated behind `DEBUG=1` and also go to standard error.
+- **JSON Collection Standards:** To ensure machine-readable APIs consistently return an empty array `[]` instead of `null` for empty collections, Go slices intended for JSON marshaling MUST be explicitly initialized with an empty literal (e.g., `s := []T{}`) rather than just declared (e.g., `var s []T`).
+- **Machine-Readable Metadata Standard:** To maintain the readability of Markdown artifacts (requirements, design, tasks) for humans and agents, all machine-specific state and instrumentation data (e.g., session timestamps, deployment IDs) MUST be stored in the specification's `spec.yaml` file. The core framework MUST provide structured Go models for this metadata to ensure type-safe access and persistence.
 
 ## Agent Orchestration Protocol
-1. **Mandatory Discovery:** Agents MUST call `specforce spec list` and `specforce constitution status --json` before initializing a new specification to ensure they have the full project context.
-2. **Interrogation over Hallucination:** Agents MUST NOT guess user intent. They must use interrogation tools to ask clarifying questions until a clear feature idea is reached.
-3. **Primary Orchestration Only:** Agents MUST remain in their primary orchestration loop and NOT use specialized "plan" or "design" modes for requirement discovery.
+1. **Mandatory Multi-Layered Pre-Flight:** Before initializing a new specification or performing significant design changes, agents MUST follow the three-layer discovery protocol:
+    - **A. Constitutional Anchor:** Consult relevant documents in `.specforce/docs/` to identify architectural and behavioral constraints.
+    - **B. Empirical Grounding:** Perform a targeted codebase scan (`grep_search`/`read_file`) to identify existing patterns and precedents.
+    - **C. Consultative Grill:** Engage in a proactive interview with the user, presenting recommendations based on layers A and B before asking for final design decisions.
+2. **Interrogation over Hallucination:** Agents MUST NOT guess user intent. They must use interrogation tools to ask clarifying questions until a clear, unambiguous feature idea is reached.
+3. **Primary Orchestration Only:** Agents MUST remain in their primary orchestration loop and NOT use specialized "plan" or "design" modes for requirement discovery. Note that the `spf.spec` skill IS the mandatory orchestration tool for planning; this rule only prohibits the use of internal LLM "Blackbox" planning features that bypass Specforce's transparent artifact generation.
 4. **Mandatory Skill Header Injection:** For agents using "Skills" (e.g., Kimi Code), all generated `SKILL.md` files (from skills or commands) MUST include a YAML frontmatter header with `name` and `description` to ensure native discovery.
 5. **Binary-Path Standard:** All agent-triggered CLI commands MUST use the global binary `specforce` (not `./specforce`) to ensure cross-platform consistency.
 
@@ -66,6 +101,8 @@
 - **Mutation Testing:** Projects SHOULD use `Gremlins` for mutation testing to verify test suite efficacy. Core packages MUST target a mutation score > 0 (all survivors investigated).
 - **Unit Testing Rules:** All core logic and state transitions MUST have automated unit tests.
 - **Regression Rules:** Any reported bug MUST be reproduced with a failing test case before being fixed.
+- **User-State Isolation:** Tests that touch per-user state (anything under `~/.specforce`) MUST point both `HOME` and `USERPROFILE` (the Windows home) at the same temporary directory (`home := t.TempDir(); t.Setenv("HOME", home); t.Setenv("USERPROFILE", home)`) before creating any state manager, and MUST NOT spawn real processes or reach the network (inject launchers, executors and HTTP endpoints). Manual or scripted runs of a locally built binary MUST also use an isolated `HOME`: running it against the real home can consume or overwrite the user's pending update. The only tests allowed to skip on Windows are permission-bit or read-only-directory assertions (Windows does not enforce `os.Chmod` modes), and only with `runtime.GOOS == "windows"` and the stated reason `t.Skip("permission bits do not apply on Windows")`, plus symlink-creation tests, which need privileges on Windows (`t.Skip("symlinks require privileges on Windows")`), and tests that execute POSIX shell scripts (`t.Skip("the staged binary is a shell script")`); a Windows-only skip for any other reason violates this rule.
+- **Release & CI Tooling:** Release and CI decisions (version agreement, channel selection, publish-or-skip, release notes selection) MUST live in versioned scripts under `scripts/` tested with the built-in `node:test` runner and no third-party dependencies; workflows only call those scripts and never swallow a failure. Release builds MUST be reproducible (`-trimpath` and the commit timestamp as build time), so a re-run of the same tag produces byte-identical binaries.
 
 ## Delivery Standards & DoD
 - **Commit Standard:** Conventional Commits (e.g., `feat:`, `fix:`, `docs:`, `chore:`).
@@ -77,7 +114,7 @@
   - [ ] Security scans pass (zero critical findings).
   - [ ] TUI views are manually verified for layout consistency.
   - [ ] Feature Specification status is updated to "Implemented".
-  - [ ] The Memorial is updated with relevant "Last Actions".
+  - [ ] The affected module living specs reflect the as-built behavior (module deltas applied).
 
 ## Error Handling Standards
 - **Sentinel Errors:** All domain-specific errors MUST be defined as package-level sentinel variables using `errors.New()` in `src/internal/core/errors.go`. No ad-hoc error strings in business logic.
@@ -87,7 +124,37 @@
 - **Idempotency Guards:** Operations that mutate persistent state (e.g., `BootstrapProject`) MUST guard against re-execution by checking existing state and returning the appropriate domain sentinel error if the operation would be redundant.
 
 ## Specification & Task Organization
+- **Self-Containment Mandate:** All specification artifacts (Requirements, Design, Tasks) MUST be actionable by an AI agent with zero access to the previous conversation history. Every business rule, intent and technical decision MUST be explicitly documented within the spec triad. Symbol-level code anchors are written only in the design, and in tasks only as non-obvious constraints that reference the design instead of repeating it.
+- **Requirement Prefix Standardization:** To maintain consistency with industry-standard User Story terminology:
+    - **Features:** Functional requirements MUST use the `[US-x]` prefix.
+    - **Bugfixes:** Requirements focusing on fixes MUST use the `[FIX-x]` prefix.
+    - **Traceability:** The requirement ID (e.g., `[US-1]`) MUST be used in the `**Context:**` field of the implementation roadmap to ensure bi-directional traceability.
 - **Hierarchical Task Structure:** Implementation roadmaps (`tasks.md`) MUST use a hierarchical structure to group atomic tasks. 
     - **Phases (H3):** Use `### Phase {N}: {Title}` for logical groupings.
     - **Tasks (H4):** Use `#### T{Phase}.{Task}: {Title}` for individual implementation steps.
+- **Action Step Density:** Every individual implementation task MUST contain at least two concrete, technically directive action steps. Tasks with insufficient density are considered "vague" and MUST be rejected by the validation engine.
+- **Task Verification Standard:** Every task MUST include an `**Acceptance Check:**` section containing a specific terminal command or test scenario. This label is mandatory and methodology-agnostic, serving as the "Definition of Done" for the task. The legacy label `**Verification (TDD):**` is deprecated and will trigger a validation error.
 - **DTO Pattern for Flat Access:** Domain models that implement nested structures (like `ImplementationReport` with `Phases`) MUST provide a `Tasks()` helper method that returns a flattened slice of all tasks. This ensures backward compatibility for scanners and progress calculators that expect a sequential list.
+
+## AI Coding Constraints & Test Invariance
+
+### 1. Pre-Coding Protocol
+- If anything is uncertain or ambiguous, the AI MUST ask before proceeding.
+- If a requirement has multiple interpretations, the AI MUST NOT choose silently; it MUST present the options and ask.
+- If an approach appears flawed, the AI MUST disagree, avoid sycophancy, and challenge the design.
+
+### 2. During Coding Protocol
+- Do NOT implement unrequested features.
+- Do NOT refactor unrequested code.
+- Do NOT implement tests for impossible scenarios.
+- Do NOT remove pre-existing dead code unless requested.
+- NEVER remove tests to reduce failure count.
+- NEVER weaken existing tests to make them pass.
+- NEVER use mechanisms that skip, ignore, or bypass tests.
+- If a test is genuinely incorrect, the AI MUST halt and confirm with the user before altering it.
+- Tests are the specification: the implementation conforms to the tests, not the reverse.
+
+### 3. Post-Implementation & Change Protocol
+- Do NOT implement features or change behaviors outside the specification. If divergence is required, activate `/spf:spec` to update the specification first.
+- The AI MUST NOT remove existing comments unless explicitly replacing them with better documentation.
+

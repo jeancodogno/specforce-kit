@@ -25,7 +25,7 @@ lens: Integration
 - Configure `mapping` for `open-code`, `kilo-code`, and `kimi-code`.
 - Write the Markdown `content` prompt implementing the Brainstormer/Detective personas, read-only constraints, and handoff rules.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `ls src/internal/agent/kit/commands/discovery.yaml` to confirm file existence.
 - Review the content to ensure all placeholders and personas from the Requirements are present.
 
@@ -40,7 +40,7 @@ lens: Integration
 - Execute the project's test suite for the agent domain to ensure the new YAML is valid and can be translated without errors.
 - Run `go test ./src/internal/agent/...`
 
-**Verification (TDD):**
+**Acceptance Check:**
 - `go test -v ./src/internal/agent/ -run TestTranslator` (or equivalent test that processes kit manifests).
 
 #### T2.2: [VERIFY] Manual Inspection of Generated Commands
@@ -52,7 +52,7 @@ lens: Integration
 - Run the kit generator (e.g., `make run` or a specialized build command that updates the `.gemini/`, `.claude/`, etc. folders).
 - Inspect `.gemini/commands/spf.discovery.toml` (if generated) or equivalent for other agents.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Verify that the generated file contains the prompt defined in `discovery.yaml`.
 
 ### Phase 3: Bootstrap & Documentation
@@ -67,7 +67,7 @@ lens: Integration
 - Add the `Discovery (/discovery)` command to the SDD Protocol section.
 - Define its purpose as a read-only brainstorming/diagnostic entry point.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Run `go test ./src/internal/project/...` to ensure template changes don't break generation tests.
 
 #### T3.2: [DOCS] Update Project Documentation
@@ -79,5 +79,5 @@ lens: Integration
 - Update `README.md` to include `spf.discovery` in the command list.
 - Update `docs/cli.md` with a detailed explanation of the Discovery mode and its handoff to `/spec`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 - Inspect the updated files for clarity and correctness.

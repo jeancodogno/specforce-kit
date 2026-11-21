@@ -2,6 +2,8 @@ package project_test
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 	"testing/fstest"
 
@@ -21,6 +23,9 @@ func (m *mockUI) Success(msg string) {}
 func (m *mockUI) Warn(msg string)    { m.warnings = append(m.warnings, msg) }
 func (m *mockUI) Error(msg string)   {}
 func (m *mockUI) SubTask(msg string) {
+	m.subtasks = append(m.subtasks, msg)
+}
+func (m *mockUI) LogSubTask(msg string) {
 	m.subtasks = append(m.subtasks, msg)
 }
 func (m *mockUI) StartSpinner(msg string) {}
@@ -133,3 +138,45 @@ tools:
 		}
 	})
 }
+
+func TestService_InitializeProject_ConditionalCreation(t *testing.T) {
+	kitFS := fstest.MapFS{
+		"kit.yaml": &fstest.MapFile{Data: []byte(`
+tools:
+  claude:
+    name: "Claude"
+    target: ".claude/"
+`)},
+		"agents/claude.yaml": &fstest.MapFile{Data: []byte("content: hello")},
+	}
+	tmpDir := t.TempDir()
+	artifactsFS := fstest.MapFS{}
+
+	svc := project.NewService(kitFS, artifactsFS, tmpDir)
+	ui := &mockUI{}
+
+	config := project.InitConfig{
+		ProjectRoot:    tmpDir,
+		SelectedAgents: []string{"claude"},
+	}
+
+	err := svc.InitializeProject(context.Background(), ui, config)
+	if err != nil {
+		t.Fatalf("InitializeProject failed: %v", err)
+	}
+
+	// .claude SHOULD exist
+	if _, err := os.Stat(filepath.Join(tmpDir, ".claude")); os.IsNotExist(err) {
+		t.Errorf("expected directory .claude to exist")
+	}
+
+	// .cursor, .agent SHOULD NOT exist
+	unselected := []string{".cursor", ".agent"}
+	for _, dir := range unselected {
+		path := filepath.Join(tmpDir, dir)
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("expected directory %s NOT to exist (not selected)", dir)
+		}
+	}
+}
+

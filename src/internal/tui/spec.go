@@ -16,7 +16,14 @@ func RenderSpecStatus(status spec.SpecStatus) string {
 	successStyle := lipgloss.NewStyle().Foreground(successGreen)
 	errorStyle := lipgloss.NewStyle().Foreground(errorRed)
 	descStyle := lipgloss.NewStyle().Foreground(textGrey)
-	nameStyle := lipgloss.NewStyle().Foreground(textWhite).Bold(true)
+	nameStyle := lipgloss.NewStyle().Foreground(textPrimary).Bold(true)
+	warnStyle := lipgloss.NewStyle().Foreground(brandCyan)
+
+	// Render Refinement State if active
+	if status.RefinementIteration > 0 {
+		iterText := fmt.Sprintf("REFINEMENT: Iteration %d/3", status.RefinementIteration)
+		fmt.Fprintf(&builder, " %s\n\n", warnStyle.Bold(true).Render(iterText))
+	}
 
 	for _, artifact := range status.Artifacts {
 		glyph := errorStyle.Render(EmptyBulletGlyph)
@@ -29,6 +36,30 @@ func RenderSpecStatus(status spec.SpecStatus) string {
 		description := descStyle.Render(artifact.Description)
 
 		fmt.Fprintf(&builder, " %s %s %s\n", glyph, name, description)
+
+		// Render validation errors if they exist
+		for _, err := range artifact.ValidationErrors {
+			indent := strings.Repeat(" ", 4)
+			fmt.Fprintf(&builder, "%s%s\n", indent, errorStyle.Render("- "+err))
+		}
+
+		// Render non-blocking validation warnings after errors
+		for _, w := range artifact.ValidationWarnings {
+			indent := strings.Repeat(" ", 4)
+			fmt.Fprintf(&builder, "%s%s\n", indent, warnStyle.Render("- warning: "+w))
+		}
+	}
+
+	// Render Coherence Errors
+	if len(status.RefinementErrors) > 0 {
+		fmt.Fprintf(&builder, "\n %s\n", errorStyle.Bold(true).Render("COHERENCE ERRORS:"))
+		for _, err := range status.RefinementErrors {
+			fmt.Fprintf(&builder, "  %s\n", errorStyle.Render("↳ "+err))
+		}
+
+		if status.RefinementIteration >= 3 {
+			fmt.Fprintf(&builder, "\n %s\n", warnStyle.Render("Automatic refinement reached limit. Manual intervention required."))
+		}
 	}
 
 	return builder.String()

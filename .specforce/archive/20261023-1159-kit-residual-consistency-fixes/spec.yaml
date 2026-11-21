@@ -1,0 +1,33 @@
+slug: 20261023-1159-kit-residual-consistency-fixes
+name: 20261023-1159-kit-residual-consistency-fixes
+type: bug
+size: small
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-10-23T19:49:50.486502829Z
+              completed_at: 2026-10-23T19:50:53.847134462Z
+    T1.2:
+        sessions:
+            - started_at: 2026-10-23T19:49:50.486503621Z
+              completed_at: 2026-10-23T19:50:53.847134713Z
+    T1.3:
+        sessions:
+            - started_at: 2026-10-23T19:49:50.486504498Z
+              completed_at: 2026-10-23T19:50:53.847134892Z
+    T2.1:
+        sessions:
+            - started_at: 2026-10-23T19:49:50.486504627Z
+              completed_at: 2026-10-23T19:50:53.847135042Z
+    T2.2:
+        sessions:
+            - started_at: 2026-10-23T19:49:50.486504734Z
+              completed_at: 2026-10-23T19:50:53.847135196Z
+    T2.3:
+        sessions:
+            - started_at: 2026-10-23T19:49:50.48650484Z
+              completed_at: 2026-10-23T19:50:53.847135346Z
+    T3.1:
+        sessions:
+            - started_at: 2026-10-23T19:50:38.005377755Z
+              completed_at: 2026-10-23T19:53:00.390710799Z

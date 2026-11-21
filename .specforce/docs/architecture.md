@@ -44,7 +44,8 @@ graph TB
 6. Strict Typing: All data models (Spec, Constitution, Artifacts) must have rigorous Go struct definitions and schema validation.
 
 6. **Metadata-Driven Discovery:** Systems that manage sets of dynamic components (e.g., Agents, Skills) MUST use metadata files (e.g., `manifest.yaml`) for discovery within an `fs.FS`. Hardcoded lists are forbidden to ensure extensibility without recompilation.
-7. **Graceful Lifecycle Management:** The application's lifecycle MUST be controlled by a root `context.Context` initialized at the entry point (`main.go`). This context must respond to OS interrupt signals (SIGINT, SIGTERM) to ensure all I/O-heavy operations can be cancelled cleanly by the user.
+7. **Deterministic Artifact Ordering:** The specification registry MUST enforce a topological sort of artifacts based on their internal dependencies (e.g., Requirements -> Design -> Tasks). This ensures that all listings, status reports, and generation pipelines follow a logical, deterministic roadmap.
+8. **Graceful Lifecycle Management:** The application's lifecycle MUST be controlled by a root `context.Context` initialized at the entry point (`main.go`). This context must respond to OS interrupt signals (SIGINT, SIGTERM) to ensure all I/O-heavy operations can be cancelled cleanly by the user.
 
 8. **Parallel Execution & Aggregation:** Systems that execute multiple independent external commands (e.g., Hooks, Lints, Tests) MUST do so in parallel using `sync.WaitGroup` and goroutines. The results (Stdout, Stderr, ExitCode) MUST be aggregated into a standard `core.HookResult` struct and returned together after all operations complete. If any command fails, a specialized error (e.g., `core.HookError`) containing all results MUST be returned to the caller.
 

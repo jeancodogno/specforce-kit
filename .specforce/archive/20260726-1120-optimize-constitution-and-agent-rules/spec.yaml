@@ -1,0 +1,20 @@
+slug: 20260726-1120-optimize-constitution-and-agent-rules
+name: 20260726-1120-optimize-constitution-and-agent-rules
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-07-26T14:21:04.469006289Z
+              completed_at: 2026-07-26T14:21:24.891560209Z
+    T1.2:
+        sessions:
+            - started_at: 2026-07-26T14:21:23.595928873Z
+              completed_at: 2026-07-26T14:21:36.675046284Z
+    T2.1:
+        sessions:
+            - started_at: 2026-07-26T14:21:38.526881708Z
+              completed_at: 2026-07-26T14:22:19.503973222Z
+    T2.2:
+        sessions:
+            - started_at: 2026-07-26T14:22:22.661039458Z
+              completed_at: 2026-07-26T14:23:31.690889258Z

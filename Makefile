@@ -1,3 +1,4 @@
+VERSION ?= $(shell node -p "require('./package.json').version")
 BINARY=specforce
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
@@ -7,7 +8,7 @@ GOPATH=$(shell go env GOPATH)
 GOBIN=$(GOPATH)/bin
 
 build:
-	go build -o $(BINARY) src/cmd/specforce/main.go
+	go build -ldflags="-s -w -X 'github.com/jeancodogno/specforce-kit/src/internal/core.Version=$(VERSION)'" -o $(BINARY) src/cmd/specforce/main.go
 
 install: build
 	install -d $(DESTDIR)$(BINDIR)
@@ -26,7 +27,7 @@ lint:
 	golangci-lint run ./...
 
 security:
-	$(GOBIN)/gosec -exclude=G703,G304,G306 -fmt=sarif -out=results.sarif ./...
+	$(GOBIN)/gosec -fmt=sarif -out=results.sarif ./...
 	$(GOBIN)/govulncheck ./...
 
 quality:
@@ -38,9 +39,12 @@ quality-lived:
 check: lint security test quality
 
 bootstrap:
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	go install golang.org/x/vuln/cmd/govulncheck@latest
-	go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
+	go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0
+	go install golang.org/x/vuln/cmd/govulncheck@v1.10.0
+	go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0
+
+brand-assets:
+	cd scripts/brandgen && go run . -out ../../assets/brand
 
 clean-test:
 	rm -rf test-init/.specforce test-init/.agent test-init/.claude test-init/.gemini
@@ -71,4 +75,4 @@ npm-packages:
 			"$$pkg_name" "$(VERSION)" "$$os" "$$arch" "$$os" "$$arch" "$$( [ "$$os" = "win32" ] && echo ".exe" )" > $$pkg_dir/package.json; \
 	done
 
-.PHONY: build test lint security quality check bootstrap clean-test install uninstall npm-packages
+.PHONY: build test lint security quality check bootstrap clean-test install uninstall npm-packages brand-assets

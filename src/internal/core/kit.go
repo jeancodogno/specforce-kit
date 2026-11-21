@@ -29,10 +29,17 @@ type ToolRoute struct {
 	Description string                    `yaml:"description"`
 	Target      string                    `yaml:"target"`
 	Mappings    map[string]MappingConfigs `yaml:"mappings"`
+	Security    ToolSecurity              `yaml:"security"`
+}
+
+// ToolSecurity defines security permissions for an agent.
+type ToolSecurity struct {
+	GlobalWrite bool `yaml:"global_write"`
 }
 
 // KitConfig represents the root configuration structure for kit.yaml,
 // defining mapping rules for all supported AI agents.
 type KitConfig struct {
-	Tools map[string]ToolRoute `yaml:"tools"`
+	Tools    map[string]ToolRoute      `yaml:"tools"`
+	Defaults map[string]MappingConfigs `yaml:"defaults"`
 }

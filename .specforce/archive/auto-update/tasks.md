@@ -21,7 +21,7 @@ lens: Balanced full-stack
 - Create `State` struct with `LastCheckAt` (time.Time), `LatestVersion` (string), and `IgnoredVersion` (string).
 - Implement `LoadState()` and `SaveState(state)` using `core.ExpandPath("~/.specforce/state.json")`.
 - Implement atomic write (write to `.tmp` + rename) for `SaveState` to prevent file corruption.
-**Verification (TDD):**
+**Acceptance Check:**
 - Write unit test in `state_test.go` asserting that state is correctly persisted and reloaded from a temporary directory.
 
 #### T1.2: [CODE] Define Provider Interface & Mock
@@ -31,7 +31,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Define `Provider` interface with `GetLatestVersion(ctx context.Context) (string, error)`.
 - Implement `MockProvider` for testing purposes.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test ensuring `MockProvider` returns a hardcoded version string.
 
 #### T1.3: [CODE] Implement GitHub Release Provider
@@ -42,7 +42,7 @@ lens: Balanced full-stack
 - Implement `GitHubProvider` targeting `api.github.com/repos/jeancodogno/specforce-kit/releases/latest`.
 - Parse the `tag_name` from the JSON response.
 - Add a 2-second timeout to the HTTP client.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test using `httptest.NewServer` to simulate GitHub API response.
 
 #### T1.4: [CODE] Implement NPM Registry Provider
@@ -52,7 +52,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Implement `NPMProvider` targeting `registry.npmjs.org/@specforce/cli/latest`.
 - Parse the `version` field from the JSON response.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test using `httptest.NewServer` to simulate NPM registry response.
 
 #### T1.5: [CODE] Implement SemVer Comparison Utility
@@ -62,7 +62,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Add helper to compare two version strings (e.g., `v1.2.3` vs `1.2.4`).
 - Support both `v`-prefixed and bare versions.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit tests covering "greater than", "equal", and "less than" scenarios for semver strings.
 
 #### T1.6: [CODE] Implement Orchestration Service
@@ -73,7 +73,7 @@ lens: Balanced full-stack
 - Create `Service` struct that coordinates `State` and `Provider`.
 - Implement `CheckForUpdate(ctx)`: checks if 24h have passed since `LastCheckAt`, then runs provider fetch in a background goroutine.
 - Implement `IsUpdateAvailable()`: returns true if `LatestVersion` > current version.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test using a mock clock and mock provider to verify that background check is skipped if throttled or already checked recently.
 
 ### Phase 2: CLI Integration
@@ -84,7 +84,7 @@ lens: Balanced full-stack
 **Context:** [REQ-2]
 **Action Steps:**
 - Add `Annotations: map[string]string{"IsAgentCommand": "true"}` to `specCmd`, `implementCmd`, and `constitutionCmd`.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test in `root_test.go` asserting these specific commands have the required annotation.
 
 #### T2.2: [CODE] Integrate PersistentPreRun Hook
@@ -94,7 +94,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - In `rootCmd.PersistentPreRunE`, initialize `upgrade.Service`.
 - Call `service.CheckForUpdate(ctx)` ONLY if `tui.IsTTY()` is true AND command annotation `IsAgentCommand` is not "true".
-**Verification (TDD):**
+**Acceptance Check:**
 - Manual verification using `DEBUG=1` logs to ensure background check is triggered/skipped based on context.
 
 #### T2.3: [CODE] Integrate PersistentPostRun Hook
@@ -104,7 +104,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - In `rootCmd.PersistentPostRun`, check `service.IsUpdateAvailable()`.
 - If true and TTY is active, trigger the notification display.
-**Verification (TDD):**
+**Acceptance Check:**
 - Manual verification: run a standard command and see the notification appear AFTER the main output.
 
 ### Phase 3: UI/UX Components
@@ -116,7 +116,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Implement `RenderUpdateNotification(current, latest string)` using Lipgloss.
 - Apply "Neon" theme colors (Cyan/Magenta) to match brand guidelines.
-**Verification (TDD):**
+**Acceptance Check:**
 - Visual verification by running a standalone TUI test script that renders the box to stdout.
 
 #### T3.2: [CODE] Create Interactive Upgrade Prompt
@@ -125,7 +125,7 @@ lens: Balanced full-stack
 **Context:** [REQ-3]
 **Action Steps:**
 - Create a Bubbletea model for a simple "Update now? [y/N]" interactive prompt.
-**Verification (TDD):**
+**Acceptance Check:**
 - Manual test in an interactive terminal verifying selection logic and default behavior.
 
 #### T3.3: [CODE] Create Upgrade Progress View
@@ -134,7 +134,7 @@ lens: Balanced full-stack
 **Context:** [REQ-3]
 **Action Steps:**
 - Implement a Bubbletea model with a progress bar (using existing `tui.ProgressBar`) to show download status.
-**Verification (TDD):**
+**Acceptance Check:**
 - Manual test with a simulated 3-second delay to verify progress bar rendering and completion message.
 
 ### Phase 4: Installation Logic
@@ -146,7 +146,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Implement logic to run `npm install -g @jeancodogno/specforce-kit` via `os/exec`.
 - Capture and log stderr on failure for user feedback.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test mocking `exec.Command` to ensure correct arguments and environment are used.
 
 #### T4.2: [CODE] Implement Binary Download & Checksum
@@ -156,7 +156,7 @@ lens: Balanced full-stack
 **Action Steps:**
 - Implement download logic for the binary based on `runtime.GOOS` and `runtime.GOARCH`.
 - Download corresponding `.sha256` file and verify hash before installation.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test with `httptest` serving a dummy file and verifying correct/incorrect hash detection.
 
 #### T4.3: [CODE] Implement Atomic Binary Replacement
@@ -167,7 +167,7 @@ lens: Balanced full-stack
 - Use `os.Executable()` to find current binary path.
 - Implement "Move to Backup -> Move New -> Remove Backup" atomic flow.
 - Ensure rollback to the backup if the replacement fails.
-**Verification (TDD):**
+**Acceptance Check:**
 - Unit test simulating a restricted permission error during move to verify original binary remains functional.
 
 #### T4.4: [CODE] Wire Service to PerformUpgrade
@@ -178,7 +178,7 @@ lens: Balanced full-stack
 - Implement `PerformUpgrade(ctx, version)`.
 - Detect installation type (checking execution path or metadata).
 - Invoke the appropriate installer strategy (NPM vs Binary).
-**Verification (TDD):**
+**Acceptance Check:**
 - Integration test ensuring `PerformUpgrade` triggers the expected installer based on environment.
 
 ### Phase 5: Final Verification
@@ -192,7 +192,7 @@ lens: Balanced full-stack
 - Mock network to return a new version.
 - Simulate user "Y" input to the upgrade prompt.
 - Verify that the dummy binary is correctly replaced and version updated.
-**Verification (TDD):**
+**Acceptance Check:**
 - Execute `go test ./src/internal/upgrade/...` and ensure all integration tests pass.
 
 #### T5.2: [TEST] Verify Silence in Non-TTY & Agent Modes
@@ -203,7 +203,7 @@ lens: Balanced full-stack
 - Run commands with redirected stdout (non-TTY).
 - Run `spec` command in a TTY.
 - Assert that no update check is performed and no notification is rendered.
-**Verification (TDD):**
+**Acceptance Check:**
 - Integration test checking logs/output for absence of upgrade indicators in restricted modes.
 
 #### T5.3: [TEST] Cross-Platform Path Verification
@@ -212,5 +212,5 @@ lens: Balanced full-stack
 **Context:** [REQ-1]
 **Action Steps:**
 - Run tests on Linux and macOS (via GitHub Actions) to ensure `~/.specforce` expansion and file permissions work correctly.
-**Verification (TDD):**
+**Acceptance Check:**
 - CI Pipeline green on all target platforms for the upgrade package.

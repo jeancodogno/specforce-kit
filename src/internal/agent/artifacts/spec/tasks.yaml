@@ -1,15 +1,25 @@
-description: "Atomic, sequential implementation roadmap and TDD verification steps in a strict, CLI-scannable format."
+description: "Atomic implementation roadmap and TDD verification steps using natural Markdown checklist format. Supports strategic parallelism."
 dependency: design
 instruction: |
-  Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements.
+  DETERMINISM MANDATE: no placeholders, no scope ambiguity. Use of 'TBD', 'To be defined', or placeholders is strictly forbidden, and every task MUST state exactly what it targets and how it is proven. The roadmap MUST be actionable by an AI agent with zero access to the previous conversation history, reading the design for the how.
 
-  1. DO NOT write actual implementation code. You write the INTENT and the ACTION.
-  2. Tasks MUST be strictly sequential. Do not use parallel execution flags.
-  3. **Phases**: Group tasks into logical phases using `### Phase {N}: [Phase Name]` headers.
-  4. STRICT FORMATTING: Use `#### T{Phase}.{Task}:` as the header for EVERY task. The immediate next line MUST be the state tracker. 
-     - ENUM CONSTRAINT: The state MUST be exactly `**State:** [PENDING]`. 
-     - DO NOT invent new states. DO NOT use [TODO], [IN_PROGRESS], or [WAITING].
-  5. Target Flexibility: If a task is a global operation, set the Target to the CLI command (e.g., `CLI (npm run lint)`) or `Global Scope`.
+  Generate the Tasks/Implementation Roadmap for the feature based on the Design and Requirements. Adhere strictly to the following execution rules for SELF-CONTAINMENT:
+
+  1. **Lean Task:** A task states its Target, Context and Acceptance Check; the design holds the how. Add an optional `**Constraints:**` block (`- ` items) ONLY for what the implementer cannot deduce from the design and the code: a pitfall, a deviation from repository convention, or a recorded design decision referenced by name rather than repeated. Tasks MUST NOT contain method signatures, constants or code snippets (no fenced code blocks); code-symbol anchors belong only in the design. Omit the block when nothing qualifies, and keep a task to at most 3 distinct paths.
+  2. **Reference, Don't Repeat:** When the design records a decision, point to it (for example "per the design inventory entry for X") instead of restating it.
+  3. **TDD-First Verification:** Every task MUST include a specific terminal command or test scenario that objectively proves the task is finished. Every Acceptance Check MUST be a single non-interactive command or test scenario with an observable expected result, runnable in under 2 minutes, with no prompts, manual clicks or pasted secrets. A criterion needing human judgment MUST be rewritten into a scriptable check or marked in the task as not verifiable by a tester.
+  4. **Strategic Parallelism:** Tasks are sequential by default. However, you MAY mark independent tasks as parallel within the same phase if they can be implemented simultaneously.
+     - **Syntax:** Use `**Parallel With: T{Phase}.{Task}**` to declare relationships.
+     - **File Isolation Rule:** Parallel tasks MUST NEVER share the same `**Target:**` or have conflicting implementation paths. If multiple tasks target the same file, they MUST be sequential.
+  5. **Traceability:** Every task MUST explicitly link to a requirement using the `**Context:** [US-x]` field.
+  6. **Phases**: Group tasks into logical phases using `### Phase {N}: [Phase Name]` headers.
+  7. **Task Format**: Use standard Markdown checklist items for tasks: `- [ ] T{Phase}.{Task}: Title`.
+     - The checkbox state indicates progress (`- [ ]` for pending).
+     - You may also include a `**State:** [PENDING]` tag if more formal tracking is required.
+  8. **Target Precision:** Set the `**Target:**` to the exact file path or CLI command.
+  9. **Black-box Scenarios:** Black-box scenarios live in a non-executable `## 3. Black-box Scenarios` section placed after the task phases, never as tasks, checkboxes or task ids. Each scenario uses an `S{n}` id, links to at least one `[US-x]`, and states one non-interactive command and its expected observable result. The section is mandatory for `large` and `complex` specs, optional for `medium` specs that produce a runnable artifact (command, service, screen), and omitted for `small` specs. Legacy roadmaps with a verification phase of tasks remain valid.
+  10. **No Verification-Only Tasks:** A verification-only task is forbidden at every size. Every task MUST change at least one product file or artifact; a task that only runs the full test suite, a smoke run, a build check or repository-wide searches MUST NOT exist, since that belongs to the final independent QA and the `on_all_tasks_finished` hooks.
+  11. **Bug-First Regression:** For `bug` specs, task T1.1 creates the regression test and states that it fails before the fix; no fix task precedes it.
 template: |
   ---
   slug: {FEATURE_SLUG}
@@ -25,31 +35,43 @@ template: |
 
   ### Phase 1: [Phase Name]
 
-  #### T1.1: [SCAFFOLD/CLI] {Task Title}
-  **State:** `[PENDING]`
+  - [ ] T1.1: [SCAFFOLD/CLI] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
-  **Context:** [REQ-X]
+  **Context:** [US-X]
+  **Parallel With:** T1.2
 
-  **Action Steps:**
-  - [Step 1: Concrete change]
-  - [Step 2: Concrete change]
+  **Constraints:** *(optional)*
+  - [Only a pitfall, a deviation from repository convention, or a referenced design decision the implementer cannot deduce]
 
-  **Verification (TDD):**
+  **Acceptance Check:**
   [MANDATORY: Define the exact test scenario or CLI command the developer MUST write/run to prove this task works.]
+
+  - [ ] T1.2: [CODE] {Task Title}
+  **Target:** `{Different/File/Path.ext}`
+  **Context:** [US-X]
+  **Parallel With:** T1.1
+
+  **Acceptance Check:**
+  [Explicit test scenario or CLI command]
 
   ### Phase 2: [Phase Name]
 
-  #### T2.1: [CODE] {Task Title}
-  **State:** `[PENDING]`
+  - [ ] T2.1: [CODE] {Task Title}
   **Target:** `{Exact/File/Path.ext | CLI Command | Global Scope}`
-  **Context:** [REQ-X]
+  **Context:** [US-X]
+  **Parallel With:** [Optional: T2.x]
 
-  **Action Steps:**
-  - [Step 1: Concrete change]
-
-  **Verification (TDD):**
+  **Acceptance Check:**
   [Explicit test scenario or CLI command]
 
-  ## 3. Pre-emptive Mitigations
+  ## 3. Black-box Scenarios
+  *(Render this section ONLY for `large` and `complex` specs, or `medium` specs with a runnable artifact; omit for `small`. It is not executable: no checkboxes, no task ids).*
+
+  - **S1:** {Scenario title}
+  **Context:** [US-X]
+  **Command:** `{Single non-interactive command}`
+  **Expected:** {Observable result}
+
+  ## 4. Pre-emptive Mitigations
   *(Render this section ONLY if there are high-impact execution risks, otherwise omit).*
   - **Risk:** [e.g., Concurrent DB writes] -> **Mitigation:** [e.g., Use pessimistic locking].

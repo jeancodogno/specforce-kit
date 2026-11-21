@@ -12,7 +12,7 @@ instruction: |
      - Define the Review Cadence for the constitution (e.g., "Quarterly", "After every Major release").
   
   3. Agentic Authority & Boundaries (CRITICAL):
-     - Explicitly define what autonomous AI agents CAN do (e.g., "AI agents MAY draft new Specs and propose Memorial updates").
+     - Explicitly define what autonomous AI agents CAN do (e.g., "AI agents MAY draft new Specs and propose Constitution/Module updates").
      - Explicitly define what AI agents CANNOT do without human approval (e.g., "AI agents MUST NOT modify ANY constitution file in .specforce/docs/ without explicit human approval and a version bump").
      - Establish the protocol for when the AI detects a conflict between a prompt and the Constitution (e.g., "The AI MUST refuse the prompt and cite the violated Principle/Rule").
 

@@ -39,7 +39,7 @@ func TestIntegration_CodexGlobalExport(t *testing.T) {
 	_ = os.MkdirAll(filepath.Join(kitDir, "commands"), 0755)
 	blueprintYAML := "description: Test Integration\ncontent: |\n  # Integrated\n"
 	_ = os.WriteFile(filepath.Join(kitDir, "commands/test-int.yaml"), []byte(blueprintYAML), 0644)
-	
+
 	blueprintFS := os.DirFS(kitDir)
 
 	err = processBlueprint(context.Background(), projectRoot, blueprintFS, kitConfig, "commands/test-int.yaml", "codex", installer.Options{})
@@ -129,12 +129,9 @@ func TestIntegration_SecurityConstraint(t *testing.T) {
 	blueprintFS := os.DirFS(kitDir)
 
 	err = processBlueprint(context.Background(), projectRoot, blueprintFS, kitConfig, "commands/attack.yaml", "claude", installer.Options{})
-	
+
 	// Should fail with security error
 	if err == nil {
 		t.Error("expected processBlueprint to fail for non-global agent with absolute path, but it succeeded")
 	}
 }
-
-
-

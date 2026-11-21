@@ -33,7 +33,7 @@ var (
 
 	FooterStyle = lipgloss.NewStyle().
 			Foreground(textGrey).
-			Background(lipgloss.Color("#111111")).
+			Background(footerBg).
 			Padding(0, 1)
 )
 
@@ -49,8 +49,8 @@ func RenderSeparator(width int) string {
 func PrintFooter(version string) {
 	cwd, _ := os.Getwd()
 	path := cwd
-	
-	footerText := fmt.Sprintf("Specforce %s | Workspace: %s", version, path)
+
+	footerText := fmt.Sprintf("specforce %s | Workspace: %s", formatVersion(version), path)
 	fmt.Println("\n" + FooterStyle.Render(footerText))
 }
 
@@ -70,7 +70,7 @@ func RenderBadge(status string, message string) string {
 		style = ErrorBadgeStyle
 		prefix = "  ERROR  "
 	default:
-		style = lipgloss.NewStyle().Foreground(textWhite).Background(mutedGrey).Padding(0, 1)
+		style = lipgloss.NewStyle().Foreground(textPrimary).Background(mutedGrey).Padding(0, 1)
 		prefix = "  INFO   "
 	}
 
@@ -105,7 +105,7 @@ type ArtifactDisplay struct {
 // PrintArtifactList renders a standardized list of artifacts.
 func PrintArtifactList(title, subtitle string, artifacts []ArtifactDisplay, version string) {
 	if IsTTY() {
-		PrintBranding()
+		PrintHeader()
 	}
 
 	fmt.Println("\n" + HeaderStyle.Render(title))

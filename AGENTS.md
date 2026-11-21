@@ -4,32 +4,51 @@
 This project uses **Specforce** for Spec-Driven Development (SDD). As an AI agent, you MUST adhere to the following rules:
 
 ## 1. Spec-Driven Development (SDD) Protocol
-You MUST operate exclusively through the Specforce workflow engines (commands/skills). They define your mindset and mandatory steps:
+You MUST operate exclusively through Specforce Skills. They define your mindset and mandatory steps:
 
-- **Discovery (`/discovery`):** Purely conversational and read-only mode for feature brainstorming or diagnostic investigation. Use this to explore ideas or research bugs before planning.
-- **Planning (`/spec`):** Always activate this workflow when a new feature intent or structural change is detected. It governs requirements discovery, constitutional alignment, and task decomposition.
-- **Governance (`/constitution`):** Use to ensure your proposals respect the project's architecture, security, and principles.
-- **Execution (`/implement`):** Activate this engine to perform the deterministic execution cycle following the approved roadmap.
-- **Archival (`/archive`):** Activate this workflow once implementation is verified to harvest lessons learned, update the Project Constitution, and clean up active specs.
+- **Discovery (`spf.discovery`):** Activate for brainstorming, research, bug investigation, or root cause analysis. Stays read-only for product code; disposable evidence (tests, scripts, screenshots) is allowed in `.specforce/scratch/`.
+- **Planning (`spf.spec`):** Activate for new features, structural changes, or to formalize a discovered fix strategy.
+- **Governance (`spf.constitution`):** Use to ensure proposals respect architecture, security, and principles.
+- **Execution (`spf.implement`):** Activate to perform the deterministic implementation cycle following an approved roadmap.
+- **Archival (`spf.archive`):** Activate once verified to harvest lessons, update Constitution/Modules, and clean up specs.
 
 ### Proactive Mandate
-Do NOT wait for explicit slash commands from the user. If the conversation context shifts to "planning" or "implementation," you MUST automatically invoke the corresponding workflow command/skill to proceed.
+Do NOT wait for explicit prompts. You MUST automatically activate the correct skill based on the user's technical intent:
+1. **Discovery Intent** (vague idea, "how to", bug report) --> Activate `spf.discovery`.
+2. **Planning Intent** (new feature, structural pivot, confirmed fix) --> Activate `spf.spec`.
+3. **Execution Intent** (approved roadmap exists, "go", "implement") --> Activate `spf.implement`.
+
+**CRITICAL: DIRECT EDIT PROHIBITION**
+You are STRICTLY FORBIDDEN from using mutation tools (`replace`, `write_file`) to modify the codebase unless a valid, approved specification exists. If the intent requires a change but no spec is active, you MUST pivot to `spf.discovery` or `spf.spec` first.
 
 - **Specs First:** Never write implementation code until a fully approved Specification (requirements.md, design.md, tasks.md) exists.
 - **Total Consistency:** If a change is required at any point (even mid-implementation), you MUST update ALL related artifacts. You are strictly forbidden from updating only tasks.md while leaving requirements.md or design.md inconsistent.
 - **Atomic Execution:** Follow the exact sequence of the tasks.md roadmap. Mark tasks as [DONE] or [FINISHED] sequentially and ONLY after successful verification.
 
-## 2. Project Constitution
-Before proposing architectural changes or adding new patterns, you MUST review the relevant Constitution documents located in .specforce/docs/:
+## 2. CLI Execution & Environment
+**CRITICAL:** The `specforce` CLI is globally available in your environment path. You MUST execute it directly as a standard command (e.g., `specforce spec list --json`). 
+- DO NOT use `npx specforce`.
+- DO NOT use relative or absolute paths like `./bin/specforce`.
+- If a command fails, DO NOT hallucinate alternative execution paths.
+
+## 3. Environment Recovery
+If the `specforce` binary is not found in the environment:
+1. Run: `npm i -g @jeancodogno/specforce-kit@1.0.0`
+2. Ensure your global npm bin directory is in your PATH.
+
+## 4. Project Constitution & Modules
+Before proposing architectural changes, writing specs, or implementing code, you MUST review the relevant Constitution documents located in .specforce/docs/:
 - principles.md: Core values, philosophy, and cultural/technical axioms.
 - architecture.md: System boundaries, dependency direction, and persistence topology.
 - ui-ux.md: Visual direction, interaction patterns, and aesthetic DNA.
 - security.md: AuthZ, roles, permissions, and data protection rules.
 - engineering.md: Coding standards, testing strategy, and refactoring guidelines.
 - governance.md: Project lifecycle rules, ownership, and AI boundaries.
-- memorial.md: Durable lessons learned and cross-session memory.
+- modules/<slug>.md: Domain-specific rules for specific sub-systems or directories. Inspect the corresponding module file when working on a specific domain.
 
-## 3. Custom Hooks Configuration
+Inspect relevant constitution and module files directly using read_file without running redundant CLI status commands.
+
+## 5. Custom Hooks Configuration
 Specforce allows developers to gate state transitions (e.g., finishing a task) using custom hooks. You can configure these in the project root's config.yaml:
 
 ```yaml
@@ -45,8 +64,52 @@ hooks:
 ```
 If a hook fails, the state transition will be blocked.
 
+## 6. Efficiency & Token Optimization
+To minimize operational costs, you MUST:
+- **Constitution Context:** Before executing `specforce constitution status`, check your conversation history. REUSE the context if no changes were made to `.specforce/docs/` since the last check.
+- **Surgical Reads:** Prefer `grep_search` to identify specific patterns or points of interest. Only read entire files when a comprehensive architectural map is required.
+- **Parallelism:** When performing independent research or validation steps, execute multiple tool calls in parallel within the same turn to reduce total turn count.
+
+## 7. Interactive Consultation Protocol
+If you encounter ambiguity, require user iteration, or need to make a critical decision, you MUST actively prompt the user using the interactive question tool native to your specific AI environment (e.g., `ask_user`, `ask`, `prompt`). Do not halt execution, make blind assumptions, or output generic chat questions. Use your environment's tool to explicitly request the required input.
+
 *Note: The content above is managed by Specforce. Do not edit inside these markers.*
 <!-- SPECFORCE_AGENTS_END -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

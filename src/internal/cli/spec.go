@@ -3,12 +3,15 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 	"github.com/jeancodogno/specforce-kit/src/internal/project"
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
@@ -18,7 +21,7 @@ import (
 // HandleSpec dispatches to the correct spec sub-command.
 func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) error {
 	if len(args) == 0 {
-		fmt.Println("Available commands: init, list, status, artifact, archive")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize, delta")
 		return nil
 	}
 
@@ -40,20 +43,94 @@ func (e *Executor) HandleSpec(ctx context.Context, ui core.UI, args ...string) e
 		return e.handleSpecStatusCmd(ctx, ui, args, jsonMode)
 	case "artifact":
 		return e.handleSpecArtifactCmd(ctx, ui, args, jsonMode)
+	case "audit":
+		return e.handleSpecAuditCmd(ctx, ui, args, jsonMode)
 	case "archive":
 		return e.handleSpecArchiveCmd(ctx, ui, args)
+	case "resize":
+		return e.handleSpecResizeCmd(ctx, ui, args, jsonMode)
+	case "delta":
+		return e.handleSpecDeltaCmd(ctx, ui, args, jsonMode)
 	default:
 		fmt.Printf("Unknown spec command: %s\n", subCommand)
-		fmt.Println("Available commands: init, list, status, artifact, archive")
+		fmt.Println("Available commands: init, list, status, artifact, audit, archive, resize, delta")
 		return nil
 	}
 }
 
 func (e *Executor) handleSpecInitCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
-	if len(args) < 2 {
-		return fmt.Errorf("missing slug for spec init. Usage: specforce spec init <slug>")
+	var positional []string
+	specType := "feature"
+	specSize := "medium"
+	for i := 1; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--json" {
+			continue
+		}
+		if arg == "--type" && i+1 < len(args) {
+			specType = args[i+1]
+			i++
+			continue
+		}
+		if strings.HasPrefix(arg, "--type=") {
+			specType = strings.TrimPrefix(arg, "--type=")
+			continue
+		}
+		if arg == "--size" && i+1 < len(args) {
+			specSize = args[i+1]
+			i++
+			continue
+		}
+		if strings.HasPrefix(arg, "--size=") {
+			specSize = strings.TrimPrefix(arg, "--size=")
+			continue
+		}
+		if !strings.HasPrefix(arg, "-") {
+			positional = append(positional, arg)
+		}
 	}
-	return e.HandleSpecInit(ctx, ui, args[1], jsonMode)
+
+	if len(positional) < 1 {
+		return fmt.Errorf("missing slug for spec init. Usage: specforce spec init <slug> [--type feature|bug] [--size small|medium|large|complex]")
+	}
+
+	return e.HandleSpecInit(ctx, ui, positional[0], jsonMode, specType, specSize)
+}
+
+func (e *Executor) handleSpecResizeCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
+	var positional []string
+	newSize := ""
+	for i := 1; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--json" {
+			continue
+		}
+		if arg == "--size" && i+1 < len(args) {
+			newSize = args[i+1]
+			i++
+			continue
+		}
+		if strings.HasPrefix(arg, "--size=") {
+			newSize = strings.TrimPrefix(arg, "--size=")
+			continue
+		}
+		if !strings.HasPrefix(arg, "-") {
+			positional = append(positional, arg)
+		}
+	}
+
+	if len(positional) < 1 {
+		return fmt.Errorf("missing slug for spec resize. Usage: specforce spec resize <slug> --size <small|medium|large|complex>")
+	}
+	slug := positional[0]
+	if newSize == "" && len(positional) > 1 {
+		newSize = positional[1]
+	}
+	if newSize == "" {
+		return fmt.Errorf("missing size for spec resize. Usage: specforce spec resize <slug> --size <small|medium|large|complex>")
+	}
+
+	return e.HandleSpecResize(ctx, ui, slug, newSize, jsonMode)
 }
 
 func (e *Executor) handleSpecStatusCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
@@ -71,6 +148,61 @@ func (e *Executor) handleSpecArtifactCmd(ctx context.Context, ui core.UI, args [
 	return e.HandleSpecArtifact(ctx, ui, slug, jsonMode)
 }
 
+func (e *Executor) handleSpecAuditCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
+	if len(args) < 2 {
+		return fmt.Errorf("missing slug for spec audit. Usage: specforce spec audit <slug> [--error <msg>] [--clear] [--iteration <n>]")
+	}
+
+	slug := args[1]
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+
+	slug = spec.ResolveSlug(projectRoot, slug)
+	meta, err := spec.LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return err
+	}
+
+	for i := 2; i < len(args); i++ {
+		switch args[i] {
+		case "--error":
+			if i+1 < len(args) {
+				meta.Refinement.Errors = append(meta.Refinement.Errors, args[i+1])
+				i++
+			}
+		case "--clear":
+			meta.Refinement.Errors = []string{}
+			meta.Refinement.IsValid = true
+		case "--iteration":
+			if i+1 < len(args) {
+				var n int
+				if _, err := fmt.Sscanf(args[i+1], "%d", &n); err == nil {
+					meta.Refinement.IterationCount = n
+					i++
+				}
+			}
+		case "--valid":
+			meta.Refinement.IsValid = true
+		case "--invalid":
+			meta.Refinement.IsValid = false
+		}
+	}
+
+	meta.Refinement.LastAuditAt = time.Now().UTC()
+	if err := spec.SaveMetadata(projectRoot, slug, meta); err != nil {
+		return fmt.Errorf("failed to save metadata: %w", err)
+	}
+
+	if jsonMode {
+		return e.outputJSON(map[string]string{"status": "ok", "slug": slug})
+	}
+
+	fmt.Printf("[OK] Audit state updated for %s\n", slug)
+	return nil
+}
+
 func (e *Executor) handleSpecArchiveCmd(ctx context.Context, ui core.UI, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("missing slug for spec archive. Usage: specforce spec archive <slug>")
@@ -86,31 +218,35 @@ func (e *Executor) handleSpecArchiveCmd(ctx context.Context, ui core.UI, args []
 }
 
 // HandleSpecInit processes the 'spec init' command.
-func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, jsonMode bool) error {
+func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, jsonMode bool, specType string, specSize string) error {
 	projectRoot, err := spec.FindProjectRoot()
 	if err != nil {
 		return err
 	}
 
-	exists, status := spec.SpecExists(projectRoot, slug)
-	if exists {
-		var errObj error
-		if status == "active" {
-			errObj = core.ErrSpecAlreadyActive
-		} else {
-			errObj = core.ErrSpecAlreadyArchived
-		}
+	// [REQ-1] Auto-timestamped slugs
+	slug = spec.PrepareSlug(slug)
 
-		if jsonMode {
-			res := map[string]string{
-				"status": "error",
-				"error":  errObj.Error(),
-			}
-			data, _ := json.MarshalIndent(res, "", "  ")
-			fmt.Println(string(data))
-			return nil
-		}
-		return errObj
+	if specType == "" {
+		specType = "feature"
+	}
+
+	// Validate type
+	validTypes := map[string]bool{"feature": true, "bug": true}
+	if !validTypes[specType] {
+		return fmt.Errorf("invalid spec type: %s. Supported: feature, bug", specType)
+	}
+
+	if specSize == "" {
+		specSize = string(spec.SpecSizeMedium)
+	}
+
+	if !spec.ValidateSize(spec.SpecSize(specSize)) {
+		return fmt.Errorf("invalid spec size: %s. Supported: small, medium, large, complex", specSize)
+	}
+
+	if err := e.ensureSpecAvailable(projectRoot, slug, jsonMode); err != nil {
+		return err
 	}
 
 	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
@@ -118,17 +254,112 @@ func (e *Executor) HandleSpecInit(ctx context.Context, ui core.UI, slug string, 
 		return fmt.Errorf("failed to create spec directory %s: %w", specDir, err)
 	}
 
+	// Save Metadata
+	meta := &spec.Metadata{
+		Slug: slug,
+		Name: slug,
+		Type: specType,
+		Size: spec.SpecSize(specSize),
+	}
+	if err := spec.SaveMetadata(projectRoot, slug, meta); err != nil {
+		return fmt.Errorf("failed to save spec metadata: %w", err)
+	}
+
 	if jsonMode {
-		res := map[string]string{
+		return e.outputJSON(map[string]string{
 			"status":  "ok",
 			"message": fmt.Sprintf("Spec directory initialized: .specforce/specs/%s", slug),
+			"type":    specType,
+			"size":    specSize,
+		})
+	}
+
+	fmt.Printf("[OK] Spec directory initialized: .specforce/specs/%s (Type: %s, Size: %s)\n", slug, specType, specSize)
+	return nil
+}
+
+// HandleSpecResize processes the 'spec resize' command.
+func (e *Executor) HandleSpecResize(ctx context.Context, ui core.UI, slug string, newSize string, jsonMode bool) error {
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+
+	slug = spec.ResolveSlug(projectRoot, slug)
+
+	if !spec.ValidateSize(spec.SpecSize(newSize)) {
+		return fmt.Errorf("invalid spec size: %s. Supported: small, medium, large, complex", newSize)
+	}
+
+	specDir := filepath.Join(projectRoot, ".specforce", "specs", slug)
+	if fi, err := os.Stat(specDir); err != nil || !fi.IsDir() {
+		return fmt.Errorf("specification not found: %s", slug)
+	}
+
+	meta, err := spec.LoadMetadata(projectRoot, slug)
+	if err != nil {
+		return fmt.Errorf("failed to load spec metadata: %w", err)
+	}
+
+	previousSize := meta.Size
+	if previousSize == "" {
+		previousSize = spec.SpecSizeMedium
+	}
+
+	meta.Size = spec.SpecSize(newSize)
+	if err := spec.SaveMetadata(projectRoot, slug, meta); err != nil {
+		return fmt.Errorf("failed to save spec metadata: %w", err)
+	}
+
+	if jsonMode {
+		return e.outputJSON(map[string]string{
+			"status":        "ok",
+			"slug":          slug,
+			"previous_size": string(previousSize),
+			"size":          newSize,
+			"message":       fmt.Sprintf("Specification resized from %s to %s", previousSize, newSize),
+		})
+	}
+
+	if ui != nil {
+		ui.Success(fmt.Sprintf("Specification %s resized to %s (was %s)", slug, newSize, previousSize))
+	} else {
+		fmt.Printf("[OK] Specification %s resized to %s (was %s)\n", slug, newSize, previousSize)
+	}
+	return nil
+}
+
+func (e *Executor) ensureSpecAvailable(projectRoot, slug string, jsonMode bool) error {
+	exists, status := spec.SpecExists(projectRoot, slug)
+	if !exists {
+		return nil
+	}
+
+	var errObj error
+	if status == "active" {
+		errObj = core.ErrSpecAlreadyActive
+	} else {
+		errObj = core.ErrSpecAlreadyArchived
+	}
+
+	if jsonMode {
+		res := map[string]string{
+			"status": "error",
+			"error":  errObj.Error(),
 		}
 		data, _ := json.MarshalIndent(res, "", "  ")
 		fmt.Println(string(data))
 		return nil
 	}
+	return errObj
+}
 
-	fmt.Printf("[OK] Spec directory initialized: .specforce/specs/%s\n", slug)
+func (e *Executor) outputJSON(data interface{}) error {
+	bytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	fmt.Println(string(bytes))
 	return nil
 }
 
@@ -216,11 +447,11 @@ func (e *Executor) HandleSpecStatus(ctx context.Context, ui core.UI, slug string
 
 func (e *Executor) renderSpecStatusTUI(slug string, status spec.SpecStatus) {
 	if tui.IsTTY() {
-		tui.PrintBranding()
+		tui.PrintHeader()
 	}
 
 	fmt.Println("\n" + tui.HeaderStyle.Render("SPEC COMPLETENESS REPORT: "+strings.ToUpper(slug)))
-	fmt.Println(tui.SubtitleStyle.Render("Target: .specforce/specs/"+slug+"/"))
+	fmt.Println(tui.SubtitleStyle.Render("Target: .specforce/specs/" + slug + "/"))
 	fmt.Println()
 
 	fmt.Print(tui.RenderSpecStatus(status))
@@ -271,6 +502,14 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 		return nil
 	}
 
+	// Dynamic instruction and template injection
+	kitFS, _ := e.GetKitFS(ui)
+	config := core.LoadConfig(".")
+	mgr := agent.NewInstructionManager(kitFS, config)
+
+	art.Instruction = mgr.InjectVariables(art.Instruction)
+	art.Template = mgr.InjectVariables(art.Template)
+
 	if jsonMode {
 		data, err := json.MarshalIndent(art, "", "  ")
 		if err != nil {
@@ -282,11 +521,11 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 
 	e.renderSpecArtifactTUI(art)
 	return nil
-	}
+}
 
-	func (e *Executor) renderSpecArtifactTUI(art *spec.Artifact) {
+func (e *Executor) renderSpecArtifactTUI(art *spec.Artifact) {
 	if tui.IsTTY() {
-		tui.PrintBranding()
+		tui.PrintHeader()
 	}
 
 	fmt.Println("\n" + tui.HeaderStyle.Render("SPEC ARTIFACT: "+strings.ToUpper(art.Name)))
@@ -307,8 +546,7 @@ func (e *Executor) HandleSpecArtifact(ctx context.Context, ui core.UI, slug stri
 	if tui.IsTTY() {
 		tui.PrintFooter(e.Version)
 	}
-	}
-
+}
 
 // ListSpecArtifacts lists all available spec artifacts.
 func (e *Executor) ListSpecArtifacts(ui core.UI, registry *spec.Registry, jsonMode bool) error {
@@ -348,6 +586,8 @@ func (e *Executor) HandleSpecArchive(ctx context.Context, ui core.UI, slug strin
 		return err
 	}
 
+	slug = spec.ResolveSlug(projectRoot, slug)
+
 	// [REQ-4] Check task completion
 	tasksPath := filepath.Join(projectRoot, ".specforce", "specs", slug, "tasks.md")
 	if _, err := os.Stat(tasksPath); err == nil {
@@ -359,11 +599,185 @@ func (e *Executor) HandleSpecArchive(ctx context.Context, ui core.UI, slug strin
 		}
 	}
 
+	// [US-7] Delta gate: never bypassed by --force.
+	if err := e.enforceDeltaGate(ctx, ui, projectRoot, slug); err != nil {
+		return err
+	}
+
+	// QA gate: never bypassed by --force.
+	if err := e.enforceQAGate(ctx, ui, projectRoot, slug); err != nil {
+		return err
+	}
+
 	if err := spec.ArchiveSpec(ctx, projectRoot, slug); err != nil {
 		ui.Error(fmt.Sprintf("Archive failed: %v\n", err))
 		return err
 	}
 
 	ui.Success(fmt.Sprintf("Spec successfully archived: %s\n", slug))
+	return nil
+}
+
+// enforceDeltaGate refuses archiving unless the delta status is none, exempt or applied.
+func (e *Executor) enforceDeltaGate(ctx context.Context, ui core.UI, projectRoot, slug string) error {
+	report, err := spec.CheckDelta(ctx, projectRoot, slug)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Delta verification failed: %v\n", err))
+		return err
+	}
+	if report.Allowed() {
+		return nil
+	}
+	ui.Error(fmt.Sprintf("Cannot archive '%s': delta status is %s.\n", slug, report.Status))
+	for _, problem := range report.Problems {
+		ui.Error("  - " + problem + "\n")
+	}
+	for _, mod := range report.Modules {
+		for _, item := range mod.Items {
+			ui.Error(fmt.Sprintf("  - %s\n", formatDeltaItem(mod.Module, item)))
+		}
+	}
+	ui.Error(deltaNextStep(report, slug) + "\n")
+	return report.Err()
+}
+
+// formatDeltaItem renders one delta item as "<module>: <op> <ref>: <state> <message>".
+func formatDeltaItem(module string, item spec.DeltaItemReport) string {
+	ref := item.ID
+	if ref == "" {
+		ref = item.Key
+	}
+	return fmt.Sprintf("%s: %s %s: %s %s", module, item.Op, ref, item.State, item.Message)
+}
+
+func deltaNextStep(report *spec.DeltaReport, slug string) string {
+	switch report.Status {
+	case spec.DeltaStatusInvalid:
+		return fmt.Sprintf("Next step: fix the problems above, then run `specforce spec delta check %s`.", slug)
+	case spec.DeltaStatusMissing:
+		return fmt.Sprintf("Next step: add deltas under the spec's deltas/ folder (then run `specforce spec delta seal %s`) or declare delta impact none, then run `specforce spec delta check %s`.", slug, slug)
+	default:
+		return fmt.Sprintf("Next step: run `specforce spec delta seal %s` if items are unsealed, apply the delta to the modules, then verify with `specforce spec delta check %s`.", slug, slug)
+	}
+}
+
+func (e *Executor) handleSpecDeltaCmd(ctx context.Context, ui core.UI, args []string, jsonMode bool) error {
+	usage := "Usage: specforce spec delta <check|seal> <slug> [--json]"
+	if len(args) < 2 {
+		return fmt.Errorf("missing delta sub-command. %s", usage)
+	}
+	var positional []string
+	for _, arg := range args[2:] {
+		if arg != "--json" {
+			positional = append(positional, arg)
+		}
+	}
+	if len(positional) < 1 {
+		return fmt.Errorf("missing slug for spec delta %s. %s", args[1], usage)
+	}
+	switch args[1] {
+	case "check":
+		return e.HandleSpecDeltaCheck(ctx, ui, positional[0], jsonMode)
+	case "seal":
+		return e.HandleSpecDeltaSeal(ctx, ui, positional[0], jsonMode)
+	default:
+		return fmt.Errorf("unknown delta sub-command %q. %s", args[1], usage)
+	}
+}
+
+// HandleSpecDeltaCheck processes 'spec delta check'. It is read-only and fails only for status invalid.
+func (e *Executor) HandleSpecDeltaCheck(ctx context.Context, ui core.UI, slug string, jsonMode bool) error {
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+	slug = spec.ResolveSlug(projectRoot, slug)
+
+	report, err := spec.CheckDelta(ctx, projectRoot, slug)
+	if err != nil {
+		return err
+	}
+	if err := e.renderDeltaReport(ui, report, jsonMode); err != nil {
+		return err
+	}
+	if report.Status == spec.DeltaStatusInvalid {
+		return report.Err()
+	}
+	return nil
+}
+
+// HandleSpecDeltaSeal processes 'spec delta seal'. It writes only spec.yaml.
+func (e *Executor) HandleSpecDeltaSeal(ctx context.Context, ui core.UI, slug string, jsonMode bool) error {
+	projectRoot, err := spec.FindProjectRoot()
+	if err != nil {
+		return err
+	}
+	slug = spec.ResolveSlug(projectRoot, slug)
+
+	report, err := spec.SealDelta(ctx, projectRoot, slug)
+	if report != nil {
+		if rerr := e.renderDeltaReport(ui, report, jsonMode); rerr != nil {
+			return rerr
+		}
+	}
+	if err != nil {
+		return err
+	}
+	if !jsonMode {
+		ui.Success(fmt.Sprintf("Delta sealed for %s\n", slug))
+	}
+	return nil
+}
+
+func (e *Executor) renderDeltaReport(ui core.UI, report *spec.DeltaReport, jsonMode bool) error {
+	if jsonMode {
+		return e.outputJSON(report)
+	}
+	line := fmt.Sprintf("Delta status for %s: %s\n", report.Slug, report.Status)
+	switch report.Status {
+	case spec.DeltaStatusInvalid:
+		ui.Error(line)
+	case spec.DeltaStatusMissing, spec.DeltaStatusPending:
+		ui.Warn(line)
+	default:
+		ui.Success(line)
+	}
+	for _, mod := range report.Modules {
+		ui.Log(fmt.Sprintf("Module %s (prefix %s, next BR %s, next US %s)\n", mod.Module, mod.Prefix, mod.NextFree["BR"], mod.NextFree["US"]))
+		for _, item := range mod.Items {
+			ref := item.ID
+			if ref == "" {
+				ref = item.Key
+			}
+			ui.Log(fmt.Sprintf("  %s %s: %s %s\n", item.Op, ref, item.State, item.Message))
+		}
+	}
+	for _, problem := range report.Problems {
+		ui.Error("  - " + problem + "\n")
+	}
+	return nil
+}
+
+// enforceQAGate refuses archiving when the stored QA report is FAILED and warns when none exists.
+func (e *Executor) enforceQAGate(_ context.Context, ui core.UI, projectRoot, slug string) error {
+	res, err := spec.CheckQAGate(projectRoot, slug)
+	if err != nil {
+		ui.Error(fmt.Sprintf("QA verification failed: %v\n", err))
+		return err
+	}
+	switch res.State {
+	case spec.QAGateFailed:
+		var b strings.Builder
+		fmt.Fprintf(&b, "cannot archive '%s': the stored QA report is FAILED.", slug)
+		for _, c := range res.Failed {
+			fmt.Fprintf(&b, "\n  - %s - %s", c.ID, c.Scenario)
+		}
+		fmt.Fprintf(&b, "\nNext step: fix the work, run the QA tester again and re-record with specforce implementation qa record %s", slug)
+		err := errors.New(b.String())
+		ui.Error(err.Error() + "\n")
+		return err
+	case spec.QAGateMissing:
+		ui.Warn(fmt.Sprintf("no QA report recorded for %s; archiving without QA evidence", slug))
+	}
 	return nil
 }

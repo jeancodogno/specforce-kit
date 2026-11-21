@@ -1,0 +1,11 @@
+slug: 20260724-1509-fix-archival-instruction-gap
+name: 20260724-1509-fix-archival-instruction-gap
+type: bug
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-07-24T18:10:15.253649869Z
+              completed_at: 2026-07-24T18:10:25.321086015Z
+    T1.2:
+        sessions:
+            - started_at: 2026-07-24T18:10:26.561809148Z

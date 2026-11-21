@@ -1,0 +1,40 @@
+slug: 20260604-0724-module-manifests-support
+name: 20260604-0724-module-manifests-support
+type: feature
+time_logs:
+    T1:
+        sessions:
+            - started_at: 2026-06-04T15:17:22.543269853Z
+              completed_at: 2026-06-04T15:17:41.045071227Z
+    T2:
+        sessions:
+            - started_at: 2026-06-04T15:17:50.350705938Z
+              completed_at: 2026-06-04T15:18:27.507171605Z
+    T3:
+        sessions:
+            - started_at: 2026-06-04T15:18:36.174839393Z
+              completed_at: 2026-06-04T15:19:07.803929573Z
+    T4:
+        sessions:
+            - started_at: 2026-06-04T15:19:16.130868267Z
+              completed_at: 2026-06-04T15:19:33.449635371Z
+    T5:
+        sessions:
+            - started_at: 2026-06-04T15:19:42.846698755Z
+              completed_at: 2026-06-04T15:20:00.534992286Z
+    T6:
+        sessions:
+            - started_at: 2026-06-04T15:20:10.071317535Z
+              completed_at: 2026-06-04T15:20:29.620953201Z
+    T7:
+        sessions:
+            - started_at: 2026-06-04T15:20:38.216850638Z
+              completed_at: 2026-06-04T15:21:00.266397596Z
+    T8:
+        sessions:
+            - started_at: 2026-06-04T15:21:08.953179131Z
+              completed_at: 2026-06-04T15:23:46.534441606Z
+    T9:
+        sessions:
+            - started_at: 2026-06-04T15:24:09.435570541Z
+              completed_at: 2026-06-04T15:24:20.939223118Z

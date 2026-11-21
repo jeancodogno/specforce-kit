@@ -20,7 +20,7 @@ lens: Backend-heavy
 **Action Steps:**
 - Update `agentsMDTemplate` to replace outdated hook names with `on_task_finished`, `on_phase_finished`, `on_all_tasks_finished`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/project/...`.
 
 #### T1.2: [CODE] Implement ensurePlatformConfigs
@@ -34,7 +34,7 @@ Run `go test ./src/internal/project/...`.
 - Implement Antigravity and Claude Code symlink creation.
 - Call `ensurePlatformConfigs` from `EnsureAgentsMD`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/project/...`.
 
 ### Phase 2: Testing and Verification
@@ -48,7 +48,7 @@ Run `go test ./src/internal/project/...`.
 - Add test cases to verify `.gemini/settings.json` content.
 - Add test cases to verify symlink existence and targets for `.agent` and `.claude`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Run `go test ./src/internal/project/...` and ensure all tests pass.
 
 #### T2.2: [CLI] Verify Final Generation
@@ -60,7 +60,7 @@ Run `go test ./src/internal/project/...` and ensure all tests pass.
 - Run `go run src/cmd/specforce/main.go project refresh`.
 - Verify files and symlinks exist in the project root.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `ls -l .agent/rules/AGENTS.md` and `cat .gemini/settings.json`.
 
 #### T2.3: [DOCS] Update documentation files
@@ -72,5 +72,5 @@ Run `go test ./src/internal/project/...` and ensure all tests pass.
 - Update `docs/configuration.md` with all supported hook names.
 - Update `docs/supported-tools.md` to mention automated platform configuration.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Inspect markdown files.

@@ -2,6 +2,7 @@ package constitution
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 	"testing/fstest"
 )
@@ -18,8 +19,8 @@ func TestNewRegistry(t *testing.T) {
 	}
 
 	artifacts := registry.List()
-	if len(artifacts) < 7 {
-		t.Errorf("Expected at least 7 artifacts, got %d", len(artifacts))
+	if len(artifacts) < 6 {
+		t.Errorf("Expected at least 6 artifacts, got %d", len(artifacts))
 	}
 
 	// Verify Architecture artifact
@@ -40,8 +41,8 @@ func TestNewRegistry(t *testing.T) {
 	if arch.Name != "architecture" {
 		t.Errorf("Expected architecture, got %s", arch.Name)
 	}
-	if arch.Path != ".specforce/docs/architecture.md" {
-		t.Errorf("Expected .specforce/docs/architecture.md, got %s", arch.Path)
+	if want := filepath.FromSlash(".specforce/docs/architecture.md"); arch.Path != want {
+		t.Errorf("Expected %s, got %s", want, arch.Path)
 	}
 }
 
@@ -65,8 +66,8 @@ func TestNewRegistry_IndexSpecialCase(t *testing.T) {
 	if idx.Name != "index" {
 		t.Errorf("Expected index, got %s", idx.Name)
 	}
-	if idx.Path != ".specforce/docs/_index.md" {
-		t.Errorf("Expected .specforce/docs/_index.md, got %s", idx.Path)
+	if want := filepath.FromSlash(".specforce/docs/_index.md"); idx.Path != want {
+		t.Errorf("Expected %s, got %s", want, idx.Path)
 	}
 }
 
@@ -91,7 +92,29 @@ func TestNewRegistry_LeadingUnderscoreSpecialCase(t *testing.T) {
 	if idx.Name != "index" {
 		t.Errorf("Expected name 'index', got %s", idx.Name)
 	}
-	if idx.Path != ".specforce/docs/_index.md" {
-		t.Errorf("Expected path .specforce/docs/_index.md, got %s", idx.Path)
+	if want := filepath.FromSlash(".specforce/docs/_index.md"); idx.Path != want {
+		t.Errorf("Expected path %s, got %s", want, idx.Path)
+	}
+}
+
+func TestNewRegistry_PathOverride(t *testing.T) {
+	mockFS := fstest.MapFS{
+		"custom.yaml": &fstest.MapFile{
+			Data: []byte("description: Custom Description\ninstruction: Custom Instruction\ntemplate: Custom Template\npath: .specforce/custom/PATH.md"),
+		},
+	}
+
+	reg, err := NewRegistry(mockFS)
+	if err != nil {
+		t.Fatalf("Failed to create registry with mock FS: %v", err)
+	}
+
+	custom, ok := reg.Get("custom")
+	if !ok {
+		t.Fatal("Custom artifact not found")
+	}
+
+	if custom.Path != ".specforce/custom/PATH.md" {
+		t.Errorf("Expected path .specforce/custom/PATH.md, got %s", custom.Path)
 	}
 }

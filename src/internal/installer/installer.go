@@ -26,7 +26,8 @@ func ShouldInstall(path string, opts Options) bool {
 	}
 
 	// Ensure the path is normalized for prefix checking
-	normalized := strings.TrimPrefix(path, "./")
+	// (native separators, e.g. `\` on Windows, become `/`).
+	normalized := strings.TrimPrefix(filepath.ToSlash(path), "./")
 
 	// Explicitly exclude .specforce/ directory in ToolsOnly mode
 	if strings.HasPrefix(normalized, ".specforce/") {

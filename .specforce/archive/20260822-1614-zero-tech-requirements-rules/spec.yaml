@@ -1,0 +1,28 @@
+slug: 20260822-1614-zero-tech-requirements-rules
+name: 20260822-1614-zero-tech-requirements-rules
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-08-23T00:55:03.35996201Z
+              completed_at: 2026-08-23T00:55:20.378829012Z
+    T1.2:
+        sessions:
+            - started_at: 2026-08-23T00:55:23.414861236Z
+              completed_at: 2026-08-23T00:55:37.337287114Z
+    T1.3:
+        sessions:
+            - started_at: 2026-08-23T00:55:39.897883874Z
+              completed_at: 2026-08-23T00:56:12.770947704Z
+    T2.1:
+        sessions:
+            - started_at: 2026-08-23T00:56:15.644690209Z
+              completed_at: 2026-08-23T00:56:28.929743146Z
+    T2.2:
+        sessions:
+            - started_at: 2026-08-23T00:56:31.831359269Z
+              completed_at: 2026-08-23T00:57:03.202434444Z
+    T3.1:
+        sessions:
+            - started_at: 2026-08-23T00:57:06.230852511Z
+              completed_at: 2026-08-23T00:57:35.684321113Z

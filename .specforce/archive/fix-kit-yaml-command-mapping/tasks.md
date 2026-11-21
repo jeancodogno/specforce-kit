@@ -22,7 +22,7 @@ lens: Backend-heavy
 - Add a new test case to `TestInjectYAMLHeader` (or create a new test function) that simulates a mapping with `Name: "SKILL"` and an empty metadata name.
 - Assert that the resulting content contains `name: SKILL` (proving the bug).
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v src/internal/agent/translator_test.go` - The test MUST fail with the current code.
 
 ### Phase 2: Core Logic Implementation
@@ -37,7 +37,7 @@ lens: Backend-heavy
 - If it is, fallback to `bp.ID`.
 - For `category == "commands"`, prefix the ID with `"spf."`.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test -v src/internal/agent/translator_test.go` - The test added in T1.1 MUST now pass.
 
 #### T2.2: [CODE] Implement Header Name Uniqueness Validator
@@ -49,7 +49,7 @@ lens: Backend-heavy
 - Add a mechanism (e.g., a shared map in the translator or registry context) to track all `displayName` values generated in a session.
 - If a name is reused for a different `bp.ID`, return an error.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Add a test case in `translator_test.go` that attempts to translate two different blueprints that result in the same name, and verify it returns an error.
 
 ### Phase 3: Metadata Enhancement
@@ -65,7 +65,7 @@ Add a test case in `translator_test.go` that attempts to translate two different
 - Update `src/internal/agent/kit/commands/implement.yaml`: Add `name: spf.implement` at root.
 - Update `src/internal/agent/kit/commands/spec.yaml`: Add `name: spf.spec` at root.
 
-**Verification (TDD):**
+**Acceptance Check:**
 Inspect the files to ensure valid YAML structure and the presence of the `name` field.
 
 ### Phase 4: Final Verification
@@ -79,5 +79,5 @@ Inspect the files to ensure valid YAML structure and the presence of the `name` 
 - Run all project tests to ensure no regressions.
 - (Optional) Run `go run ./src/cmd/specforce/main.go spec refresh` if applicable to see generated outputs in a test environment.
 
-**Verification (TDD):**
+**Acceptance Check:**
 `go test ./src/internal/agent/...`

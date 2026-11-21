@@ -21,12 +21,20 @@ type BinaryInstaller struct {
 // NewBinaryInstaller creates a new BinaryInstaller.
 func NewBinaryInstaller() *BinaryInstaller {
 	return &BinaryInstaller{
-		Client: NewHTTPClient(),
+		Client: &http.Client{},
 	}
 }
 
-// DownloadAndVerify downloads the binary and verifies its checksum.
-func (i *BinaryInstaller) DownloadAndVerify(ctx context.Context, version, baseURL string) (string, error) {
+// Fingerprint identifies a verified release binary: its sha256 (hex, as
+// verified against the release checksum file) and its size in bytes.
+type Fingerprint struct {
+	SHA256 string
+	Size   int64
+}
+
+// DownloadAndVerify downloads the binary and verifies its checksum. It returns
+// the temporary path of the verified download and its fingerprint.
+func (i *BinaryInstaller) DownloadAndVerify(ctx context.Context, version, baseURL string) (string, Fingerprint, error) {
 	osName := runtime.GOOS
 	archName := runtime.GOARCH
 	
@@ -46,45 +54,56 @@ func (i *BinaryInstaller) DownloadAndVerify(ctx context.Context, version, baseUR
 	// or we pass the download URL directly if we had it.
 	// Since we are implementation, let's assume we have a helper to get the asset URL.
 	
-	downloadURL := fmt.Sprintf("%s/repos/jeancodogno/specforce-kit/releases/download/%s/%s", 
+	downloadURL := fmt.Sprintf("%s/jeancodogno/specforce-kit/releases/download/%s/%s", 
 		baseURL, version, assetName)
-	checksumURL := fmt.Sprintf("%s/repos/jeancodogno/specforce-kit/releases/download/%s/%s", 
+	checksumURL := fmt.Sprintf("%s/jeancodogno/specforce-kit/releases/download/%s/%s", 
 		baseURL, version, checksumName)
 
-	// 1. Download Binary to Temp File
+	// 1. Download Binary to Temp File. The temp file is removed on every
+	// failure; on success the caller owns (and must remove or move) it.
 	tmpBinary, err := os.CreateTemp("", "specforce-update-*")
 	if err != nil {
-		return "", err
+		return "", Fingerprint{}, err
 	}
-	defer func() { _ = tmpBinary.Close() }()
+	tmpPath := tmpBinary.Name()
+	ok := false
+	defer func() {
+		_ = tmpBinary.Close()
+		if !ok {
+			_ = os.Remove(tmpPath)
+		}
+	}()
 
 	if err := i.downloadFile(ctx, downloadURL, tmpBinary); err != nil {
-		return "", fmt.Errorf("failed to download binary: %w", err)
+		return "", Fingerprint{}, fmt.Errorf("failed to download binary: %w", err)
+	}
+	if err := tmpBinary.Close(); err != nil {
+		return "", Fingerprint{}, fmt.Errorf("failed to write binary: %w", err)
 	}
 
-	// 2. Download Checksum
-	resp, err := i.Client.Get(checksumURL)
+	// 2. Download Checksum (bounded by ctx)
+	var checksums strings.Builder
+	if err := i.downloadFile(ctx, checksumURL, &checksums); err != nil {
+		return "", Fingerprint{}, fmt.Errorf("failed to download checksum: %w", err)
+	}
+
+	expectedHash, err := i.findHashInChecksums(strings.NewReader(checksums.String()), assetName)
 	if err != nil {
-		return "", fmt.Errorf("failed to download checksum: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("checksum file not found (status %d)", resp.StatusCode)
-	}
-
-	expectedHash, err := i.findHashInChecksums(resp.Body, assetName)
-	if err != nil {
-		return "", err
+		return "", Fingerprint{}, err
 	}
 
 	// 3. Verify Hash
-	if err := i.verifyHash(tmpBinary.Name(), expectedHash); err != nil {
-		_ = os.Remove(tmpBinary.Name())
-		return "", err
+	if err := i.verifyHash(tmpPath, expectedHash); err != nil {
+		return "", Fingerprint{}, err
 	}
 
-	return tmpBinary.Name(), nil
+	info, err := os.Stat(tmpPath)
+	if err != nil {
+		return "", Fingerprint{}, err
+	}
+
+	ok = true
+	return tmpPath, Fingerprint{SHA256: strings.ToLower(expectedHash), Size: info.Size()}, nil
 }
 
 func (i *BinaryInstaller) downloadFile(ctx context.Context, url string, w io.Writer) error {
@@ -120,6 +139,7 @@ func (i *BinaryInstaller) findHashInChecksums(r io.Reader, assetName string) (st
 }
 
 func (i *BinaryInstaller) verifyHash(filePath, expectedHash string) error {
+	// #nosec G304 - filePath is a temporary file created by DownloadAndVerify
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -179,12 +199,14 @@ func (i *BinaryInstaller) moveFile(src, dst string) error {
 	}
 
 	// Fallback to copy + delete (different filesystems)
+	// #nosec G304 - src is managed internally by the upgrade service
 	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = in.Close() }()
 
+	// #nosec G304 - dst is managed internally by the upgrade service
 	out, err := os.Create(dst)
 	if err != nil {
 		return err

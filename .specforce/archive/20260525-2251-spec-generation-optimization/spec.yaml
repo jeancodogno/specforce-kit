@@ -1,0 +1,24 @@
+slug: 20260525-2251-spec-generation-optimization
+name: 20260525-2251-spec-generation-optimization
+type: feature
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-05-27T02:20:12.376917696Z
+              completed_at: 2026-05-27T02:21:33.544865349Z
+    T1.2:
+        sessions:
+            - started_at: 2026-05-27T02:21:38.563481519Z
+              completed_at: 2026-05-27T02:22:10.635543449Z
+    T3.1:
+        sessions:
+            - started_at: 2026-05-27T02:23:24.040200211Z
+              completed_at: 2026-05-27T02:24:50.657133838Z
+    T4.1:
+        sessions:
+            - started_at: 2026-05-27T02:24:55.674089753Z
+              completed_at: 2026-05-27T02:27:17.492695739Z
+    T4.2:
+        sessions:
+            - started_at: 2026-05-27T02:27:22.509143251Z
+              completed_at: 2026-05-27T02:29:16.505955917Z

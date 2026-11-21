@@ -1,6 +1,8 @@
 package cobra
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/jeancodogno/specforce-kit/src/internal/tui"
 )
@@ -31,23 +33,40 @@ var implementationUpdateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		executor := GetExecutor()
 		appUI := tui.NewUI()
-		// We'll need to pass the other flags too.
-		return executor.HandleImplementationUpdate(cmd.Context(), appUI, args[0], taskId, taskStatus)
+		return executor.HandleImplementationUpdate(cmd.Context(), appUI, args[0], taskIds, taskStatus)
 	},
 }
 
-var taskId string
+var implementationQACmd = &cobra.Command{
+	Use:   "qa",
+	Short: "Persist the independent QA report",
+}
+
+var implementationQARecordCmd = &cobra.Command{
+	Use:   "record [slug]",
+	Short: "Record a QA report (JSON on stdin) for a feature",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		executor := GetExecutor()
+		appUI := tui.NewUI()
+		return executor.HandleImplementationQARecord(cmd.Context(), appUI, args[0], os.Stdin)
+	},
+}
+
+var taskIds []string
 var taskStatus string
 
 func init() {
 	implementationStatusCmd.Flags().BoolVar(&jsonMode, "json", false, "output in machine-readable JSON format")
 	
-	implementationUpdateCmd.Flags().StringVar(&taskId, "task", "", "task ID to update")
+	implementationUpdateCmd.Flags().StringSliceVar(&taskIds, "task", nil, "task ID(s) to update (comma-separated or repeated)")
 	implementationUpdateCmd.Flags().StringVar(&taskStatus, "status", "", "new status for the task")
 	_ = implementationUpdateCmd.MarkFlagRequired("task")
 	_ = implementationUpdateCmd.MarkFlagRequired("status")
 
 	implementationCmd.AddCommand(implementationStatusCmd)
 	implementationCmd.AddCommand(implementationUpdateCmd)
+	implementationQACmd.AddCommand(implementationQARecordCmd)
+	implementationCmd.AddCommand(implementationQACmd)
 	rootCmd.AddCommand(implementationCmd)
 }

@@ -1,0 +1,316 @@
+---
+prefix: KIT
+---
+
+# Module: Agent Kit & Project Integration
+
+## 1. Domain Scope
+Manages the embedded Agent Kit blueprints (skills), artifact generation schemas, and project workspace integration (`specforce init`, tool synchronization, and legacy asset cleanup).
+
+## 2. Business Rules & Invariants
+- `[BR-KIT-01]` The embedded kit MUST contain exclusively sovereign skills (`spf-spec`, `spf-constitution`, `spf-discovery`, `spf-implement`, `spf-archive`, and `consultative-grill`). Legacy commands, workflows, and decommissioned agents/tools (including Gemini CLI) are decommissioned.
+- `[BR-KIT-02]` `requirements.md` MUST adhere to the Strict Zero-Technical-Specification Policy: containing exclusively business rules, end-user personas, and BDD acceptance criteria ("What" and "Why"). Technical implementation details ("How") belong strictly in `design.md`.
+- `[BR-KIT-03]` Project initialization and update flows (`specforce init`, `UpdateTools`) MUST detect legacy Specforce assets and prompt the user before performing any destructive cleanup.
+- `[BR-KIT-04]` Secondary workers and subagents spawned during implementation are STRICTLY FORBIDDEN from modifying `tasks.md` directly. State transitions belong exclusively to the primary orchestrator via `specforce implementation update`.
+- `[BR-KIT-05]` Implementation orchestration MUST partition the roadmap into a global budget of 2 to 3 Batches (recommended sweet spot) and at most 4 Batches for the entire implementation roadmap (or 1 batch for 1-3 task roadmaps), assigning exactly 1 dedicated worker subagent per batch. The final verification worker MUST be an independent qa-tester that did not implement any task of the roadmap.
+- `[BR-KIT-06]` Task status updates via `specforce implementation update` support multi-task batching (comma-separated or repeated `--task`), executing verification hooks once in deduplicated sequence and updating task states and session logs atomically.
+- `[BR-KIT-07]` Implementation orchestration blueprints and Mission Brief Envelopes MUST embed non-negotiable worker guardrails (pre-coding interrogation, anti-sycophancy, scope jail, and test invariance) and an orchestrator mid/post-implementation specification gate.
+- `[BR-KIT-08]` Discovery orchestration blueprints MUST guide agents to adopt a consultative stance ("Strong Opinions, Weakly Held"), proactively providing architectural opinions, trade-off comparisons with recommended picks, and edge-case mitigations.
+- `[BR-KIT-09]` Implementation orchestration blueprints MUST mandate fresh subagent worker sessions per batch (isolation) and confine message-based feedback loops strictly to within-batch verification adjustments (up to 2 iterations). Progress visibility follows a free-form post-dispatch narration standard: after dispatching a batch, the orchestrator narrates in the user's language with a progress prefix (batches and tasks completed), the batch scope and the worker role (only when relevant to the developer), and closes each batch with a brief completion summary. No literal banner or completion-tag formats are mandated.
+- `[BR-KIT-10]` Archival blueprints and instructions MUST append a conceptual "Suggested Next Steps & Follow-up Specs" section to feature closing summaries to maintain architectural continuity.
+- `[BR-KIT-11]` Archival blueprints and instructions MUST mandate that `.specforce/docs/modules/<domain>.md` living specifications are structured exclusively as 5-part behavioral specifications (Domain Scope, Invariants, BDD Scenarios, Public Integration Surfaces, Operational Invariants), omitting low-level internal code file paths and opportunistically migrating legacy module formats upon merge, with every module declaring a unique `prefix` in its frontmatter and expressing each rule and use case as a uniformly structured block identified as `BR-<PREFIX>-<NN>` or `US-<PREFIX>-<NN>`.
+- `[BR-KIT-12]` Implementation and QA orchestration blueprints MUST enforce a 4-Tier active QA verification protocol (Tier 1: Global Test Suite, Tier 2: Active Black-Box & Smoke Verification on real compiled artifacts/APIs, Tier 3: Visual & E2E UI Verification, Tier 4: Adversarial & Edge Case Testing), prohibiting completion sign-off based exclusively on unit tests when runtime artifacts or interfaces exist. The protocol is governed by a criterion traceability matrix mapping every acceptance criterion to a verdict (`PASSED`, `FAILED`, or `NOT-VERIFIABLE`). The qa-tester is read-only with respect to the codebase, and failed criteria trigger at most 2 correction cycles before escalation.
+- `[BR-KIT-13]` Worker blueprints MUST enforce multimodal visual verification for user interface tasks, requiring workers to run local dev servers/previews, capture headless screenshots across responsive states via automated browser tools (e.g., Playwright, Puppeteer, or scripts), and visually inspect rendered output against design and UI/UX standards.
+- `[BR-KIT-14]` Agent blueprints MUST enforce a strict Human-in-the-Loop Blocker Protocol: prohibiting plaintext secrets in conversations and requiring `.env` updates, mandating interactive consultation tools for minor ambiguities with structured trade-offs, and enforcing mandatory specification gates (`/spf:spec`) before coding any architectural or scope drift. Workers that cannot proceed without a decision MUST stop and return a BLOCKED report stating the question, the available options and a recommendation; only the orchestrator consults the user and relays the answer.
+- `[BR-KIT-15]` Named role charters (for example implementer and qa-tester) MUST be defined inside the skill blueprints themselves as instructions given at delegation time; the kit MUST NOT require registering per-tool agent definitions for them.
+- `[BR-KIT-16]` Workers MUST report observations outside their task scope as out-of-scope findings without acting on them, and the orchestrator MUST surface them in the final summary. When an implementation is resumed after an interruption, the orchestrator MUST inspect the current repository and task state and continue safely without redoing finished work or discarding uncommitted changes.
+- `[BR-KIT-17]` Planning blueprints MUST direct `medium`, `large` and `complex` specifications to write one delta document per affected module after requirements (and design when required) and before the task roadmap, to seal it, to make the roadmap cover every delta item, and to list the delta in the hand-off summary; when no module changes, the blueprint MUST direct declaring `delta.impact: none` instead and not sealing.
+- `[BR-KIT-18]` Archival blueprints and instructions MUST direct the agent to correct each delta to the as-built result, allocate final identifiers only in the module (the delta keeps its provisional key and the mapping is recorded in the specification metadata), apply the delta so module blocks equal delta blocks, rewrite the scope, public surface and operational sections as-built where the delta changes them, stop without touching the module on a base conflict, lazily migrate a prefix-less target module after the user confirms a proposed prefix, and require `specforce spec delta check <slug>` to report `applied` (or `none`/`exempt`) before archiving.
+- `[BR-KIT-19]` The independent qa-tester's traceability matrix MUST contain one additional row per delta item (operation plus identifier or provisional key) using the existing verdicts; specifications without a delta or with `delta.impact: none` add no rows, and a removal row fails when the block is still present.
+- `[BR-KIT-20]` Planning blueprints MUST direct every task acceptance check to be a single non-interactive command or test scenario with an observable expected result, rewriting or explicitly flagging criteria that need human judgment as not verifiable by a tester. Every task MUST change at least one product file or artifact; tasks whose only purpose is running the full test suite, a smoke run, a build check or repository-wide searches are forbidden, since that verification belongs to the independent QA step and the all-tasks hooks. Black-box scenarios are declared in a non-executable scenario section placed after the task phases (never as tasks, checkboxes or task identifiers), each linked to at least one requirement and stating one non-interactive command and its expected observable result; the section is mandatory for `large` and `complex` roadmaps, optional for `medium` roadmaps that produce a runnable artifact, and omitted for `small` roadmaps. Existing roadmaps with a verification phase of tasks remain valid and are executed as ordinary tasks.
+- `[BR-KIT-21]` Bug specification blueprints MUST require concrete reproduction steps and an established root cause (halting to ask or recommend discovery when unknown), and the roadmap MUST start with a regression test task that fails before the fix, with no fix task preceding it.
+- `[BR-KIT-22]` Planning blueprints MUST restate decisions already taken in a proposal for a single confirmation and ask only open questions and newly found gaps; questions go in waves of at most four, each with a recommendation, and an approval of all recommendations confirms that wave only and never carries over; the hard gate before writing artifacts is preserved.
+- `[BR-KIT-23]` Planning blueprints MAY delegate strictly read-only exploration to helpers during grounding of `large` and `complex` specifications, while interview, decisions and artifact writing remain in the primary session; unresolved markers (`TBD`, `TODO`, bare `N/A`) stay forbidden, and a section that does not apply is omitted or kept with a one-line justification.
+- `[BR-KIT-24]` Archival instructions MUST refuse, before any retrospective, Constitution or module change, to archive a specification whose progress is below complete, listing each pending task with identifier, title and state and pointing to the implementation flow, even when the user asks to archive anyway.
+- `[BR-KIT-25]` Archival summaries MUST list the archived artifacts and changed module documents as clickable links to their archived or current location and MUST suggest, never execute, one conventional commit message.
+- `[BR-KIT-26]` Implementation orchestration blueprints MUST direct the orchestrator, never the independent qa-tester, to persist the QA verdict through the specification metadata after the QA step and again after every correction cycle, before declaring validation complete.
+- `[BR-KIT-27]` Archival blueprints and instructions MUST read the persisted QA state, refuse to archive when it is FAILED, warn visibly when it is absent, and derive next-step suggestions from the persisted findings and NOT-VERIFIABLE criteria instead of the conversation.
+- `[BR-KIT-28]` Planning blueprints MUST direct test-first roadmaps to mark RED tasks with the RED token in the task title so the scoped hook relaxation applies, and finishing a RED task MUST be announced with a notice naming the skipped per-task hooks.
+- `[BR-KIT-29]` Discovery blueprints MUST be stored as a readable multi-line block of at most 120 lines, keep the consultative directives, ask for short and dense turns that still carry an opinion without contradictory length guidance, and keep only one compact example conversation and one compact wireframe.
+- `[BR-KIT-30]` Discovery blueprints MUST keep product code read-only (no edit, rename, format or deletion of existing files) while allowing disposable evidence: new tests, scripts, logs and screenshots created in `.specforce/scratch/` (preferred), which the agent creates together with a self-ignoring rule on first use; only when a hypothesis cannot be proven from the scratch area may a new file be created elsewhere, and its name MUST contain the `spf-probe` marker. The rule MUST be language-agnostic.
+- `[BR-KIT-31]` Discovery blueprints MUST record every path created outside the scratch area, remove them before the session ends and verify the cleanup through version-control status, reporting any leftover explicitly; scratch evidence is treated as stale in later sessions, and on a confirmed bug the proposal cites the reproduction and screenshot or log paths as evidence.
+- `[BR-KIT-32]` Discovery blueprints MUST allow non-mutating commands and running the application, test suites and browsers locally for evidence, MUST forbid commands that change tracked product files or that have external or irreversible effects (mutating network calls, real credentials, production data or services, destructive commands) without asking the user first, and MAY delegate broad searches to strictly read-only helpers while conclusions stay in the main session.
+- `[BR-KIT-33]` Discovery blueprints MUST describe, only for an explicit formalization request, a proposal with problem, verified findings with file references, decisions taken, rejected alternatives, open questions, suggested type and size, and evidence references, and MUST offer a bug-type specification when a root cause is confirmed; early and mid turns MUST NOT push toward a specification, and an oversized idea gets a decomposition recommendation in text without halting.
+- `[BR-KIT-34]` The generated agent guide, the repository agent guide and the discovery skill description MUST state that discovery is read-only for product code while allowing disposable evidence in the scratch area, and the prohibition of direct edits without an approved specification MUST remain unchanged for product code.
+- `[BR-KIT-35]` Planning blueprints MUST direct task roadmaps to state constraints only when they carry something the implementer cannot deduce from the design and the code (a pitfall, a deviation from repository convention, or a recorded design decision referenced rather than repeated), MUST forbid method signatures, constants and code snippets in tasks, and MUST direct the design to be the only artifact where code-symbol anchors are written.
+- `[BR-KIT-36]` The design blueprint MUST allow a one-line `Why:` on a non-obvious technical decision inside the contract or inventory entry it affects, MUST forbid debating alternatives and adding a dedicated rationale section, and MUST NOT require it for decisions with no real alternative.
+- `[BR-KIT-37]` Implementation orchestration blueprints MUST direct the orchestrator to put into each worker brief the task's constraints (omitting the line when there are none) and, copied verbatim and naming their source, the design inventory entries, related contracts and `Why:` lines that concern the task's target, or to state that none applies when the design is absent or has no matching entry.
+- `[BR-KIT-38]` The independent qa-tester's black-box tier MUST execute every scenario of the roadmap's black-box scenario section and add one traceability matrix row per scenario, identified by its scenario identifier, using the existing verdicts; a scenario that cannot be executed is `NOT-VERIFIABLE` with a stated reason, and roadmaps without the section derive black-box checks from the requirements' acceptance scenarios.
+
+## 3. Canonical Requirements & Use Cases
+### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
+- **Scenario:** Planning a new feature or bugfix
+  - **GIVEN** the orchestrator is generating `requirements.md`
+  - **WHEN** drafting user stories and BDD scenarios
+  - **THEN** it uses exclusively end-user personas and domain-level outcomes without technical endpoints, status codes, SQL queries, or JSON schemas.
+
+### [US-KIT-02] Legacy Asset Detection and Interactive Cleanup
+- **Scenario:** Initializing or updating an existing workspace with legacy files
+  - **GIVEN** legacy agent/skill files exist in integration directories (`.agents`, `.cursor`, `.claude`, etc.)
+  - **WHEN** `specforce init` executes
+  - **THEN** the system prompts the user to confirm legacy asset removal and safely removes confirmed assets if approved.
+
+### [US-KIT-03] Batch Task Updates and Deduplicated Verification
+- **Scenario:** Updating multiple tasks in a single implementation batch
+  - **GIVEN** multiple task IDs passed to `specforce implementation update <slug> --task T1.1,T1.2 --status finished`
+  - **WHEN** verification hooks are configured
+  - **THEN** the system deduplicates all applicable hooks, runs them once, and updates all task states and session logs atomically.
+
+### [US-KIT-04] Global Batch Budget and Subagent Sizing Protocol
+- **Scenario:** Executing an implementation roadmap with spawned subagents
+  - **GIVEN** an active implementation roadmap of tasks
+  - **WHEN** the orchestrator partitions the roadmap and delegates tasks
+  - **THEN** it partitions the roadmap into 2 to 3 Batches (max 4) across the entire implementation lifecycle, assigns 1 dedicated fresh worker subagent per batch, and retains exclusive authority over `tasks.md` state transitions.
+
+### [US-KIT-05] Strict Worker Guardrails and Orchestrator Spec Gating
+- **Scenario:** Executing task implementation batches and handling ad-hoc change requests
+  - **GIVEN** a worker subagent executing an implementation batch
+  - **WHEN** coding and verifying tasks
+  - **THEN** the worker operates under non-negotiable guardrails (pre-coding interrogation, anti-sycophancy, scope jail, and test invariance), and the orchestrator mandates updating specifications via `/spf:spec` before applying any behavioral drift.
+
+### [US-KIT-06] Proactive Architectural Suggestions in Discovery
+- **Scenario:** Brainstorming architecture or investigating bugs during discovery
+  - **GIVEN** a developer discussing a technical design or issue
+  - **WHEN** the discovery workflow runs
+  - **THEN** the agent provides concrete opinions, suggests clean architectural patterns, recommends preferred trade-offs, and highlights edge cases.
+
+### [US-KIT-07] Subagent Batch Isolation, Progress Visibility, and Within-Batch Continuity
+- **Scenario:** Executing task batches with worker subagents across various agent harnesses
+  - **GIVEN** task batches with varying risk and complexity
+  - **WHEN** delegating and verifying implementation tasks
+  - **THEN** the orchestrator spawns a fresh subagent for each batch, narrates each dispatched batch in free-form language (progress, scope and, when relevant, the worker role) with a brief completion summary, and restricts message feedback loops strictly to the active subagent for fixing verification failures.
+
+### [US-KIT-08] Strategic Next Steps Handoff in Archival
+- **Scenario:** Completing feature archival
+  - **GIVEN** a completed feature whose living spec has been reconciled
+  - **WHEN** `specforce spec archive <slug>` finishes
+  - **THEN** the output includes conceptual next steps and candidate follow-up specifications.
+
+### [US-KIT-09] Behavioral Living Spec Synthesis and Opportunistic Legacy Migration
+- **Scenario:** Reconciling domain living specs during archival
+  - **GIVEN** a completed feature and an existing or new domain module document
+  - **WHEN** the archival lifecycle reconciles domain behavior into `.specforce/docs/modules/<domain>.md`
+  - **THEN** it structures the document using the 5 canonical behavioral sections, omits internal code file dumps, and opportunistically upgrades legacy module formats to the new canonical standard.
+
+### [US-KIT-10] Pure Skills Standard and Tool Decommissioning
+- **Scenario:** Initializing or updating agent tools across supported AI coding harnesses
+  - **GIVEN** an active Specforce installation for any supported agent
+  - **WHEN** tool synchronization runs
+  - **THEN** all capabilities are generated strictly as native skills in `<tool-target>/skills/<slug>/SKILL.md`, omitting all legacy command and workflow paths, and safely detecting/removing obsolete `.agents/workflows/`, `<tool>/commands/`, and `.gemini/` directories upon user confirmation.
+
+### [US-KIT-11] Active Black-Box and UI Verification in QA
+- **Scenario:** Conducting final quality assurance verification after implementation batches
+  - **GIVEN** all batch tasks in an implementation roadmap have completed
+  - **WHEN** the independent qa-tester executes the 4-tier verification protocol
+  - **THEN** it builds a criterion traceability matrix, executes automated regression tests, performs active black-box execution against real compiled artifacts/APIs, verifies UI rendering and adversarial edge cases without modifying the codebase, and generates a structured QA report with a manual developer walkthrough.
+
+### [US-KIT-12] Multimodal Screenshot Inspection in UI Tasks
+- **Scenario:** Implementing or modifying user interface components
+  - **GIVEN** a worker subagent assigned a task modifying visual/UI components
+  - **WHEN** completing code modifications
+  - **THEN** it launches the local preview server, captures screenshots across relevant responsive viewports using headless browser tools, visually inspects the captures via multimodal vision, and ensures fidelity with design specifications.
+
+### [US-KIT-13] Zero-Secret Blocker and Spec Gate Protocol
+- **Scenario:** Encountering missing credentials, technical ambiguity, or scope drift during execution
+  - **GIVEN** an orchestrator or worker facing blockers during task implementation
+  - **WHEN** resolving the condition
+  - **THEN** it guides secret placement into `.env` without echoing values, uses interactive consultation tools to present structured trade-offs for ambiguities, and halts for formal spec updates via `/spf:spec` when scope or architecture diverges.
+
+### [US-KIT-14] Bounded Correction Cycle After Failed QA
+- **Scenario:** The qa-tester reports failed acceptance criteria
+  - **GIVEN** the traceability matrix contains criteria with a failed verdict
+  - **WHEN** the orchestrator handles the failures
+  - **THEN** it delegates fixes to an implementer and re-runs a fresh qa-tester for at most 2 correction cycles, and escalates to the user if criteria still fail afterwards.
+
+### [US-KIT-15] BLOCKED Escalation from Workers
+- **Scenario:** A worker cannot proceed without a decision
+  - **GIVEN** a worker facing an ambiguity or conflict it cannot resolve within its scope
+  - **WHEN** it stops work
+  - **THEN** it returns a BLOCKED report with the question, the options and a recommendation, and the orchestrator consults the user and relays the answer before work continues.
+
+### [US-KIT-16] Delta-Driven Archive Reconciliation
+- **Scenario:** Archiving a specification with a delta
+  - **GIVEN** a finished `medium` or larger specification with a sealed delta
+  - **WHEN** `/spf:archive` runs
+  - **THEN** the agent corrects the delta to the as-built result, allocates final identifiers, applies the delta to the module, refreshes the scope, public surface and operational sections where affected, and archives only after the delta check reports applied.
+- **Scenario:** Base conflict detected at archive
+  - **GIVEN** a delta whose target block was changed by another specification
+  - **WHEN** `/spf:archive` runs
+  - **THEN** the module is left untouched and the developer is told to redo the delta and seal it again.
+
+### [US-KIT-17] Executable Acceptance Checks and Black-box Scenarios
+- **Scenario:** Planning a large specification
+  - **GIVEN** a `large` or `complex` specification being planned
+  - **WHEN** the roadmap is produced
+  - **THEN** every task has a non-interactive acceptance check, no task exists only to run verification, and a black-box scenario section traced to requirements follows the task phases.
+- **Scenario:** Planning a small specification
+  - **GIVEN** a `small` specification being planned
+  - **WHEN** the roadmap is produced
+  - **THEN** it has no scenario section and no verification-only task.
+- **Scenario:** Criterion needing human judgment
+  - **GIVEN** a task whose outcome cannot be scripted
+  - **WHEN** its acceptance check is written
+  - **THEN** it is rewritten into an observable check or flagged as not verifiable by a tester.
+### [US-KIT-18] Bug Specification Starts From a Failing Test
+- **Scenario:** Planning a bug fix
+  - **GIVEN** a bug specification
+  - **WHEN** requirements and roadmap are produced
+  - **THEN** reproduction and root cause are documented and the first task creates a regression test that fails before the fix.
+- **Scenario:** Unknown root cause
+  - **GIVEN** a bug whose root cause is not established
+  - **WHEN** the planner reaches the root cause
+  - **THEN** it halts to ask the user or recommends discovery instead of guessing.
+
+### [US-KIT-19] Planning Interview in Waves
+- **Scenario:** Proposal with decisions taken
+  - **GIVEN** a proposal listing taken decisions and open questions
+  - **WHEN** the interview starts
+  - **THEN** taken decisions are restated for one confirmation and only open questions are asked, in waves with recommendations.
+- **Scenario:** Approval does not carry over
+  - **GIVEN** the user approved all recommendations of one wave
+  - **WHEN** the next wave starts
+  - **THEN** the next wave still requires its own confirmation.
+
+### [US-KIT-20] Read-only Grounding Helpers
+- **Scenario:** Grounding a large specification
+  - **GIVEN** a `large` or `complex` specification
+  - **WHEN** the planner grounds itself in the codebase
+  - **THEN** it may delegate read-only exploration while interview, decisions and writing stay in the primary session.
+- **Scenario:** Section that does not apply
+  - **GIVEN** a template section that does not apply
+  - **WHEN** the artifact is drafted
+  - **THEN** the section is omitted or justified in one line, and unresolved markers are rejected.
+
+### [US-KIT-21] Archive Refuses Incomplete Work
+- **Scenario:** Incomplete implementation
+  - **GIVEN** a specification with progress below complete
+  - **WHEN** `/spf:archive` runs
+  - **THEN** it stops before any change, lists each pending task and points to `/spf:implement`, even if the user asks to archive anyway.
+
+### [US-KIT-22] Archive Summary With Links and Commit Suggestion
+- **Scenario:** Successful archival
+  - **GIVEN** a completed and archived specification
+  - **WHEN** the final summary is produced
+  - **THEN** it links archived artifacts and changed modules and suggests one conventional commit message without running it.
+- **Scenario:** No module changes
+  - **GIVEN** a specification with no module impact
+  - **WHEN** the final summary is produced
+  - **THEN** it states no module changed and still suggests the commit message.
+### [US-KIT-23] Orchestrator Persists the QA Verdict
+- **Scenario:** QA step completed
+  - **GIVEN** the independent qa-tester returned its traceability matrix and findings
+  - **WHEN** the orchestrator closes validation
+  - **THEN** it records the report before declaring validation complete and records again after each correction cycle.
+- **Scenario:** Tester attempts to persist
+  - **GIVEN** the qa-tester role charter
+  - **WHEN** the tester reports its results
+  - **THEN** it only returns them to the orchestrator and writes nothing.
+### [US-KIT-24] Archival Reads Persisted QA
+- **Scenario:** Archival in a fresh session
+  - **GIVEN** a specification with a persisted PASSED report that has findings
+  - **WHEN** archival produces its next-step suggestions
+  - **THEN** the suggestions cite the persisted findings and NOT-VERIFIABLE criteria.
+- **Scenario:** Persisted report is FAILED
+  - **GIVEN** a specification whose persisted report is FAILED
+  - **WHEN** archival starts
+  - **THEN** it stops before any change, lists the failed criteria and points to fixing and re-recording.
+- **Scenario:** No persisted report
+  - **GIVEN** a specification without a persisted report
+  - **WHEN** archival starts
+  - **THEN** it warns that no QA evidence exists and continues.
+### [US-KIT-25] RED Tasks Are Marked in Planning
+- **Scenario:** Planning a test-first pair
+  - **GIVEN** a roadmap with RED and GREEN task pairs
+  - **WHEN** the roadmap is written
+  - **THEN** every RED task carries the RED token in its title.
+
+### [US-KIT-26] Lean Discovery Blueprint
+- **Scenario:** Reading the blueprint
+  - **GIVEN** the discovery blueprint
+  - **WHEN** it is read and validated
+  - **THEN** it asks for short dense turns with an opinion, keeps the consultative directives and stays within the size ceiling.
+- **Scenario:** Size breach
+  - **GIVEN** a blueprint longer than the ceiling
+  - **WHEN** the kit validation runs
+  - **THEN** it fails and reports the breach.
+### [US-KIT-27] Disposable Evidence in Discovery
+- **Scenario:** Proving a hypothesis
+  - **GIVEN** a bug hypothesis
+  - **WHEN** the agent needs proof
+  - **THEN** it creates new evidence in the scratch area, runs it and reports the observed result.
+- **Scenario:** Proof requires the source tree
+  - **GIVEN** a hypothesis not provable from the scratch area
+  - **WHEN** the agent creates a file in the source tree
+  - **THEN** the name contains the probe marker and the path is recorded.
+- **Scenario:** Risky action
+  - **GIVEN** an action with external or irreversible effects
+  - **WHEN** the agent considers it
+  - **THEN** it does not run it and asks the user first.
+### [US-KIT-28] Evidence Is Discarded or Promoted
+- **Scenario:** Session end
+  - **GIVEN** in-tree probes created in the session
+  - **WHEN** the session ends
+  - **THEN** they are removed, the cleanup is verified and any leftover is reported.
+- **Scenario:** Formalizing a confirmed bug
+  - **GIVEN** a confirmed root cause with evidence
+  - **WHEN** the user asks to formalize
+  - **THEN** the proposal cites the evidence and a bug-type specification is offered.
+### [US-KIT-29] Consistent Discovery Limits
+- **Scenario:** Reading governance texts
+  - **GIVEN** the agent guide, repository guide and skill description
+  - **WHEN** they are read
+  - **THEN** they consistently describe discovery as read-only for product code with disposable evidence allowed.
+
+### [US-KIT-30] Lean Planning and Design-Anchored Worker Briefs
+- **Scenario:** Writing a roadmap
+  - **GIVEN** a planning session with a design that records a decision
+  - **WHEN** the roadmap is written
+  - **THEN** tasks reference the decision instead of repeating it and contain no signatures, constants or code snippets.
+- **Scenario:** Preparing a worker brief
+  - **GIVEN** a task whose target has an inventory entry with a rationale line
+  - **WHEN** the orchestrator prepares the brief
+  - **THEN** the brief contains the entry and rationale verbatim with their source and the task's constraints.
+- **Scenario:** No design entry
+  - **GIVEN** a task whose target has no matching design entry
+  - **WHEN** the orchestrator prepares the brief
+  - **THEN** the brief states that no design excerpt applies and invents none.
+### [US-KIT-31] Independent QA Runs Declared Scenarios Once
+- **Scenario:** Roadmap with scenarios
+  - **GIVEN** a roadmap that declares black-box scenarios
+  - **WHEN** the qa-tester runs the black-box tier
+  - **THEN** every scenario command is executed and recorded as its own matrix row next to requirement and delta rows.
+- **Scenario:** Roadmap without scenarios
+  - **GIVEN** a roadmap with no scenario section
+  - **WHEN** the qa-tester runs the black-box tier
+  - **THEN** black-box checks are derived from the requirements' acceptance scenarios.
+- **Scenario:** Scenario cannot run
+  - **GIVEN** a scenario whose command cannot be executed in the environment
+  - **WHEN** the matrix is built
+  - **THEN** its row is `NOT-VERIFIABLE` with a reason and is never reported as passed.
+
+## 4. Public Integration Surfaces & Contracts
+- **Public CLI Commands:**
+  - `specforce init [agents...]`: Initializes or updates project agent tools and performs interactive or automated legacy asset cleanup.
+  - `specforce implementation update <slug> --task <id1,id2,...> --status <in-progress|finished|pending>`: Atomically updates one or more tasks and executes deduplicated verification hooks.
+  - `specforce implementation status <slug> [--json]`: Inspects current task execution progress and roadmap completion.
+  - `specforce implementation qa record <slug>`: Persists the independent QA report (criteria with verdicts and out-of-scope findings, supplied as JSON on standard input) in the specification metadata; only the orchestrator calls it, never the qa-tester.
+- **Cross-Module Contracts & Dependencies:**
+  - Consumes specification metadata and task roadmaps from `spec-management`, including the module delta and its check states used by planning, archival and the independent QA matrix.
+  - Integrates with `constitution` for living spec template reconciliation during archival.
+  - Generates native skill structures for supported harnesses (Claude Code, OpenCode, Antigravity, Cursor, Kimi, Kilo, Qwen, Codex).
+
+## 5. Operational & Quality Invariants
+- All agent blueprint definitions must be syntactically valid YAML.
+- Tool and skill generation must be deterministic across all supported agent environments.
+- Multi-task status transitions must execute atomically without partial failure or corrupted task files.
+

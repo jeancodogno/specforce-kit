@@ -24,6 +24,7 @@ func (m *mockUI) Warn(msg string)       { m.warns = append(m.warns, msg) }
 func (m *mockUI) Error(msg string)      { m.errors = append(m.errors, msg) }
 func (m *mockUI) Success(msg string)    { m.successes = append(m.successes, msg) }
 func (m *mockUI) SubTask(msg string)    { m.logs = append(m.logs, msg) }
+func (m *mockUI) LogSubTask(msg string) { m.logs = append(m.logs, msg) }
 func (m *mockUI) StartSpinner(_ string) {}
 func (m *mockUI) StopSpinner()          {}
 func (m *mockUI) Confirm(_ string) bool { return m.confirmResponse }
@@ -126,5 +127,43 @@ func TestInitCmd_UpdateToolsFlow(t *testing.T) {
 	err = executor.HandleInit(context.Background(), ui, "claude")
 	if err != nil {
 		t.Errorf("HandleInit failed: %v", err)
+	}
+}
+
+func TestHandleInit_EnsuresConfigExistsInUpdateFlow(t *testing.T) {
+	pkgDir, _ := os.Getwd()
+	repoRoot := filepath.Join(pkgDir, "..", "..", "..")
+	tmpDir := t.TempDir()
+
+	// 1. Pre-create .specforce but NO config.yaml
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".specforce"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	original, _ := os.Getwd()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(original) }()
+
+	executor := &Executor{
+		Version:       "test",
+		DevMode:       true,
+		KitRoot:       filepath.Join(repoRoot, "src/internal/agent/kit"),
+		ArtifactsRoot: filepath.Join(repoRoot, "src/internal/agent/artifacts"),
+		Registry:      &agent.Registry{},
+	}
+
+	// 2. Run HandleInit (will enter update flow because .specforce exists)
+	ui := &mockUI{confirmResponse: false} // Don't even need to update tools
+	err := executor.HandleInit(context.Background(), ui, "claude")
+	if err != nil {
+		t.Errorf("HandleInit failed: %v", err)
+	}
+
+	// 3. Verify config.yaml was created
+	configPath := filepath.Join(tmpDir, ".specforce", "config.yaml")
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		t.Error("expected config.yaml to be created in update flow, but it was not")
 	}
 }

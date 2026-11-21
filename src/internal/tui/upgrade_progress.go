@@ -51,12 +51,12 @@ func (m UpgradeProgressModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m UpgradeProgressModel) View() string {
 	if m.Finished {
 		if m.Err != nil {
-			return fmt.Sprintf("\n  %s %v\n", lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Render("✘"), m.Err)
+			return fmt.Sprintf("\n  %s %v\n", lipgloss.NewStyle().Foreground(errorRed).Render("✘"), m.Err)
 		}
-		return fmt.Sprintf("\n  %s Upgrade complete!\n", lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00")).Render("✔"))
+		return fmt.Sprintf("\n  %s Upgrade complete!\n", lipgloss.NewStyle().Foreground(successGreen).Render("✔"))
 	}
 
-	statusStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#00FFFF"))
+	statusStyle := lipgloss.NewStyle().Foreground(brandCyan)
 	bar := RenderProgressBar(m.Percent, 40)
 
 	return fmt.Sprintf("\n  %s %s\n  %s\n", statusStyle.Render("›"), m.Status, bar)

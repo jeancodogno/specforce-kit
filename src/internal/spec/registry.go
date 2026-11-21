@@ -20,6 +20,7 @@ type Artifact struct {
 // Registry manages the collection of spec artifacts.
 type Registry struct {
 	artifacts map[string]Artifact
+	order     []string // Cached topological order of artifact names
 }
 
 // NewRegistry initializes a new registry by loading YAML files from the provided filesystem.
@@ -51,8 +52,8 @@ func NewRegistry(artifactsFS fs.FS) (*Registry, error) {
 		return nil, fmt.Errorf("failed to load spec artifacts: %w", err)
 	}
 
-	// Circular dependency check
-	if err := r.checkCircularDependencies(); err != nil {
+	// Resolve topological order and check for cycles
+	if err := r.topologicalSort(); err != nil {
 		return nil, err
 	}
 
@@ -87,28 +88,56 @@ func loadArtifact(artifactsFS fs.FS, path, fileName string) (Artifact, error) {
 	return art, nil
 }
 
-// Get returns an artifact by its name.
+// Get returns an artifact by its name. It supports prefixed lookups (e.g., "bug-requirements")
+// and right-to-left inference for base types (e.g., "tasks-for-design" -> "design").
 func (r *Registry) Get(name string) (Artifact, bool) {
-	art, ok := r.artifacts[name]
-	return art, ok
+	// 1. Try exact match (could be base name or already a full prefixed name in the registry)
+	if art, ok := r.artifacts[name]; ok {
+		return art, true
+	}
+
+	// 2. Try to resolve if it has a known prefix
+	for _, t := range []string{"bug", "feature"} {
+		prefix := t + "-"
+		if strings.HasPrefix(name, prefix) {
+			baseName := strings.TrimPrefix(name, prefix)
+			return r.GetForType(t, baseName)
+		}
+	}
+
+	// 3. Right-to-left inference for base types
+	baseTypes := []string{"requirements", "design", "tasks", "implementation", "archive"}
+	bestMatch := ""
+	bestIndex := -1
+	for _, bt := range baseTypes {
+		idx := strings.LastIndex(name, bt)
+		if idx > bestIndex {
+			bestIndex = idx
+			bestMatch = bt
+		}
+	}
+	if bestMatch != "" {
+		if art, ok := r.artifacts[bestMatch]; ok {
+			return art, true
+		}
+	}
+
+	return Artifact{}, false
 }
 
-// List returns all loaded artifacts.
+// List returns all loaded artifacts in topological order.
 func (r *Registry) List() []Artifact {
-	list := make([]Artifact, 0, len(r.artifacts))
-	// Standard order: requirements, design, tasks
-	order := []string{"requirements", "design", "tasks"}
-
-	for _, name := range order {
+	list := make([]Artifact, 0, len(r.order))
+	for _, name := range r.order {
 		if art, ok := r.artifacts[name]; ok {
 			list = append(list, art)
 		}
 	}
 
-	// Catch any artifacts not in the explicit order
+	// Catch any artifacts not in the dependency graph (if any were somehow missed by topologicalSort)
 	for name, art := range r.artifacts {
 		found := false
-		for _, orderedName := range order {
+		for _, orderedName := range r.order {
 			if name == orderedName {
 				found = true
 				break
@@ -122,21 +151,131 @@ func (r *Registry) List() []Artifact {
 	return list
 }
 
-func (r *Registry) checkCircularDependencies() error {
-	for name := range r.artifacts {
-		visited := make(map[string]bool)
-		curr := name
-		for curr != "" {
-			if visited[curr] {
-				return fmt.Errorf("circular dependency detected involving artifact: %s", curr)
-			}
-			visited[curr] = true
-			art, ok := r.artifacts[curr]
-			if !ok {
-				break
-			}
-			curr = art.Dependency
+// GetForType returns an artifact by its name, checking for typed versions first.
+func (r *Registry) GetForType(typeName, artifactName string) (Artifact, bool) {
+	// Try typed version: "{type}-{name}"
+	typedName := fmt.Sprintf("%s-%s", typeName, artifactName)
+	if art, ok := r.artifacts[typedName]; ok {
+		// Return with the original artifact name to keep filenames consistent
+		art.Name = artifactName
+		return art, true
+	}
+
+	// Fallback to default
+	art, ok := r.artifacts[artifactName]
+	return art, ok
+}
+
+// ListForType returns all loaded artifacts resolved for a specific type, respecting topological order.
+func (r *Registry) ListForType(typeName string) []Artifact {
+	list := make([]Artifact, 0, len(r.order))
+	seenBase := make(map[string]bool)
+
+	for _, name := range r.order {
+		if art, ok := r.GetForType(typeName, name); ok {
+			list = append(list, art)
+			seenBase[name] = true
 		}
 	}
+
+	// Catch any artifacts not in the explicit order
+	for name := range r.artifacts {
+		// Extract base name if it's a typed artifact (e.g., "bug-requirements" -> "requirements")
+		baseName := name
+		for _, t := range []string{"bug", "feature"} {
+			prefix := t + "-"
+			if strings.HasPrefix(name, prefix) {
+				baseName = strings.TrimPrefix(name, prefix)
+				break
+			}
+		}
+
+		if !seenBase[baseName] {
+			if art, ok := r.GetForType(typeName, baseName); ok {
+				list = append(list, art)
+				seenBase[baseName] = true
+			}
+		}
+	}
+
+	return list
+}
+
+// ListForTypeAndSize returns artifacts resolved for a specific spec type and size,
+// filtering the artifacts matrix dynamically while preserving topological order.
+func (r *Registry) ListForTypeAndSize(specType string, size SpecSize) []Artifact {
+	all := r.ListForType(specType)
+	var allowed map[string]bool
+	switch size {
+	case SpecSizeSmall:
+		allowed = map[string]bool{"tasks": true}
+	case SpecSizeMedium:
+		allowed = map[string]bool{"requirements": true, "tasks": true}
+	case SpecSizeLarge, SpecSizeComplex:
+		return all
+	default:
+		return all
+	}
+
+	filtered := make([]Artifact, 0, len(all))
+	for _, art := range all {
+		if allowed[art.Name] {
+			filtered = append(filtered, art)
+		}
+	}
+	return filtered
+}
+
+func (r *Registry) topologicalSort() error {
+	var sorted []string
+	visited := make(map[string]bool)
+	temp := make(map[string]bool)
+
+	// We only want to sort base artifacts and their dependencies.
+	// Prefixed artifacts (bug-*) should not be in the base dependency graph
+	// as they are resolved via GetForType.
+	var baseArtifacts []string
+	for name := range r.artifacts {
+		isPrefixed := false
+		for _, p := range []string{"bug-", "feature-"} {
+			if strings.HasPrefix(name, p) {
+				isPrefixed = true
+				break
+			}
+		}
+		if !isPrefixed {
+			baseArtifacts = append(baseArtifacts, name)
+		}
+	}
+
+	var visit func(string) error
+	visit = func(name string) error {
+		if temp[name] {
+			return fmt.Errorf("circular dependency detected involving artifact: %s", name)
+		}
+		if !visited[name] {
+			temp[name] = true
+			art, ok := r.artifacts[name]
+			if ok && art.Dependency != "" {
+				if err := visit(art.Dependency); err != nil {
+					return err
+				}
+			}
+			visited[name] = true
+			delete(temp, name)
+			sorted = append(sorted, name)
+		}
+		return nil
+	}
+
+	for _, name := range baseArtifacts {
+		if !visited[name] {
+			if err := visit(name); err != nil {
+				return err
+			}
+		}
+	}
+
+	r.order = sorted
 	return nil
 }

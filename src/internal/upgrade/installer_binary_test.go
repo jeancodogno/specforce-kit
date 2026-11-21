@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestNewBinaryInstaller(t *testing.T) {
@@ -129,7 +130,7 @@ func TestBinaryInstaller_DownloadAndVerify_ChecksumMismatch(t *testing.T) {
 
 	installer := &BinaryInstaller{Client: ts.Client()}
 	
-	_, err := installer.DownloadAndVerify(context.Background(), "v1.0.0", ts.URL)
+	_, _, err := installer.DownloadAndVerify(context.Background(), "v1.0.0", ts.URL)
 	if err == nil {
 		t.Error("expected error due to checksum mismatch, got nil")
 	}
@@ -160,9 +161,9 @@ func TestBinaryInstaller_DownloadAndVerify(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case fmt.Sprintf("/repos/jeancodogno/specforce-kit/releases/download/v1.0.0/%s", assetName):
+		case fmt.Sprintf("/jeancodogno/specforce-kit/releases/download/v1.0.0/%s", assetName):
 			_, _ = w.Write([]byte(binaryContent))
-		case "/repos/jeancodogno/specforce-kit/releases/download/v1.0.0/specforce-kit_1.0.0_checksums.txt":
+		case "/jeancodogno/specforce-kit/releases/download/v1.0.0/specforce-kit_1.0.0_checksums.txt":
 			_, _ = w.Write([]byte(checksumContent))
 		default:
 			w.WriteHeader(http.StatusNotFound)
@@ -174,7 +175,7 @@ func TestBinaryInstaller_DownloadAndVerify(t *testing.T) {
 		Client: ts.Client(),
 	}
 
-	tmpFile, err := installer.DownloadAndVerify(context.Background(), "v1.0.0", ts.URL)
+	tmpFile, _, err := installer.DownloadAndVerify(context.Background(), "v1.0.0", ts.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -254,4 +255,140 @@ func TestBinaryInstaller_ReplaceAt_Rollback(t *testing.T) {
 	if string(content) != "original content" {
 		t.Errorf("expected original content after rollback, got %q", string(content))
 	}
+}
+
+// --- Download hygiene tests (FIX-8) ---
+
+func hygieneAssetName() string {
+	name := fmt.Sprintf("specforce-kit_%s_%s", runtime.GOOS, runtime.GOARCH)
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	return name
+}
+
+// isolatedTmpDir points TMPDIR to a fresh empty directory and returns it.
+func isolatedTmpDir(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	t.Setenv("TMPDIR", dir)
+	return dir
+}
+
+func assertDirEmpty(t *testing.T, dir string) {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		names := make([]string, 0, len(entries))
+		for _, e := range entries {
+			names = append(names, e.Name())
+		}
+		t.Errorf("expected temp dir to be empty, found %v", names)
+	}
+}
+
+func TestDownloadHygiene_TempCleanupOnEveryFailure(t *testing.T) {
+	binaryContent := []byte("dummy binary content")
+	goodSum := sha256.Sum256(binaryContent)
+
+	cases := []struct {
+		name    string
+		handler http.HandlerFunc
+	}{
+		{
+			name: "binary 404",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+			},
+		},
+		{
+			name: "checksum 404",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasSuffix(r.URL.Path, "_checksums.txt") {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				_, _ = w.Write(binaryContent)
+			},
+		},
+		{
+			name: "checksum entry missing",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasSuffix(r.URL.Path, "_checksums.txt") {
+					_, _ = fmt.Fprintf(w, "%x  some-other-asset\n", goodSum)
+					return
+				}
+				_, _ = w.Write(binaryContent)
+			},
+		},
+		{
+			name: "checksum mismatch",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasSuffix(r.URL.Path, "_checksums.txt") {
+					_, _ = fmt.Fprintf(w, "deadbeef  %s\n", hygieneAssetName())
+					return
+				}
+				_, _ = w.Write(binaryContent)
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			setTestHome(t)
+			tmp := isolatedTmpDir(t)
+			ts := httptest.NewServer(tc.handler)
+			defer ts.Close()
+
+			installer := &BinaryInstaller{Client: ts.Client()}
+			path, _, err := installer.DownloadAndVerify(context.Background(), "v1.0.0", ts.URL)
+			if err == nil {
+				t.Fatalf("expected an error, got path %q", path)
+			}
+			assertDirEmpty(t, tmp)
+		})
+	}
+}
+
+func TestDownloadHygiene_ChecksumTimeoutHonorsContext(t *testing.T) {
+	setTestHome(t)
+	tmp := isolatedTmpDir(t)
+
+	release := make(chan struct{})
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "_checksums.txt") {
+			// Never respond until the client gives up or the test ends.
+			select {
+			case <-r.Context().Done():
+			case <-release:
+			}
+			return
+		}
+		_, _ = w.Write([]byte("dummy binary content"))
+	}))
+	t.Cleanup(ts.Close)
+	t.Cleanup(func() { close(release) }) // runs before ts.Close (LIFO)
+
+	installer := &BinaryInstaller{Client: ts.Client()}
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() {
+		_, _, err := installer.DownloadAndVerify(ctx, "v1.0.0", ts.URL)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("expected an error when the checksum fetch exceeds the deadline")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("DownloadAndVerify did not return within 5s of the context deadline")
+	}
+	assertDirEmpty(t, tmp)
 }

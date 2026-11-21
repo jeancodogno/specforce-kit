@@ -1,0 +1,199 @@
+slug: 20261121-1156-release-pipeline-hardening
+name: 20261121-1156-release-pipeline-hardening
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T15:37:24.704658797Z
+              completed_at: 2026-11-21T15:39:27.63795477Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T15:37:24.704659926Z
+              completed_at: 2026-11-21T15:39:27.637955395Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-21T15:39:30.794922499Z
+              completed_at: 2026-11-21T15:41:33.588287976Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-21T15:39:30.79492313Z
+              completed_at: 2026-11-21T15:41:33.588288597Z
+    T2.3:
+        sessions:
+            - started_at: 2026-11-21T16:18:27.776787284Z
+              completed_at: 2026-11-21T16:19:03.730772549Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-21T15:39:30.794923409Z
+              completed_at: 2026-11-21T15:41:33.588288986Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 2
+    recorded_at: 2026-11-21T16:21:09Z
+    criteria:
+        - id: US-1.1
+          scenario: push to main/<major>.x runs lint, security, mutation, tests on Linux/macOS/Windows
+          evidence: 'Static only: ci.yml push.branches=[''main'',''*.x'']; jobs lint/security/quality/test; test matrix [ubuntu-latest,macos-latest,windows-latest]'
+          verdict: PASSED
+        - id: US-1.2
+          scenario: PR to main/<major>.x runs same verification
+          evidence: 'Static only: pull_request.branches=[''main'',''*.x''], same job set'
+          verdict: PASSED
+        - id: US-1.3
+          scenario: release tooling tests and coverage gate once on Linux
+          evidence: 'Static: release-tooling job ubuntu-latest runs node --test scripts/*.test.js; coverage steps if matrix.os==''ubuntu-latest''. Local gate run: ''Core Packages Average Coverage: 88.0761%'' pass'
+          verdict: PASSED
+        - id: US-1.4
+          scenario: Windows-only failure fails the run
+          evidence: 'Static only: fail-fast false; windows leg runs go test ./... with no continue-on-error; per-OS check names'
+          verdict: PASSED
+        - id: US-1.5
+          scenario: push to feat/x starts no run
+          evidence: 'Static only: push branch filter is main and ''*.x''; ''*.x'' does not match feat/x'
+          verdict: PASSED
+        - id: US-2.1
+          scenario: agreeing versions pass; lint+tests before build
+          evidence: 'Scratch tree check-version v1.0.0 -> ''version ok: v1.0.0'' exit 0; static: verify job runs check-version, golangci-lint, go test, node tests; release needs: verify'
+          verdict: PASSED
+        - id: US-2.2
+          scenario: manifest 1.0.0-rc.1 vs tag v1.0.0 refused naming 3 values
+          evidence: '''Error: version mismatch: tag=v1.0.0 package.json=1.0.0-rc.1 built-in=1.0.0'' exit 1'
+          verdict: PASSED
+        - id: US-2.3
+          scenario: invalid tag vnext refused
+          evidence: '''Error: tag "vnext" is not a valid version'' exit 1'
+          verdict: PASSED
+        - id: US-2.4
+          scenario: failing unit test blocks build/publish
+          evidence: 'Static: go test ./... in verify; release needs: verify'
+          verdict: PASSED
+        - id: US-3.1
+          scenario: 1.0.0 -> npm latest, GitHub latest
+          evidence: 'channel 1.0.0 -> latest; fake npm argv --tag latest for all 6 packages; static prerelease: auto'
+          verdict: PASSED
+        - id: US-3.2
+          scenario: 1.0.0-rc.1 -> rc, GitHub prerelease
+          evidence: 'workflow step simulation channel=rc; fake npm --tag rc; static release.prerelease: auto'
+          verdict: PASSED
+        - id: US-3.3
+          scenario: 1.1.0-next.1 -> next
+          evidence: CLI and workflow step -> next; equals verbatim Go ChannelOf
+          verdict: PASSED
+        - id: US-3.4
+          scenario: 1.1.0-1 stops before publishing
+          evidence: Derive Release Channel step exit 1 'needs a named pre-release channel'; step precedes GoReleaser/npm
+          verdict: PASSED
+        - id: US-3.5
+          scenario: binary reports released version
+          evidence: 'go build with goreleaser ldflag Version=9.9.9: ''specforce version 9.9.9''; goreleaser snapshot binary matches metadata.json version'
+          verdict: PASSED
+        - id: US-4.1
+          scenario: 5 platform packages first, main last
+          evidence: 'fake npm log: 5 view+publish in npm/* then root; exit 0'
+          verdict: PASSED
+        - id: US-4.2
+          scenario: platform publish failure fails run, main not published
+          evidence: linux-arm64 E403 -> 'failed to publish', native step exit 1, root never queried
+          verdict: PASSED
+        - id: US-4.3
+          scenario: rerun skips 3, publishes 2, then main
+          evidence: 3 skipped, 2 published (E404 and empty-output), root published, exit 0. Publish stage only; GoReleaser rerun not exercised (finding 1)
+          verdict: PASSED
+        - id: US-4.4
+          scenario: all exist -> all skipped, success
+          evidence: 6 skipped lines, only npm view calls, exit 0
+          verdict: PASSED
+        - id: US-4.5
+          scenario: registry query error fails without publishing
+          evidence: ECONNREFUSED -> no publish for that package, main not run, exit 1
+          verdict: PASSED
+        - id: US-5.1
+          scenario: provenance + public access on every publish
+          evidence: 'fake npm argv: publish --access public --provenance --tag <channel> on every call; static id-token: write. Registry-side attestation not observable locally'
+          verdict: PASSED
+        - id: US-5.2
+          scenario: provenance failure fails the run
+          evidence: fake E422 provenance error -> 'failed to publish', exit 1
+          verdict: PASSED
+        - id: US-6.1
+          scenario: non-empty notes file used
+          evidence: scratch tree notes v1.0.0 prints path; step output args=--release-notes <path>; log names source
+          verdict: PASSED
+        - id: US-6.2
+          scenario: missing notes -> generated list
+          evidence: args= and log 'generated change list'; S4
+          verdict: PASSED
+        - id: US-6.3
+          scenario: empty/whitespace notes treated as absent
+          evidence: whitespace-only and 0-byte files -> empty output exit 0 -> args=
+          verdict: PASSED
+        - id: S1
+          scenario: mismatched version refused
+          evidence: '''Error: version mismatch: tag=v9.9.9 package.json=1.0.0-beta.3 built-in=1.0.0-beta.3'' exit=1 (re-run by orchestrator)'
+          verdict: PASSED
+        - id: S2
+          scenario: channels of stable/pre-release
+          evidence: latest / rc / next (re-run by orchestrator)
+          verdict: PASSED
+        - id: S3
+          scenario: numeric pre-release has no channel
+          evidence: '''needs a named pre-release channel'' exit=1 (re-run by orchestrator)'
+          verdict: PASSED
+        - id: S4
+          scenario: missing notes falls back
+          evidence: '[] exit=0'
+          verdict: PASSED
+        - id: INV-1
+          scenario: publish only after version agreement + lint + tests
+          evidence: 'static release needs: verify; dynamic check-version cases'
+          verdict: PASSED
+        - id: INV-2
+          scenario: stable never pre-release channel; pre-release never latest
+          evidence: 'Go/JS channel parity on 10 versions; numeric refused; static prerelease: auto'
+          verdict: PASSED
+        - id: INV-3
+          scenario: main never published while a platform package is missing
+          evidence: fake npm flows 4.2/4.5 main not run; no swallow patterns in release.yml
+          verdict: PASSED
+        - id: INV-4
+          scenario: every publish carries provenance
+          evidence: single publish path with hard-coded --provenance; fake npm argv confirms
+          verdict: PASSED
+        - id: US-4.6
+          scenario: Re-run replaces existing GitHub release assets instead of failing
+          evidence: 'Static: release.replace_existing_artifacts: true; goreleaser check v2.20.3 exit 0; goreleaser jsonschema lists the key. Live GitHub re-run not possible locally; to confirm in the v1.0.0-rc.1 rehearsal'
+          verdict: PASSED
+        - id: US-4.7
+          scenario: Same commit built twice yields byte-identical binaries
+          evidence: Two full snapshot builds, 6 targets, identical sha256 sets; binary mtimes = commit timestamp
+          verdict: PASSED
+        - id: NFR-reproducible
+          scenario: No machine paths or build timestamps; independent of build dir
+          evidence: Build in a copy at another path gives identical hashes; no home paths in strings; control build without -trimpath differs
+          verdict: PASSED
+        - id: T2.3
+          scenario: replace_existing_artifacts, -trimpath, mod_timestamp; goreleaser check passes
+          evidence: Acceptance greps match; goreleaser check exit 0
+          verdict: PASSED
+        - id: REG-tests
+          scenario: node and go tests pass after T2.3
+          evidence: node --test 17/17; go test -count=1 ./... 738 passed, exit 0
+          verdict: PASSED
+    findings:
+        - title: publish accepts an empty channel
+          detail: The script does not validate the channel argument; the workflow guards it because the channel step fails first.
+        - title: Malformed root package.json prints a Node stack trace
+          detail: check-version requires package.json before its try/catch.
+        - title: --release-notes path is not quoted
+          detail: A path with spaces would split; harmless on GitHub runners.
+        - title: notes <tag> does not sanitise the tag
+          detail: '''../'' in the tag resolves outside .github/release-notes; low risk since tags come from ''v*'' refs.'
+        - title: npm latest currently points to 0.2.2
+          detail: Plain 'npm i -g @jeancodogno/specforce-kit' installs 0.2.2 today; the 1.0.0 release moves latest as intended.
+        - title: QA side effect
+          detail: QA deleted a pre-existing gitignored dist/ directory (old v0.2.2-next snapshot build output, regenerable).
+        - title: Reproducibility depends on the CI Go version
+          detail: Byte-identical rebuilds were proven on one host and toolchain; CI pins go-version 1.26.3 in release.yml, which keeps re-runs on the same toolchain.

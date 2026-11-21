@@ -537,6 +537,7 @@ func TestStandardizedNaming(t *testing.T) {
 				Mappings: map[string]core.MappingConfigs{
 					"commands": {core.MappingConfig{Path: "spf", Name: "spf-*", Ext: ".md"}},
 				},
+				Security: core.ToolSecurity{GlobalWrite: true},
 			},
 		},
 	}
@@ -551,9 +552,6 @@ func TestStandardizedNaming(t *testing.T) {
 		t.Errorf("expected file %s to exist in global path", expectedGlobalPath)
 	}
 }
-
-
-
 
 func TestResolveMapping_TargetOverride(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "specforce-test-target-override-*")
@@ -625,10 +623,11 @@ func TestResolveMapping_TildeExpansionFailure(t *testing.T) {
 		},
 	}
 
-	oldHome := os.Getenv("HOME")
+	// t.Setenv restores both home variables after the test; then unset them.
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
 	_ = os.Unsetenv("HOME")
-	_ = os.Unsetenv("USERPROFILE") // For windows compatibility in tests if ever run there
-	defer func() { _ = os.Setenv("HOME", oldHome) }()
+	_ = os.Unsetenv("USERPROFILE")
 
 	// macOS and some other platforms might have fallback mechanisms for UserHomeDir
 	// that don't rely on environment variables. If it still succeeds, we skip the test.
@@ -664,38 +663,38 @@ func TestCodexExpansionHierarchy(t *testing.T) {
 	}
 	bp := &core.Blueprint{ID: "test"}
 
-	// Cleanup env after test
-	defer func() {
-		_ = os.Unsetenv("CODEX_PROMPTS_DIR")
-		_ = os.Unsetenv("CODEX_HOME")
-	}()
+	// Isolated home (HOME and USERPROFILE); t.Setenv restores every variable.
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("CODEX_PROMPTS_DIR", "")
+	t.Setenv("CODEX_HOME", "")
 
 	// Case 1: CODEX_PROMPTS_DIR
-	_ = os.Setenv("CODEX_PROMPTS_DIR", "/path/to/prompts")
+	t.Setenv("CODEX_PROMPTS_DIR", "/path/to/prompts")
 	mappings, err := resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
 		t.Fatalf("resolveMappings failed: %v", err)
 	}
 	mapping := mappings[0]
-	if mapping.Path != "/path/to/prompts" {
-		t.Errorf("Priority 1 failed: expected /path/to/prompts, got %s", mapping.Path)
+	if want := filepath.FromSlash("/path/to/prompts"); mapping.Path != want {
+		t.Errorf("Priority 1 failed: expected %s, got %s", want, mapping.Path)
 	}
 
 	// Case 2: CODEX_HOME
 	_ = os.Unsetenv("CODEX_PROMPTS_DIR")
-	_ = os.Setenv("CODEX_HOME", "/home/user/.codex")
+	t.Setenv("CODEX_HOME", "/home/user/.codex")
 	mappings, err = resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
 		t.Fatalf("resolveMappings failed: %v", err)
 	}
 	mapping = mappings[0]
-	if mapping.Path != "/home/user/.codex/prompts" {
-		t.Errorf("Priority 2 failed: expected /home/user/.codex/prompts, got %s", mapping.Path)
+	if want := filepath.FromSlash("/home/user/.codex/prompts"); mapping.Path != want {
+		t.Errorf("Priority 2 failed: expected %s, got %s", want, mapping.Path)
 	}
 
 	// Case 3: Default ~/.codex/prompts
 	_ = os.Unsetenv("CODEX_HOME")
-	home, _ := os.UserHomeDir()
 	mappings, err = resolveMappings(kitConfig, "commands/test.yaml", bp, "codex")
 	if err != nil {
 		t.Fatalf("resolveMappings failed: %v", err)
@@ -740,8 +739,8 @@ func TestCodexGlobalLocalIsolation(t *testing.T) {
 		t.Fatalf("resolveMappings failed: %v", err)
 	}
 	mapping := mappings[0]
-	if mapping.Path != globalDir {
-		t.Errorf("expected global path %s, got %s", globalDir, mapping.Path)
+	if want := filepath.FromSlash(globalDir); mapping.Path != want {
+		t.Errorf("expected global path %s, got %s", want, mapping.Path)
 	}
 
 	// 2. Verify Skill is Local (Relative)
@@ -755,3 +754,154 @@ func TestCodexGlobalLocalIsolation(t *testing.T) {
 		t.Errorf("expected local path %s, got %s", expectedLocal, mapping.Path)
 	}
 }
+
+func TestResolveMapping_UseSubdir(t *testing.T) {
+	kitConfig := &core.KitConfig{
+		Tools: map[string]core.ToolRoute{
+			"cursor": {
+				Target: ".cursor/",
+				Mappings: map[string]core.MappingConfigs{
+					"skills": {
+						core.MappingConfig{
+							Path:      "skills",
+							Ext:       ".md",
+							UseSubdir: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	bp := &core.Blueprint{ID: "test"}
+
+	// Slug should be "tdd" based on path "skills/tdd.yaml"
+	mappings, err := resolveMappings(kitConfig, "skills/tdd.yaml", bp, "cursor")
+	if err != nil {
+		t.Fatalf("resolveMappings failed: %v", err)
+	}
+	mapping := mappings[0]
+
+	// Expected path: .cursor/skills/tdd
+	expected := filepath.Clean(filepath.Join(".cursor/", "skills", "tdd"))
+	if mapping.Path != expected {
+		t.Errorf("expected path %s, got %s", expected, mapping.Path)
+	}
+}
+
+func TestResolveMapping_UseSubdirOverride(t *testing.T) {
+	kitConfig := &core.KitConfig{
+		Tools: map[string]core.ToolRoute{
+			"cursor": {
+				Target: ".cursor/",
+				Mappings: map[string]core.MappingConfigs{
+					"skills": {
+						core.MappingConfig{
+							Path:      "skills",
+							Ext:       ".md",
+							UseSubdir: false, // Default is false
+						},
+					},
+				},
+			},
+		},
+	}
+	bp := &core.Blueprint{
+		ID: "test",
+		Metadata: core.BlueprintMetadata{
+			Mapping: map[string]core.MappingConfig{
+				"cursor": {
+					UseSubdir: true, // Override to true
+				},
+			},
+		},
+	}
+
+	mappings, err := resolveMappings(kitConfig, "skills/tdd.yaml", bp, "cursor")
+	if err != nil {
+		t.Fatalf("resolveMappings failed: %v", err)
+	}
+	mapping := mappings[0]
+
+	// Expected path: .cursor/skills/tdd
+	expected := filepath.Clean(filepath.Join(".cursor/", "skills", "tdd"))
+	if mapping.Path != expected {
+		t.Errorf("expected path %s, got %s", expected, mapping.Path)
+	}
+}
+
+func TestResolveMapping_UseSubdirWithSubparts(t *testing.T) {
+	kitConfig := &core.KitConfig{
+		Tools: map[string]core.ToolRoute{
+			"cursor": {
+				Target: ".cursor/",
+				Mappings: map[string]core.MappingConfigs{
+					"skills": {
+						core.MappingConfig{
+							Path:      "skills",
+							Ext:       ".md",
+							UseSubdir: true,
+						},
+					},
+				},
+			},
+		},
+	}
+	bp := &core.Blueprint{ID: "test"}
+
+	// Path "skills/my-skill/SKILL.yaml"
+	// slug is "SKILL"
+	// parts are ["skills", "my-skill", "SKILL.yaml"]
+	// applyWildcards will add "my-skill" to Path -> "skills/my-skill"
+	// UseSubdir will add slug "SKILL" to Path -> "skills/my-skill/SKILL"
+	mappings, err := resolveMappings(kitConfig, "skills/my-skill/SKILL.yaml", bp, "cursor")
+	if err != nil {
+		t.Fatalf("resolveMappings failed: %v", err)
+	}
+	mapping := mappings[0]
+
+	expected := filepath.Clean(filepath.Join(".cursor/", "skills", "my-skill", "SKILL"))
+	if mapping.Path != expected {
+		t.Errorf("expected path %s, got %s", expected, mapping.Path)
+	}
+}
+
+func TestSkillAdaptationGuardrails(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "specforce-test-guardrails-adapt-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	kitFS := os.DirFS("kit")
+	ctx := context.Background()
+
+	// Adapt for antigravity
+	err = AdaptArtifacts(ctx, tmpDir, kitFS, "antigravity", nil, installer.Options{})
+	if err != nil {
+		t.Fatalf("AdaptArtifacts for antigravity failed: %v", err)
+	}
+
+	skillPath := filepath.Join(tmpDir, ".agents", "skills", "spf-implement", "SKILL.md")
+	data, err := os.ReadFile(skillPath)
+	if err != nil {
+		t.Fatalf("failed to read adapted skill at %s: %v", skillPath, err)
+	}
+	content := string(data)
+
+	expectedSnippets := []string{
+		"NON-NEGOTIABLE WORKER GUARDRAILS",
+		"Uncertainty & Ambiguity",
+		"Multiple Interpretations",
+		"Flawed Approach",
+		"Scope Containment",
+		"Test Integrity & Invariance (Tests = Specification)",
+		"Mid/Post-Implementation Spec Gate",
+	}
+
+	for _, snippet := range expectedSnippets {
+		if !strings.Contains(content, snippet) {
+			t.Errorf("adapted skill missing expected snippet: %q", snippet)
+		}
+	}
+}
+

@@ -55,9 +55,8 @@ func runEmptyDirTest(t *testing.T, tmpDir string, registry *Registry) {
 		t.Fatalf("GetStatus failed: %v", err)
 	}
 
-	// We removed current-state and index, so it should be 7 artifacts
-	// (principles, architecture, ui-ux, security, engineering, governance, memorial)
-	expectedTotal := 7
+	// (principles, architecture, ui-ux, security, engineering, governance)
+	expectedTotal := 6
 	if status.Total != expectedTotal {
 		t.Errorf("expected %d artifacts, got %d", expectedTotal, status.Total)
 	}
@@ -80,6 +79,15 @@ func runAllFilesPresentTest(t *testing.T, tmpDir string, registry *Registry) {
 		t.Fatalf("failed to create docs dir: %v", err)
 	}
 
+	// Create a dummy module
+	modulesDir := filepath.Join(docsDir, "modules")
+	if err := os.MkdirAll(modulesDir, 0755); err != nil {
+		t.Fatalf("failed to create modules dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(modulesDir, "auth.md"), []byte("test"), 0644); err != nil {
+		t.Fatalf("failed to write module file: %v", err)
+	}
+
 	artifacts := registry.List()
 	coreCount := 0
 	for _, art := range artifacts {
@@ -87,7 +95,11 @@ func runAllFilesPresentTest(t *testing.T, tmpDir string, registry *Registry) {
 			continue
 		}
 		coreCount++
-		if err := os.WriteFile(filepath.Join(tmpDir, art.Path), []byte("test"), 0644); err != nil {
+		filePath := filepath.Join(tmpDir, art.Path)
+		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			t.Fatalf("failed to create dir for %s: %v", art.Name, err)
+		}
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatalf("failed to write test file %s: %v", art.Name, err)
 		}
 	}
@@ -102,6 +114,9 @@ func runAllFilesPresentTest(t *testing.T, tmpDir string, registry *Registry) {
 	}
 	if status.Progress != 100 {
 		t.Errorf("expected 100%% progress, got %d%%", status.Progress)
+	}
+	if len(status.Modules) != 1 || status.Modules[0] != "auth" {
+		t.Errorf("expected module 'auth', got %v", status.Modules)
 	}
 }
 
@@ -129,7 +144,11 @@ func runPartiallyPresentTest(t *testing.T, registry *Registry) {
 
 	// Create only the first 2 core artifacts
 	for i := 0; i < 2; i++ {
-		if err := os.WriteFile(filepath.Join(partialTmpDir, coreArtifacts[i].Path), []byte("test"), 0644); err != nil {
+		filePath := filepath.Join(partialTmpDir, coreArtifacts[i].Path)
+		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			t.Fatalf("failed to create dir for partial test: %v", err)
+		}
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatalf("failed to write partial test file: %v", err)
 		}
 	}
@@ -146,6 +165,9 @@ func runPartiallyPresentTest(t *testing.T, registry *Registry) {
 	expectedProgress := (2 * 100) / len(coreArtifacts)
 	if status.Progress != expectedProgress {
 		t.Errorf("expected %d%% progress, got %d%%", expectedProgress, status.Progress)
+	}
+	if len(status.Modules) != 0 {
+		t.Errorf("expected 0 modules, got %d", len(status.Modules))
 	}
 }
 

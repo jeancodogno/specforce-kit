@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
 
 func TestEnsureAgentsMD(t *testing.T) {
@@ -15,7 +17,7 @@ func TestEnsureAgentsMD(t *testing.T) {
 	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	t.Run("Create new file", func(t *testing.T) {
-		err := EnsureAgentsMD(tempDir, nil)
+		err := EnsureAgentsMD(tempDir, nil, []string{})
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
@@ -39,7 +41,7 @@ func TestEnsureAgentsMD(t *testing.T) {
 			t.Fatalf("failed to write existing file: %v", err)
 		}
 
-		err = EnsureAgentsMD(tempDir, nil)
+		err = EnsureAgentsMD(tempDir, nil, []string{})
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
@@ -54,50 +56,108 @@ func TestEnsureAgentsMD(t *testing.T) {
 	})
 }
 
-func TestEnsurePlatformConfigs(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "specforce-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer func() { _ = os.RemoveAll(tempDir) }()
+func TestEnsurePlatformConfigs_NoSelection(t *testing.T) {
+	tempDir := t.TempDir()
 
-	err = EnsureAgentsMD(tempDir, nil)
+	err := EnsureAgentsMD(tempDir, nil, []string{})
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}
 
-	// Gemini
-	geminiPath := filepath.Join(tempDir, ".gemini", "settings.json")
-	if _, err := os.Stat(geminiPath); err != nil {
-		t.Errorf("Gemini settings.json not created: %v", err)
+	// Verify no directories were created
+	for _, dir := range []string{".gemini", ".claude"} {
+		path := filepath.Join(tempDir, dir)
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("expected directory %s NOT to exist", dir)
+		}
 	}
-	data, _ := os.ReadFile(geminiPath)
-	if !strings.Contains(string(data), "\"fileName\": [") {
-		t.Errorf("Gemini settings.json content mismatch (expected array): %s", string(data))
-	}
-	if !strings.Contains(string(data), "\"AGENTS.md\"") {
-		t.Errorf("Gemini settings.json missing AGENTS.md: %s", string(data))
-	}
+}
 
-	// Antigravity symlink
-	agentLink := filepath.Join(tempDir, ".agent", "rules", "AGENTS.md")
-	if _, err := os.Lstat(agentLink); err != nil {
-		t.Errorf("Antigravity symlink not created: %v", err)
-	}
-	target, _ := os.Readlink(agentLink)
-	if target != "../../AGENTS.md" {
-		t.Errorf("Antigravity symlink target mismatch: %s", target)
-	}
+func TestEnsurePlatformConfigs_Gemini(t *testing.T) {
+	t.Run("Does NOT create configs if selected", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		err := EnsureAgentsMD(subTempDir, nil, []string{"gemini-cli"})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
 
-	// Claude Code symlink
-	claudeLink := filepath.Join(tempDir, ".claude", "rules", "AGENTS.md")
-	if _, err := os.Lstat(claudeLink); err != nil {
-		t.Errorf("Claude Code symlink not created: %v", err)
-	}
-	target, _ = os.Readlink(claudeLink)
-	if target != "../../AGENTS.md" {
-		t.Errorf("Claude Code symlink target mismatch: %s", target)
-	}
+		geminiDir := filepath.Join(subTempDir, ".gemini")
+		if _, err := os.Stat(geminiDir); err == nil {
+			t.Errorf("expected .gemini directory NOT to exist when gemini-cli is passed")
+		}
+	})
+
+	t.Run("Does NOT create settings.json even if dir exists", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(subTempDir, ".gemini"), 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		err := EnsureAgentsMD(subTempDir, nil, []string{})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		geminiPath := filepath.Join(subTempDir, ".gemini", "settings.json")
+		if _, err := os.Stat(geminiPath); err == nil {
+			t.Errorf("expected .gemini/settings.json NOT to be created")
+		}
+	})
+}
+
+func TestEnsurePlatformConfigs_Claude(t *testing.T) {
+	t.Run("Creates configs if selected", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		err := EnsureAgentsMD(subTempDir, nil, []string{"claude"})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		claudeLink := filepath.Join(subTempDir, ".claude", "rules", "AGENTS.md")
+		if _, err := os.Lstat(claudeLink); err != nil {
+			t.Errorf("Claude Code symlink not created: %v", err)
+		}
+	})
+}
+
+func TestEnsurePlatformConfigs_Cursor(t *testing.T) {
+	t.Run("Does NOT create symlinks for Cursor", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		err := EnsureAgentsMD(subTempDir, nil, []string{"cursor"})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		// Cursor symlink (should NOT exist)
+		cursorLink := filepath.Join(subTempDir, ".cursor", "rules", "AGENTS.md")
+		if _, err := os.Lstat(cursorLink); err == nil {
+			t.Errorf("Cursor symlink should NOT be created")
+		}
+
+		cursorDir := filepath.Join(subTempDir, ".cursor")
+		if _, err := os.Stat(cursorDir); err == nil {
+			t.Errorf("Cursor directory should NOT be created by EnsureAgentsMD")
+		}
+	})
+
+	t.Run("Does NOT create symlinks for Cursor even if directory exists", func(t *testing.T) {
+		subTempDir := t.TempDir()
+		cursorDir := filepath.Join(subTempDir, ".cursor")
+		if err := os.MkdirAll(cursorDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		err := EnsureAgentsMD(subTempDir, nil, []string{})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		// Cursor symlink (should NOT exist)
+		cursorLink := filepath.Join(subTempDir, ".cursor", "rules", "AGENTS.md")
+		if _, err := os.Lstat(cursorLink); err == nil {
+			t.Errorf("Cursor symlink should NOT be created even if .cursor directory exists")
+		}
+	})
 }
 
 func TestGenerateAgentsContent(t *testing.T) {
@@ -111,6 +171,53 @@ func TestGenerateAgentsContent(t *testing.T) {
 	}
 	if !strings.Contains(content, "# AI Agent Collaboration Guide") {
 		t.Errorf("content does not contain title")
+	}
+	if !strings.Contains(content, "## 2. CLI Execution & Environment") {
+		t.Errorf("content does not contain CLI Execution section")
+	}
+	if !strings.Contains(content, "## 3. Environment Recovery") {
+		t.Errorf("content does not contain Environment Recovery section")
+	}
+
+	if !strings.Contains(content, "## 4. Project Constitution & Modules") {
+		t.Errorf("content does not contain Project Constitution & Modules section")
+	}
+	if !strings.Contains(content, "modules/<slug>.md") {
+		t.Errorf("content does not contain modules/<slug>.md reference")
+	}
+	expectedRecoveryCmd := "npm i -g @jeancodogno/specforce-kit@" + core.Version
+	if !strings.Contains(content, expectedRecoveryCmd) {
+		t.Errorf("content does not contain the correct recovery command with version: %s", expectedRecoveryCmd)
+	}
+
+	// Pure skills assertions
+	if !strings.Contains(content, "You MUST operate exclusively through Specforce Skills.") {
+		t.Errorf("content does not contain Specforce Skills requirement in Section 1")
+	}
+	for _, skill := range []string{"spf.discovery", "spf.spec", "spf.constitution", "spf.implement", "spf.archive"} {
+		if !strings.Contains(content, skill) {
+			t.Errorf("content does not contain skill reference %s", skill)
+		}
+	}
+	for _, slashCmd := range []string{"/spf:discovery", "/spf:spec", "/spf:constitution", "/spf:implement", "/spf:archive"} {
+		if strings.Contains(content, slashCmd) {
+			t.Errorf("content contains obsolete slash command %s", slashCmd)
+		}
+	}
+
+	// Discovery wording assertions
+	if !strings.Contains(content, "read-only for product code") {
+		t.Errorf("content does not contain discovery wording 'read-only for product code'")
+	}
+	if !strings.Contains(content, ".specforce/scratch/") {
+		t.Errorf("content does not mention .specforce/scratch/")
+	}
+	if strings.Contains(content, "Purely read-only") {
+		t.Errorf("content still contains obsolete wording 'Purely read-only'")
+	}
+	if !strings.Contains(content, "STRICTLY FORBIDDEN from using mutation tools") ||
+		!strings.Contains(content, "`replace`") || !strings.Contains(content, "`write_file`") {
+		t.Errorf("content does not contain the direct-edit prohibition mentioning replace and write_file")
 	}
 }
 
@@ -142,6 +249,20 @@ func TestMergeAgentsContent(t *testing.T) {
 		expected := "CUSTOM START\n" + replacement + "\nCUSTOM END"
 		if result != expected {
 			t.Errorf("expected %q, got %q", expected, result)
+		}
+	})
+
+	t.Run("Old discovery wording is replaced exactly once", func(t *testing.T) {
+		existing := "CUSTOM START\n<!-- SPECFORCE_AGENTS_START -->\n- Discovery: Purely read-only.\n<!-- SPECFORCE_AGENTS_END -->\nCUSTOM END"
+		result := mergeAgentsContent(existing, generateAgentsContent())
+		if strings.Contains(result, "Purely read-only") {
+			t.Errorf("old wording still present after merge")
+		}
+		if got := strings.Count(result, "read-only for product code"); got != 1 {
+			t.Errorf("expected new wording exactly once, got %d", got)
+		}
+		if got := strings.Count(result, "<!-- SPECFORCE_AGENTS_START -->"); got != 1 {
+			t.Errorf("expected exactly one start marker, got %d", got)
 		}
 	})
 }

@@ -3,6 +3,7 @@ package tui
 import (
 	"os"
 
+	"github.com/charmbracelet/x/term"
 	"github.com/mattn/go-isatty"
 )
 
@@ -11,8 +12,15 @@ func IsTTY() bool {
 	return isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
 }
 
-// GetTerminalWidth returns the current width of the terminal.
+// defaultTerminalWidth is used when the width of stdout cannot be determined.
+const defaultTerminalWidth = 80
+
+// GetTerminalWidth returns the current width of the terminal, or 80 when it
+// cannot be determined (for example when stdout is not a terminal).
 func GetTerminalWidth() int {
-	// Simplified implementation, could use golang.org/x/term
-	return 80 // Default fallback
+	width, _, err := term.GetSize(os.Stdout.Fd())
+	if err != nil || width <= 0 {
+		return defaultTerminalWidth
+	}
+	return width
 }

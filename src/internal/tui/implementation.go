@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
 )
@@ -10,7 +11,7 @@ import (
 // RenderImplementationStatus renders the implementation status report.
 func RenderImplementationStatus(report *spec.ImplementationReport) error {
 	if IsTTY() {
-		PrintBranding()
+		PrintHeader()
 	}
 
 	renderStatusHeader(report)
@@ -18,6 +19,7 @@ func RenderImplementationStatus(report *spec.ImplementationReport) error {
 	renderImplementationContext(report)
 	renderExecutionStrategy(report)
 	renderAtomicTasks(report)
+	renderQALine(report)
 	renderProjectInstructions(report)
 	renderPreemptiveMitigations(report)
 
@@ -26,7 +28,7 @@ func RenderImplementationStatus(report *spec.ImplementationReport) error {
 
 func renderStatusHeader(report *spec.ImplementationReport) {
 	fmt.Println("\n" + HeaderStyle.Render("IMPLEMENTATION READINESS: "+strings.ToUpper(report.Name)))
-	
+
 	var statusBadge string
 	switch strings.ToLower(report.Status) {
 	case "ready":
@@ -85,6 +87,22 @@ func renderAtomicTasks(report *spec.ImplementationReport) {
 		}
 	}
 	fmt.Println()
+
+	if report.TotalTime > 0 {
+		fmt.Printf("                                          TOTAL: %s\n", HeaderStyle.Render(formatDuration(report.TotalTime)))
+	}
+}
+
+func formatDuration(d time.Duration) string {
+	d = d.Round(time.Second)
+	if d < time.Hour {
+		m := d / time.Minute
+		s := (d % time.Minute) / time.Second
+		return fmt.Sprintf("%02dm %02ds", m, s)
+	}
+	h := d / time.Hour
+	m := (d % time.Hour) / time.Minute
+	return fmt.Sprintf("%02dh %02dm", h, m)
 }
 
 func renderPhase(phase spec.Phase, totalPhases int) {
@@ -100,7 +118,7 @@ func renderPhase(phase spec.Phase, totalPhases int) {
 	if allFinished {
 		phaseTitle = "✓ " + phaseTitle
 	}
-	
+
 	if totalPhases > 1 || (phase.ID != "0" && phase.ID != "") {
 		phaseStyle := HeaderStyle
 		if allFinished {
@@ -117,16 +135,29 @@ func renderPhase(phase spec.Phase, totalPhases int) {
 func renderTask(task spec.ImplementationTask) {
 	stateIcon := "○"
 	stateStyle := BodyStyle
+	workingBadge := ""
+
 	switch strings.ToUpper(task.State) {
 	case "FINISHED":
 		stateIcon = "◉"
 		stateStyle = SuccessStyle
 	case "IN-PROGRESS":
 		stateStyle = WarningStyle
+		workingBadge = ClockStyle.Render(" ⏲ ")
 	case "FAILED":
 		stateStyle = ErrorStyle
 	}
-	fmt.Printf("    %s %s: %s\n", stateStyle.Render(stateIcon), HeaderStyle.Render(task.ID), BodyStyle.Render(task.Title))
+
+	timeLabel := ""
+	if task.TotalTime > 0 {
+		timeStyle := BodyStyle
+		if task.TotalTime > 4*time.Hour {
+			timeStyle = OvertimeStyle
+		}
+		timeLabel = fmt.Sprintf(" (%s)", timeStyle.Render(formatDuration(task.TotalTime)))
+	}
+
+	fmt.Printf("    %s %s: %s%s%s\n", stateStyle.Render(stateIcon), HeaderStyle.Render(task.ID), BodyStyle.Render(task.Title), timeLabel, workingBadge)
 	if task.Target != "" {
 		fmt.Printf("        %s %s\n", SubtitleStyle.Render("Target:"), BodyStyle.Render(task.Target))
 	}
@@ -148,4 +179,26 @@ func renderPreemptiveMitigations(report *spec.ImplementationReport) {
 		fmt.Println(BodyStyle.Render("  " + report.PreemptiveMitigations))
 		fmt.Println()
 	}
+}
+
+func renderQALine(report *spec.ImplementationReport) {
+	switch {
+	case report.QAError != "":
+		fmt.Println(ErrorStyle.Render("QA: unreadable (" + report.QAError + ")"))
+	case report.QA == nil:
+		fmt.Println(SubtitleStyle.Render("QA: not recorded"))
+	default:
+		qa := report.QA
+		line := fmt.Sprintf("QA: %s (%d passed, %d failed, %d not-verifiable, %d findings)",
+			qa.Status, qa.Counts.Passed, qa.Counts.Failed, qa.Counts.NotVerifiable, len(qa.Findings))
+		style := BodyStyle
+		switch qa.Status {
+		case spec.QAStatusFailed:
+			style = ErrorStyle
+		case spec.QAStatusPassed:
+			style = SuccessStyle
+		}
+		fmt.Println(style.Render(line))
+	}
+	fmt.Println()
 }

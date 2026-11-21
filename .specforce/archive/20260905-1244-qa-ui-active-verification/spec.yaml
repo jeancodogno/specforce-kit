@@ -1,0 +1,17 @@
+slug: 20260905-1244-qa-ui-active-verification
+name: 20260905-1244-qa-ui-active-verification
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-09-05T17:19:45.346732044Z
+              completed_at: 2026-09-05T17:21:26.419143211Z
+    T1.2:
+        sessions:
+            - started_at: 2026-09-05T17:19:45.346733062Z
+              completed_at: 2026-09-05T17:21:26.419143425Z
+    T2.1:
+        sessions:
+            - started_at: 2026-09-05T17:21:28.672087882Z
+              completed_at: 2026-09-05T17:21:49.708191474Z

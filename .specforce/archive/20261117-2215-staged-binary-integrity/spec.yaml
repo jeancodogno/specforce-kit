@@ -1,0 +1,161 @@
+slug: 20261117-2215-staged-binary-integrity
+name: 20261117-2215-staged-binary-integrity
+type: bug
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-18T01:19:56.512262846Z
+              completed_at: 2026-11-18T01:29:34.422949184Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-18T01:19:56.512263296Z
+              completed_at: 2026-11-18T01:29:34.422949448Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-18T01:19:56.512263381Z
+              completed_at: 2026-11-18T01:29:34.422949625Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-18T01:19:56.512263443Z
+              completed_at: 2026-11-18T01:29:34.422949763Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-18T01:19:56.512263505Z
+              completed_at: 2026-11-18T01:29:34.422949927Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-18T01:19:56.512263567Z
+              completed_at: 2026-11-18T01:29:34.422950079Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-18T01:29:34.432341055Z
+              completed_at: 2026-11-18T01:32:38.653988815Z
+    T4.2:
+        sessions:
+            - started_at: 2026-11-18T01:29:34.432341446Z
+              completed_at: 2026-11-18T01:32:38.653989086Z
+    T5.1:
+        sessions:
+            - started_at: 2026-11-18T01:29:34.432341589Z
+              completed_at: 2026-11-18T01:32:38.653989232Z
+    T5.2:
+        sessions:
+            - started_at: 2026-11-18T01:29:34.432342494Z
+              completed_at: 2026-11-18T01:32:38.653989372Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 2
+    recorded_at: 2026-11-18T01:59:50Z
+    criteria:
+        - id: FIX-1a
+          scenario: Corrupted staged file never applied
+          evidence: 'emptied staged: size 0 vs expected, discarded, target unchanged (orchestrator re-ran S1: size 16146051, staged 0)'
+          verdict: PASSED
+        - id: FIX-1b
+          scenario: Non-running staged binary never applied
+          evidence: exec format error / wrong version / 5s timeout discarded
+          verdict: PASSED
+        - id: FIX-1c
+          scenario: Staged update without fingerprint
+          evidence: '''has no fingerprint; discarding'''
+          verdict: PASSED
+        - id: FIX-1d
+          scenario: Healthy staged binary applied
+          evidence: target==beta.9, 755, re-exec prints beta.9
+          verdict: PASSED
+        - id: FIX-2a
+          scenario: First verification failure re-stages
+          evidence: real v1.0.0-beta.3 re-downloaded after count=1
+          verdict: PASSED
+        - id: FIX-2b
+          scenario: Second failure manual, hint once, no re-download
+          evidence: manual after 2 failures; staging skipped; hint once
+          verdict: PASSED
+        - id: FIX-3a
+          scenario: Re-exec failure rolls back
+          evidence: 'real ENOENT exec failure: original restored, no .old, manual recorded, DEBUG includes exec error'
+          verdict: PASSED
+        - id: FIX-3b
+          scenario: Successful restart keeps new binary
+          evidence: updated notice once on stderr
+          verdict: PASSED
+        - id: FIX-4a
+          scenario: Unparseable state repaired
+          evidence: DEBUG state repair with parse error (orchestrator re-verified), orphan removed, valid state rewritten
+          verdict: PASSED
+        - id: FIX-4b
+          scenario: State path directory/unreadable
+          evidence: no crash, nothing overwritten
+          verdict: PASSED
+        - id: S1
+          scenario: Empty staged file
+          evidence: beta.3 x2, staged 0
+          verdict: PASSED
+        - id: S2
+          scenario: Random staged file
+          evidence: beta.3 x2 rc=0
+          verdict: PASSED
+        - id: S3
+          scenario: Garbage state repaired
+          evidence: REPAIRED
+          verdict: PASSED
+        - id: S4
+          scenario: Healthy update end to end
+          evidence: beta.2 -> beta.3 x2
+          verdict: PASSED
+        - id: NFR-Safety
+          scenario: Fingerprint + test run before replace
+          evidence: self-rewrite rejected, symlink rejected and target mode unchanged, FIFO/dir rejected
+          verdict: PASSED
+        - id: NFR-Performance
+          scenario: Bounded test run
+          evidence: 5.02s bound, no orphans, no nested check
+          verdict: PASSED
+        - id: NFR-Isolation
+          scenario: Test run isolated
+          evidence: empty temp HOME/cwd, --version only
+          verdict: PASSED
+        - id: NFR-Observability
+          scenario: DEBUG reasons
+          evidence: verification, rollback (exec error) and state repair (parse error) lines present
+          verdict: PASSED
+        - id: NFR-Security
+          scenario: Owner-only files
+          evidence: state 600, staged dir 700, staged file 600
+          verdict: PASSED
+        - id: REG-1
+          scenario: No downgrade
+          evidence: older staged discarded
+          verdict: PASSED
+        - id: REG-2
+          scenario: Other target ignored
+          evidence: skipped, kept
+          verdict: PASSED
+        - id: REG-3
+          scenario: JSON stdout during swap
+          evidence: valid in single and 120 concurrent runs
+          verdict: PASSED
+        - id: REG-4
+          scenario: Notices stderr interactive only
+          evidence: agent 0, non-tty silent
+          verdict: PASSED
+        - id: REG-5
+          scenario: Offline throttle
+          evidence: 1/0/0
+          verdict: PASSED
+        - id: T-RED
+          scenario: RED tests failed pre-fix
+          evidence: fix already in tree; RED failures were recorded by implementers
+          verdict: NOT-VERIFIABLE
+    findings:
+        - title: Concurrent starts on one pending swap
+          detail: 'parallel runs: losers record manual_update_version over winner''s applied_version, target path briefly missing, .old can be overwritten; no corrupted executable. Needs lock around swap (follow-up spec).'
+        - title: setsid children escape test-run process group
+          detail: low risk; would need subreaper/cgroup
+        - title: Symlinked staging directory is followed
+          detail: only leaf checked; same-user only
+        - title: State-repair DEBUG line repeats
+          detail: printed once per Load until rewritten

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
 )
@@ -26,27 +27,11 @@ func BootstrapProject(ctx context.Context, root string, kitFS fs.FS, artifactsFS
 		".specforce/archive",
 	}
 
-	if ui != nil {
-		ui.StartSpinner("Creating directories...")
-	}
-	if err := createDirectories(root, dirs); err != nil {
-		return err
-	}
-
-	if ui != nil {
-		ui.StopSpinner()
-		ui.Success("Specforce directory structure initialized successfully.")
-	}
-
-	if err := EnsureAgentsMD(root, ui); err != nil {
-		return fmt.Errorf("failed to ensure AGENTS.md: %w", err)
-	}
-
-	return nil
-}
-
-func createDirectories(root string, dirs []string) error {
 	for _, dir := range dirs {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		path := filepath.Join(root, dir)
 		if err := os.MkdirAll(path, 0750); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", path, err)
@@ -59,6 +44,17 @@ func createDirectories(root string, dirs []string) error {
 				return fmt.Errorf("failed to create .gitkeep in %s: %w", path, err)
 			}
 		}
+
+		if ui != nil {
+			// Format: ↳ .specforce/docs ................................. OK
+			dotCount := 40 - len(dir)
+			if dotCount < 1 {
+				dotCount = 1
+			}
+			dots := strings.Repeat(".", dotCount)
+			ui.LogSubTask(fmt.Sprintf("%s %s OK", dir, dots))
+		}
 	}
+
 	return nil
 }

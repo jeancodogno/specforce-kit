@@ -5,6 +5,9 @@
 - **Token/Session Lifecycle:** N/A (Stateless CLI).
 - **Authorization Model:** Implicit (The user running the CLI must have RW permissions on the project directory).
 - **Tenant Isolation (IDOR Prevention):** N/A (Single-tenant; project scope is the current directory).
+- **Permission Hardening:** 
+    - **Files:** Sensitive data (upgrade states, metadata) MUST be stored with `0600` permissions.
+    - **Directories:** All framework-managed directories MUST use `0750` permissions.
 
 ## Data Protection & Cryptography
 - **Data in Transit:** N/A (Internal tool; all data flows remain local).
@@ -27,9 +30,14 @@
     1. Call `filepath.Clean(path)`.
     2. Ensure the resulting path remains within the project's root boundary.
     3. Reject any path that attempts to escape via directory traversal (e.g., `../`).
+- **Verify Immediately Before Use:** Any downloaded artifact that is used later (e.g., a staged binary) MUST carry a fingerprint (hash and size) recorded when it was verified against its trusted source, and MUST be re-verified immediately before use and after any step that executes it. It MUST be a regular file (checked without following symlinks), and permission changes MUST be applied through the opened file, never through a path that could be a link. On any mismatch the artifact is discarded, never used.
 - **Command Sanitization:** Subprocess execution (e.g., Hooks) MUST NOT use shell-mediated execution (e.g., `sh -c`). Instead, command strings MUST be parsed into a base command and an explicit slice of arguments to prevent shell injection.
 
 ## AI Security Constraints
 - The AI MUST NEVER hardcode passwords, tokens, or API keys in the source code. All secrets MUST be mocked via environment variables.
 - The AI MUST ALWAYS use parameterized inputs when interacting with external processes or generating dynamic content. Raw string concatenation for executable logic is strictly forbidden.
 - The AI MUST strictly validate all inputs at the project boundary (CLI arguments, file reads) before processing domain logic.
+
+## Dependency & Toolchain Hardening
+- **Min-Max Versioning:** The project MUST track the Go toolchain version in `go.mod`. Security patches for the standard library MUST be applied immediately upon release (e.g., Go 1.26.3 to fix net/http vulnerabilities).
+- **Vulnerability Scanning:** Continuous monitoring via `govulncheck` is mandatory in all CI pipelines. Zero-day vulnerabilities in the standard library or direct dependencies MUST be addressed within 24 hours of discovery.

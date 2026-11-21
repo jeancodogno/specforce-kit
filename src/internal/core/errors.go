@@ -28,4 +28,10 @@ var (
 
 	// ErrSpecAlreadyArchived is returned when a spec slug is already in use in the archive directory.
 	ErrSpecAlreadyArchived = errors.New("feature specification already exists in the archive")
+
+	// ErrDeltaInvalid is returned when a specification delta has problems that must be fixed.
+	ErrDeltaInvalid = errors.New("delta is invalid")
+
+	// ErrDeltaNotApplied is returned when a specification delta is missing or not yet reflected in its modules.
+	ErrDeltaNotApplied = errors.New("delta is not applied")
 )

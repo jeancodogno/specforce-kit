@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -13,20 +14,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// globalEnabledAgents defines which agents are allowed to write artifacts to global system paths.
-var globalEnabledAgents = []string{"codex"}
-
 // Transformer defines how to transform a blueprint into a target format.
 type Transformer func(bp *core.Blueprint, mapping core.MappingConfig) string
 
 var transformers = map[string]Transformer{
-	".toml": func(bp *core.Blueprint, mapping core.MappingConfig) string {
-		desc := bp.Metadata.Description
-		if desc == "" {
-			desc = mapping.Name
+	// Deprecated: .toml transformer removed with Gemini CLI decommissioning.
+	".json": func(bp *core.Blueprint, mapping core.MappingConfig) string {
+		profile := struct {
+			Name         string   `json:"name"`
+			Description  string   `json:"description"`
+			Instructions string   `json:"instructions"`
+			Tools        []string `json:"tools"` // Initialized as empty slice
+		}{
+			Name:         bp.Metadata.Name,
+			Description:  bp.Metadata.Description,
+			Instructions: bp.Content,
+			Tools:        []string{},
 		}
-		// Gemini TOML format: REQ-2 AC-5
-		return fmt.Sprintf("description = %q\nprompt = \"\"\"\n%s\n\"\"\"\n", desc, bp.Content)
+		data, _ := json.MarshalIndent(profile, "", "  ")
+		return string(data)
 	},
 }
 
@@ -153,6 +159,8 @@ func processBlueprint(ctx context.Context, root string, kitFS fs.FS, kitConfig *
 		return err
 	}
 
+	toolRoute := kitConfig.Tools[agent]
+
 	for _, mapping := range mappings {
 		// REQ-2: Check if this artifact should be installed based on the target path
 		if !installer.ShouldInstall(mapping.Path, opts) {
@@ -160,7 +168,7 @@ func processBlueprint(ctx context.Context, root string, kitFS fs.FS, kitConfig *
 		}
 
 		var targetDir, targetFile string
-		if isGlobalEnabled(agent) {
+		if toolRoute.Security.GlobalWrite {
 			targetDir = mapping.Path
 			if !filepath.IsAbs(targetDir) {
 				targetDir = filepath.Join(root, targetDir)
@@ -208,63 +216,67 @@ func resolveMappings(kitConfig *core.KitConfig, path string, bp *core.Blueprint,
 		return nil, core.ErrToolMappingNotFound
 	}
 
-	rawMappings, hasMapping := toolRoute.Mappings[category]
-
-	var results []core.MappingConfig
-
-	if !hasMapping {
-		if bp.Metadata.Mapping == nil {
-			return nil, nil
-		}
-		override, ok := bp.Metadata.Mapping[agent]
-		if !ok {
-			return nil, nil
-		}
-		results = []core.MappingConfig{override}
-	} else {
-		// Process each mapping in the slice
-		for _, m := range rawMappings {
-			mapping := m
-			applyBlueprintOverrides(&mapping, bp, agent)
-			results = append(results, mapping)
-		}
+	rawMappings := getRawMappings(kitConfig, bp, toolRoute, agent, category)
+	if len(rawMappings) == 0 {
+		return nil, nil
 	}
 
-	for i := range results {
-		mapping := &results[i]
-		initialPath := mapping.Path
-		applyWildcards(mapping, slug, parts, initialPath)
+	results := make([]core.MappingConfig, 0, len(rawMappings))
+	for _, m := range rawMappings {
+		mapping := m
+		applyBlueprintOverrides(&mapping, bp, agent)
 
-		// Default naming logic: If mapping.Name is missing, resolve it based on source filename
-		if mapping.Name == "" {
-			mapping.Name = slug
+		if err := finalizeMapping(&mapping, toolRoute, slug, parts); err != nil {
+			return nil, err
 		}
-
-		// Resolve final target path
-		rawTarget := mapping.Target
-		if rawTarget == "" {
-			rawTarget = toolRoute.Target
-		}
-
-		target := core.ExpandPath(rawTarget)
-		if strings.HasPrefix(target, "~") {
-			return nil, fmt.Errorf("failed to resolve home directory for path: %s", target)
-		}
-
-		// Use filepath.Join to combine target and the mapping's internal path
-		mapping.Path = filepath.Clean(filepath.Join(target, mapping.Path))
+		results = append(results, mapping)
 	}
 
 	return results, nil
 }
 
-func isGlobalEnabled(agent string) bool {
-	for _, a := range globalEnabledAgents {
-		if a == agent {
-			return true
+func getRawMappings(kitConfig *core.KitConfig, bp *core.Blueprint, toolRoute core.ToolRoute, agent, category string) []core.MappingConfig {
+	if specific, ok := toolRoute.Mappings[category]; ok {
+		return specific
+	}
+	if bp.Metadata.Mapping != nil {
+		if override, ok := bp.Metadata.Mapping[agent]; ok {
+			return []core.MappingConfig{override}
 		}
 	}
-	return false
+	if defaults, ok := kitConfig.Defaults[category]; ok {
+		return defaults
+	}
+	return nil
+}
+
+func finalizeMapping(mapping *core.MappingConfig, toolRoute core.ToolRoute, slug string, parts []string) error {
+	initialPath := mapping.Path
+	applyWildcards(mapping, slug, parts, initialPath)
+
+	if mapping.UseSubdir {
+		mapping.Path = filepath.Join(mapping.Path, slug)
+	}
+
+	// Default naming logic: If mapping.Name is missing, resolve it based on source filename
+	if mapping.Name == "" {
+		mapping.Name = slug
+	}
+
+	// Resolve final target path
+	rawTarget := mapping.Target
+	if rawTarget == "" {
+		rawTarget = toolRoute.Target
+	}
+
+	target := core.ExpandPath(rawTarget)
+	if strings.HasPrefix(target, "~") {
+		return fmt.Errorf("failed to resolve home directory for path: %s", target)
+	}
+
+	// Use filepath.Join to combine target and the mapping's internal path
+	mapping.Path = filepath.Clean(filepath.Join(target, mapping.Path))
+	return nil
 }
 
 func applyBlueprintOverrides(mapping *core.MappingConfig, bp *core.Blueprint, agent string) {
@@ -278,6 +290,9 @@ func applyBlueprintOverrides(mapping *core.MappingConfig, bp *core.Blueprint, ag
 			}
 			if override.Ext != "" {
 				mapping.Ext = override.Ext
+			}
+			if override.UseSubdir {
+				mapping.UseSubdir = override.UseSubdir
 			}
 		}
 	}
@@ -310,6 +325,15 @@ func applyTransformation(bp *core.Blueprint, mapping core.MappingConfig, sourceP
 	// REQ-2: Standardized YAML Frontmatter Headers for Markdown
 	if mapping.Ext == ".md" {
 		return injectYAMLHeader(bp, mapping, sourcePath, category)
+	}
+
+	// Legacy TOML support for residual tests until T3.1 decommissioning
+	if mapping.Ext == ".toml" {
+		desc := bp.Metadata.Description
+		if desc == "" {
+			desc = mapping.Name
+		}
+		return fmt.Sprintf("description = %q\nprompt = \"\"\"\n%s\n\"\"\"\n", desc, bp.Content)
 	}
 
 	return bp.Content

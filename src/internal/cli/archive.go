@@ -3,10 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
-	"io/fs"
+	"time"
 
-	"github.com/jeancodogno/specforce-kit/src/internal/constitution"
+	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
+	"github.com/jeancodogno/specforce-kit/src/internal/tui"
 )
 
 // HandleArchive dispatches to the correct archive sub-command.
@@ -28,64 +29,36 @@ func (e *Executor) HandleArchive(ctx context.Context, ui core.UI, args ...string
 
 // HandleArchiveInstructions processes the 'archive instructions' command.
 func (e *Executor) HandleArchiveInstructions(ctx context.Context, ui core.UI) error {
-	// 1. Fetch Constitution Status
-	artifactsFS, err := e.GetArtifactsFS(ui)
-	if err != nil {
-		return err
-	}
-	constitutionFS, err := fs.Sub(artifactsFS, "constitution")
-	if err != nil {
-		return fmt.Errorf("failed to sub-filesystem for constitution: %w", err)
-	}
-	registry, err := constitution.NewRegistry(constitutionFS)
-	if err != nil {
-		return fmt.Errorf("failed to initialize constitution registry: %w", err)
-	}
-	status, err := constitution.GetStatus(ctx, ".", registry)
-	if err != nil {
-		return fmt.Errorf("failed to scan constitution: %w", err)
-	}
-
-	// 2. Fetch Kit Instructions
 	kitFS, err := e.GetKitFS(ui)
 	if err != nil {
 		return err
 	}
-	kitInstructions, err := fs.ReadFile(kitFS, "instructions/archive.md")
-	if err != nil {
-		// Fallback if file doesn't exist
-		kitInstructions = []byte("Follow the standard archiving procedure.")
-	}
-
-	// 3. Fetch Config Instructions
 	config := core.LoadConfig(".")
-	customInstructions := config.Instructions["archive"]
-
-	// 4. Print Combined Output
-	fmt.Println("# ARCHIVE INSTRUCTIONS")
-	fmt.Println()
-	fmt.Println("## 1. Project Constitution Context")
-	fmt.Println("These are the global standards of the project:")
-	for _, art := range status.Artifacts {
-		existsStr := "[MISSING]"
-		if art.Exists {
-			existsStr = "[EXISTS]"
-		}
-		fmt.Printf("- %s %s: %s (Path: %s)\n", existsStr, art.Name, art.Description, art.Path)
-	}
-	fmt.Println()
-
-	fmt.Println("## 2. Core Archiving Rules")
-	fmt.Println(string(kitInstructions))
-	fmt.Println()
-
-	if len(customInstructions) > 0 {
-		fmt.Println("## 3. Project-Specific Rules (config.yaml)")
-		for _, instr := range customInstructions {
-			fmt.Printf("- %s\n", instr)
-		}
-		fmt.Println()
+	if config.Context == nil {
+		config.Context = make(map[string]string)
 	}
 
+	// Inject dynamic context for archiving
+	now := time.Now()
+	config.Context["CURRENT_DATE"] = now.Format("20060102")
+	config.Context["CURRENT_TIME"] = now.Format("1504")
+	config.Context["CURRENT_DATETIME"] = now.Format("20060102-1504")
+
+	mgr := agent.NewInstructionManager(kitFS, config)
+	finalInstructions, err := mgr.GetInstructions("archive")
+	if err != nil {
+		return fmt.Errorf("failed to get archive instructions: %w", err)
+	}
+
+	e.printArchiveInstructions(finalInstructions)
 	return nil
+}
+
+func (e *Executor) printArchiveInstructions(instructions string) {
+	fmt.Println(instructions)
+	fmt.Println()
+
+	if tui.IsTTY() {
+		tui.PrintFooter(e.Version)
+	}
 }

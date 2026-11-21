@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/jeancodogno/specforce-kit/src/internal/agent"
 	"github.com/jeancodogno/specforce-kit/src/internal/core"
-	"github.com/jeancodogno/specforce-kit/src/internal/installer"
 	"github.com/jeancodogno/specforce-kit/src/internal/project"
 	"github.com/jeancodogno/specforce-kit/src/internal/spec"
 	"github.com/jeancodogno/specforce-kit/src/internal/tui"
@@ -37,21 +35,6 @@ func NewExecutor(Version string) *Executor {
 	}
 }
 
-func (e *Executor) HandleInstall(ctx context.Context, ui core.UI) error {
-	if tui.IsTTY() {
-		tui.PrintBranding()
-	}
-	err := installer.Install(ctx, ui)
-	if err != nil {
-		switch {
-		case errors.Is(err, core.ErrInstallerPermissionDenied):
-			// installer already printed the sudo suggestion; exit gracefully
-			return nil
-		}
-	}
-	return err
-}
-
 func (e *Executor) HandleInit(ctx context.Context, ui core.UI, agents ...string) error {
 	if tui.IsTTY() {
 		tui.PrintBranding()
@@ -62,36 +45,44 @@ func (e *Executor) HandleInit(ctx context.Context, ui core.UI, agents ...string)
 		return err
 	}
 
-	selected, err := e.ResolveSelectedAgents(ctx, ui, agents...)
+	selected, removed, err := e.ResolveSelectedAgents(ctx, ui, agents...)
 	if err != nil {
 		return err
 	}
 
+	// Auto-initialize config.yaml if it doesn't exist
+	if err := core.EnsureConfigExists("."); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize config.yaml: %v\n", err)
+	}
+
 	// Check if already initialized for update flow
 	if project.IsInitialized(".") {
-		return e.handleUpdateFlow(ctx, ui, kitFS, selected)
+		return e.handleUpdateFlow(ctx, ui, kitFS, selected, removed)
 	}
 
 	return e.handleNewInitFlow(ctx, ui, kitFS, selected)
 }
 
-func (e *Executor) handleUpdateFlow(ctx context.Context, ui core.UI, kitFS fs.FS, selected []string) error {
-	if ui != nil && ui.Confirm("Do you want to update agent tools and instructions (.gemini, .claude, etc)?") {
-		// Initialize ProjectService lazily
-		if e.ProjectService == nil {
-			e.ProjectService = project.NewService(kitFS, nil, ".")
-		}
-
-		if err := e.ProjectService.UpdateTools(ctx, ui, selected); err != nil {
-			return err
-		}
-		if tui.IsTTY() {
-			tui.PrintCompletionBox("UPDATE COMPLETE", "Agent tools and instructions updated successfully.")
-		}
-		return nil
+func (e *Executor) handleUpdateFlow(ctx context.Context, ui core.UI, kitFS fs.FS, selected []string, removed []string) error {
+	// If the user already confirmed in the TUI (removed is non-empty and they passed),
+	// or if it's a direct CLI command, we might not need another confirm.
+	// However, if it's an interactive TUI session, we should trust the TUI result.
+	
+	// Initialize ProjectService lazily
+	if e.ProjectService == nil {
+		e.ProjectService = project.NewService(kitFS, nil, ".")
 	}
-	if ui != nil {
-		ui.Warn("Initialization cancelled. Project remains unchanged.")
+
+	// Decommission removed agents
+	if err := e.ProjectService.DecommissionAgents(ctx, ui, removed); err != nil {
+		return err
+	}
+
+	if err := e.ProjectService.UpdateTools(ctx, ui, selected); err != nil {
+		return err
+	}
+	if tui.IsTTY() {
+		tui.PrintCompletionBox("UPDATE COMPLETE", "Agent tools and instructions updated successfully.")
 	}
 	return nil
 }
@@ -120,13 +111,8 @@ func (e *Executor) handleNewInitFlow(ctx context.Context, ui core.UI, kitFS fs.F
 		return err
 	}
 
-	// Auto-initialize config.yaml if it doesn't exist
-	if err := core.EnsureConfigExists("."); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize config.yaml: %v\n", err)
-	}
-
 	if tui.IsTTY() {
-		tui.PrintCompletionBox("MISSION ACCOMPLISHED", "Specforce initialized successfully!\nYou can now start using SDD with your selected AI agents.")
+		tui.PrintCompletionBox("MISSION ACCOMPLISHED", "Specforce structure is live.\n\nNEXT: Run '/spf:discovery' to start the SDD cycle.")
 	}
 	return nil
 }
@@ -161,62 +147,86 @@ func (e *Executor) GetArtifactsFS(ui core.UI) (fs.FS, error) {
 	return artifactsFS, nil
 }
 
-func (e *Executor) ResolveSelectedAgents(ctx context.Context, ui core.UI, agents ...string) ([]string, error) {
+func (e *Executor) ResolveSelectedAgents(ctx context.Context, ui core.UI, agents ...string) ([]string, []string, error) {
 	// For HandleInit, we need a kitFS
 	kitFS, err := e.GetKitFS(ui)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Ensure registry is initialized
-	if err := e.Registry.Initialize(kitFS); err != nil {
-		return nil, fmt.Errorf("failed to initialize agent registry: %w", err)
+	if err := e.Registry.Initialize(kitFS, "."); err != nil {
+		return nil, nil, fmt.Errorf("failed to initialize agent registry: %w", err)
 	}
 
 	if len(agents) > 0 {
-		// Normalize and validate provided agents
-		normalized := make([]string, len(agents))
-		for i, a := range agents {
-			n := a
-			// Aliases normalization
-			switch a {
-			case "opencode":
-				n = "open-code"
-			case "kilocode":
-				n = "kilo-code"
-			case "qwen-code":
-				n = "qwen"
-			case "kimicode":
-				n = "kimi-code"
-			}
-
-			if _, ok := e.Registry.GetAgent(n); !ok {
-				return nil, fmt.Errorf("agent %q is not supported. Use 'specforce init' without arguments to see available agents", a)
-			}
-			normalized[i] = n
-		}
-		return normalized, nil
+		return e.resolveDirectAgents(ctx, agents...)
 	}
 
 	if !tui.IsTTY() {
-		return nil, fmt.Errorf("no agents specified and no TTY detected")
+		return nil, nil, fmt.Errorf("no agents specified and no TTY detected")
 	}
 
 	existing := project.DetectExistingAgents(ctx, ".", e.Registry)
-	selected, err := tui.SelectAgents(e.Registry.GetAgents(), existing)
+	selected, removed, err := tui.SelectAgents(e.Registry.GetAgents(), existing)
 	if err != nil {
 		if err.Error() == "aborted" {
 			fmt.Println("Project initialization aborted.")
 			os.Exit(0)
 		}
-		return nil, fmt.Errorf("TUI failure: %w", err)
+		return nil, nil, fmt.Errorf("TUI failure: %w", err)
 	}
 
 	if len(selected) == 0 {
-		return nil, fmt.Errorf("no agents selected; project initialization aborted")
+		return nil, nil, fmt.Errorf("no agents selected; project initialization aborted")
 	}
 
-	return selected, nil
+	return selected, removed, nil
+}
+
+func (e *Executor) resolveDirectAgents(ctx context.Context, agents ...string) ([]string, []string, error) {
+	normalized := make([]string, len(agents))
+	for i, a := range agents {
+		n := a
+		// Aliases normalization
+		switch a {
+		case "opencode":
+			n = "open-code"
+		case "kilocode":
+			n = "kilo-code"
+		case "qwen-code":
+			n = "qwen"
+		case "kimicode":
+			n = "kimi-code"
+		}
+
+		if _, ok := e.Registry.GetAgent(n); !ok {
+			return nil, nil, fmt.Errorf("agent %q is not supported. Use 'specforce init' without arguments to see available agents", a)
+		}
+		normalized[i] = n
+	}
+
+	// If project is initialized, we should also detect what's NOT in 'normalized' but is currently installed
+	var removed []string
+	if project.IsInitialized(".") {
+		existing := project.DetectExistingAgents(ctx, ".", e.Registry)
+		for _, ex := range existing {
+			if !contains(normalized, ex) {
+				removed = append(removed, ex)
+			}
+		}
+	}
+
+	return normalized, removed, nil
+}
+
+func contains(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *Executor) HandleConsole(ctx context.Context, ui core.UI) error {
@@ -248,7 +258,6 @@ func (e *Executor) PrintUsage() {
 	fmt.Println("\nUsage:")
 	fmt.Println("  specforce [flags] [command]")
 	fmt.Println("\nAvailable Commands:")
-	fmt.Println("  install       Global framework installation")
 	fmt.Println("  init          Project initialization with TUI")
 	fmt.Println("  constitution  Manage project constitution docs")
 	fmt.Println("  spec          Manage feature specification artifacts")

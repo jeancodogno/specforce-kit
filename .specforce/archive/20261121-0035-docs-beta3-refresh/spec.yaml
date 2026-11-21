@@ -1,0 +1,291 @@
+slug: 20261121-0035-docs-beta3-refresh
+name: 20261121-0035-docs-beta3-refresh
+type: feature
+size: large
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T03:40:21.675900695Z
+              completed_at: 2026-11-21T03:48:34.147218179Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T03:40:21.675901975Z
+              completed_at: 2026-11-21T03:48:34.147218782Z
+    T1.3:
+        sessions:
+            - started_at: 2026-11-21T03:40:21.675902277Z
+              completed_at: 2026-11-21T03:48:34.147219127Z
+    T1.4:
+        sessions:
+            - started_at: 2026-11-21T03:40:21.675902494Z
+              completed_at: 2026-11-21T03:48:34.147219457Z
+    T1.5:
+        sessions:
+            - started_at: 2026-11-21T03:40:21.675902702Z
+              completed_at: 2026-11-21T03:48:34.14721979Z
+    T1.6:
+        sessions:
+            - started_at: 2026-11-21T03:40:21.675902905Z
+              completed_at: 2026-11-21T03:48:34.147220133Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-21T03:48:37.555637009Z
+              completed_at: 2026-11-21T03:54:33.302047296Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-21T03:48:37.555637571Z
+              completed_at: 2026-11-21T03:54:33.302047906Z
+    T2.3:
+        sessions:
+            - started_at: 2026-11-21T03:48:37.555637743Z
+              completed_at: 2026-11-21T03:54:33.302048227Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-21T03:54:33.321027564Z
+              completed_at: 2026-11-21T04:01:37.903318455Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-21T03:54:33.321028235Z
+              completed_at: 2026-11-21T04:01:37.903319006Z
+    T3.3:
+        sessions:
+            - started_at: 2026-11-21T03:54:33.321028429Z
+              completed_at: 2026-11-21T04:01:37.903319222Z
+    T4.1:
+        sessions:
+            - started_at: 2026-11-21T03:54:33.321028701Z
+              completed_at: 2026-11-21T04:01:37.903319449Z
+    T4.2:
+        sessions:
+            - started_at: 2026-11-21T03:54:33.32102894Z
+              completed_at: 2026-11-21T04:01:37.903319662Z
+    T4.3:
+        sessions:
+            - started_at: 2026-11-21T03:54:33.321029166Z
+              completed_at: 2026-11-21T04:01:37.903319874Z
+delta:
+    impact: none
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-21T04:08:00Z
+    criteria:
+        - id: US-1.1
+          scenario: Supported-agent lists show exactly the 8 current tools, no decommissioned agent
+          evidence: kit.yaml has claude,qwen,open-code,kilo-code,codex,antigravity,kimi-code,cursor; supported-tools.md (en/pt/es) list + 8 table rows (T1.1/T3.2/T4.2 OK); getting-started prereqs list the 8; S3 grep for gemini returns nothing
+          verdict: PASSED
+        - id: US-1.2
+          scenario: Constitution location .specforce/docs/ with six documents plus modules/
+          evidence: artifacts.md s1 lists principles, architecture, ui-ux, security, engineering, governance, modules/<module>.md; getting-started, cli.md constitution status name the folder; T1.3 OK
+          verdict: PASSED
+        - id: US-1.3
+          scenario: README and getting-started state the same Go minimum matching go.mod
+          evidence: go.mod 'go 1.26.4'; 'Go 1.26+' in README*.md:148, docs/*/getting-started.md:10, CONTRIBUTING*.md; no 'go 1.24' anywhere (S3)
+          verdict: PASSED
+        - id: US-1.4
+          scenario: Prior defects removed (duplicated license sentence, repeated numbering, mid-page metadata header, foreign-language example)
+          evidence: T2.2 check excludes 'pecforce Kit is released'; README has a single License section; T1.6/T3.3/T4.3 confirm no slug/lens frontmatter in git-worktrees; T1.4 confirms no Portuguese example strings in en configuration.md; README lifecycle numbered 1..5
+          verdict: PASSED
+        - id: US-1.5
+          scenario: Only Claude Code gets the AGENTS.md link; Cursor/others read root guide or skills folder
+          evidence: supported-tools.md Automated Configuration matches agents_md.go agentMappings (only .claude, symlink ../../AGENTS.md; Cursor excluded comment) and CleanupLegacySymlinks for .agents/*/rules
+          verdict: PASSED
+        - id: US-2.1
+          scenario: Every subcommand of init, console, constitution, spec, implementation, archive documented with args and flags
+          evidence: 'Full help tree dumped (installed binary and fresh source build give identical help); every subcommand and every flag of these six groups appears in cli.md; S4 prints only END. Note: completion --no-descriptions is undocumented (completion is outside the listed groups; see findings)'
+          verdict: PASSED
+        - id: US-2.2
+          scenario: --json flag stated and intended for automation
+          evidence: 'cli.md intro: ''Flags marked --json print machine-readable JSON intended for automation and agents''; every --json-capable command shows [--json]'
+          verdict: PASSED
+        - id: US-2.3
+          scenario: archive --force never bypasses delta check nor FAILED QA
+          evidence: cli.md spec archive entry states it; matches help text and BR-SPEC-07/BR-SPEC-11
+          verdict: PASSED
+        - id: US-2.4
+          scenario: Agent-only command (qa record) described without instructing the reader and without audience label
+          evidence: cli.md qa record entry describes purpose and ends 'The implementation skill uses it after the QA step'; no 'you run'/'agent runs' labels in cli.md
+          verdict: PASSED
+        - id: US-3.1
+          scenario: 'Invocation table: per tool install folder and explicit invocation'
+          evidence: supported-tools.md '## Invoking skills' table Tool|Install folder|Explicit invocation|Notes, 8 rows; install folders match kit.yaml targets + skills/
+          verdict: PASSED
+        - id: US-3.2
+          scenario: Other pages use neutral skill names + plain-language example linking to invocation table
+          evidence: 'README, getting-started, artifacts, workflows, cli, CONTRIBUTING (all 3 langs) link supported-tools.md#invoking-skills (pt/es to translated anchors that resolve); no /spf: anywhere (S3)'
+          verdict: PASSED
+        - id: US-3.3
+          scenario: Tool without confirmed syntax tells reader to ask by name
+          evidence: KiloCode, Antigravity, Cursor rows read 'Ask by name in chat (e.g. 'use spf.spec ...')'. Confirmation of the syntaxes shown for Claude/Qwen/Kimi/OpenCode/Codex against official docs was not re-done by QA (see findings)
+          verdict: PASSED
+        - id: US-3.4
+          scenario: Codex global prompt write and location stated
+          evidence: 'Codex Notes cell states prompts written outside the project in ${CODEX_PROMPTS_DIR:-${CODEX_HOME:-~/.codex}/prompts} with fallback explanation; matches kit.yaml (global_write: true)'
+          verdict: PASSED
+        - id: US-4.1
+          scenario: Sizes table with required artifacts and default
+          evidence: artifacts.md s3 table small/medium/large/complex, default medium; matches BR-SPEC-01/02
+          verdict: PASSED
+        - id: US-4.2
+          scenario: Bug variants explained; bug roadmap starts with failing regression test
+          evidence: artifacts.md s4 bug-requirements/bug-design and first [RED] regression task
+          verdict: PASSED
+        - id: US-4.3
+          scenario: 'Delta section: ADDED/MODIFIED/REMOVED, delta.impact: none, seal, states, archive requires applied/none/exempt'
+          evidence: artifacts.md s6; states none/exempt/missing/pending/applied/invalid match src/internal/spec/delta.go constants and spec-management.md surface
+          verdict: PASSED
+        - id: US-4.4
+          scenario: 'QA section: verdicts, FAILED blocks archive, missing report warns'
+          evidence: artifacts.md s7 PASSED/FAILED/NOT-VERIFIABLE, archive gate sentence; matches BR-SPEC-11
+          verdict: PASSED
+        - id: US-4.5
+          scenario: RED task skips only per-task hooks; phase/all-tasks hooks still run
+          evidence: artifacts.md s8, cli.md implementation update, configuration.md; matches BR-SPEC-12
+          verdict: PASSED
+        - id: US-4.6
+          scenario: Configuration lists accepted instruction keys and generic+specific combination
+          evidence: configuration.md 'Accepted instruction keys' table (requirements, bug-requirements, design, bug-design, tasks, implementation, archive) and combination paragraph; T1.4 OK
+          verdict: PASSED
+        - id: US-4.NFR
+          scenario: Each concept section <=25 lines; task format matches roadmap rules
+          evidence: 'artifacts.md ## section lengths 14,13,16,10,14,16,12,10,14 (all 3 langs); s5 describes target + single acceptance check, optional constraints, no verification-only tasks, Black-box Scenarios section'
+          verdict: PASSED
+        - id: US-5.1
+          scenario: 'Updates: 6-hour check, channel-following, applies on next run'
+          evidence: getting-started '## Updates' matches BR-UPD-01/03 and swap-on-next-run; T1.5 OK
+          verdict: PASSED
+        - id: US-5.2
+          scenario: Manual update commands for npm and native
+          evidence: Updates section shows 'npm install -g @jeancodogno/specforce-kit@<version>' and release download / 'sudo make install' (auto-update.md surfaces)
+          verdict: PASSED
+        - id: US-5.3
+          scenario: Debug env var and per-user state location
+          evidence: DEBUG=1 and ~/.specforce/state.json documented; match auto-update.md
+          verdict: PASSED
+        - id: US-5.4
+          scenario: Agents never see update notices
+          evidence: Section states constitution/spec/implementation never start a check or show notice, stderr only; matches IsAgentCommand annotations on those three groups in src/internal/cli/cobra and BR-UPD-02/12
+          verdict: PASSED
+        - id: US-5.NFR
+          scenario: Updates section <=30 lines
+          evidence: 20 lines in en/pt/es
+          verdict: PASSED
+        - id: US-6.1
+          scenario: 12 recipes in the listed order
+          evidence: 'docs/en/workflows.md ### 1..12 in exact order of design 3.3; pt/es same structure'
+          verdict: PASSED
+        - id: US-6.2
+          scenario: 'Each recipe: When to use, labelled steps, optional Behind the scenes, If it goes wrong'
+          evidence: "12 'When to use', 12 <details> blocks, 12 'If it goes wrong'; 29 numbered steps, all 29 start with \U0001F4BB **Terminal:** or \U0001F4AC **Agent chat:** (all 3 langs)"
+          verdict: PASSED
+        - id: US-6.3
+          scenario: Agent-run commands only in prose/collapsed block, never as reader steps
+          evidence: 'Indentation-aware extraction of bash blocks: 8 lines across 5 terminal steps (spec status, implementation status x2, git status, git worktree add, specforce console, specforce init, specforce init claude cursor), all in allow-list; no bash block inside <details>; agent commands (spec init, resize, qa record) appear only inside <details>'
+          verdict: PASSED
+        - id: US-6.4
+          scenario: 'Prototype recipe: read-only discovery, scratch folder / spf-probe, formalize into proposal'
+          evidence: Recipe 1 steps + Behind the scenes cover .specforce/scratch/, spf-probe files removed, proposal.md reused by spf.spec
+          verdict: PASSED
+        - id: US-6.NFR
+          scenario: Each recipe <=40 lines; terminal commands are human commands
+          evidence: Recipe lengths 30,28,22,27,23,24,24,28,27,23,23,32 (max 32)
+          verdict: PASSED
+        - id: US-7.1
+          scenario: Common situations follow Symptom -> Why -> What to do
+          evidence: 10 entries each with **Symptom:**, **Why:**, **What to do:** in order
+          verdict: PASSED
+        - id: US-7.2
+          scenario: Covers the 10 listed symptoms
+          evidence: 'Headings: pending tasks; delta missing/pending; delta base conflict; QA FAILED; no QA report; hook failure; code without spec; BLOCKED question; resize during implementation; edit approved spec'
+          verdict: PASSED
+        - id: US-7.3
+          scenario: Agent-action resolutions are chat requests, not internal commands
+          evidence: All What-to-do lines use 'ask ...' chat requests; only inline terminal commands are allow-listed (implementation status, spec status, spec delta check)
+          verdict: PASSED
+        - id: US-7.NFR
+          scenario: 10 entries each <=10 lines
+          evidence: Each entry 8 lines (incl. blank lines) in en/pt/es
+          verdict: PASSED
+        - id: US-8.1
+          scenario: README lifecycle order Constitution->Discovery->Spec->Implement->Archive, sequential numbering, neutral names linking to table
+          evidence: 'README headings ### 1..5 in that order; T2.2 first-occurrence order check OK in en; same order in pt/es; links to supported-tools.md#invoking-skills'
+          verdict: PASSED
+        - id: US-8.2
+          scenario: README docs list includes workflow guide
+          evidence: README.md:164 links docs/en/workflows.md; README.pt/es link docs/pt|es/workflows.md
+          verdict: PASSED
+        - id: US-8.3
+          scenario: Philosophy/benefits kept but trimmed of decommissioned/tool-specific claims
+          evidence: Philosophy and Why use Specforce sections present; no gemini/CLAUDE.md/.cursorrules/rule-file claims
+          verdict: PASSED
+        - id: US-8.NFR
+          scenario: README growth <=10%
+          evidence: README.md 11258 bytes vs HEAD 10836 bytes (+3.9%); <=11700
+          verdict: PASSED
+        - id: US-9.1
+          scenario: pt/es exist with identical file names, same sections, language selector at top
+          evidence: S2 identical 7 files; heading-level sequences identical en vs pt/es for all 7 docs, README and CONTRIBUTING; selector line 1 on every docs page
+          verdict: PASSED
+        - id: US-9.2
+          scenario: CONTRIBUTING pt/es fully translated with corrected facts
+          evidence: 'Leftover-English heuristic scan: 0 English prose lines in CONTRIBUTING.pt/es (detector finds 45 in en workflows as sanity check); SKILL.yaml/kit.yaml/Go 1.26+ facts present; T3.3/T4.3 OK'
+          verdict: PASSED
+        - id: US-9.3
+          scenario: Translated page links resolve within same language folder
+          evidence: No ../en/ links outside the selector line in pt/es docs; README/CONTRIBUTING pt/es link docs/pt|es/; S1 no broken links; 84 anchored links all resolve (GitHub slug rules, accents kept)
+          verdict: PASSED
+        - id: US-9.NFR
+          scenario: Commands/flags/file names/skill names never translated
+          evidence: Indent-aware bash-block extraction identical byte-for-byte en vs pt and en vs es; spf.* names and flags unchanged
+          verdict: PASSED
+        - id: S1
+          scenario: Every relative link resolves
+          evidence: 'Run as written: only END printed'
+          verdict: PASSED
+        - id: S2
+          scenario: Identical file sets in three language folders
+          evidence: No diff output, then 7
+          verdict: PASSED
+        - id: S3
+          scenario: No stale facts anywhere
+          evidence: Only END printed
+          verdict: PASSED
+        - id: S4
+          scenario: Every CLI subcommand of current build documented
+          evidence: Only END printed (installed 1.0.0-beta.3 binary; help identical to a fresh source build)
+          verdict: PASSED
+        - id: S5
+          scenario: Workflow guides show only human commands as terminal steps
+          evidence: 'As written: only END printed, but VACUOUS: the unindented awk matches 0 lines in all three files because fences are indented. Indentation-aware variant: 8 bash lines per language, all in allow-list, only END printed; no bash block inside <details>'
+          verdict: PASSED
+        - id: S6
+          scenario: Local kit override undocumented
+          evidence: Only END printed; broader grep for 'kit override|local kit|project-level kit' also empty
+          verdict: PASSED
+    findings:
+        - title: S5 / T2.1 / T3.1 / T4.1 bash checks are vacuous
+          detail: The awk pattern /^```bash/ only matches unindented fences; workflows.md indents every fence inside list items, so S5, the T2.1 allow-list clause and the T3.1/T4.1 diff all compare empty input and would pass for any content. The indentation-aware variant passes (8 allowed lines per language, pt/es byte-identical to en). Suggest updating the scenario commands to /^[ \t]*```bash/ in a later spec.
+        - title: specforce init with tool keys deletes whole tool directories, which the docs understate
+          detail: src/internal/cli/cli.go resolveDirectAgents marks every installed tool not in the args as removed, and project.Service.DecommissionAgents runs os.RemoveAll on the tool's directory (e.g. .claude/, .cursor/), not only its skills. workflows.md recipe 11 says init 'removes those [skills] of installed tools you left out', and cli.md says 'add or remove tools'. The interactive picker shows a DECOMMISSION WARNING, but the direct-args path has no confirmation. A reader running 'specforce init cursor' in a Claude project would lose all of .claude/ (settings, user rules). Suggest stating that the whole tool folder is deleted.
+        - title: completion --no-descriptions flag not documented
+          detail: The help for 'specforce completion bash|zsh|fish|powershell' shows --no-descriptions; cli.md covers 'completion <shell>' but not this flag. The US-2 NFR says '100% of flags shown by CLI help'. The scenario names only six groups and completion is a Cobra built-in, so the criterion was not failed, but the page does not meet a strict reading of the 100% NFR.
+        - title: spec resize documents --size as mandatory; the CLI defaults it to medium
+          detail: cli.md shows 'spec resize <slug> --size <size>'. The help shows '--size string ... (default "medium")' with no required mark, so running 'specforce spec resize <slug>' without --size quietly resizes to medium. Either the docs or the CLI should make this explicit.
+        - title: Explicit invocation syntaxes not independently re-verified
+          detail: QA did not re-check the official docs for Claude Code (/spf.spec), Qwen (/spf.spec), Kimi Code (/skill:spf.spec), OpenCode ('Mention @spf-spec') and Codex (/prompts:spf-spec). US-3 Integrity depends on the implementer's cited sources (worker reports were off-limits to QA). The OpenCode @-mention form is the most doubtful and should be checked.
+        - title: CLI shows a wrong Target path for short slugs (product bug, not docs)
+          detail: '''specforce spec status docs-beta3-refresh'' reports 100% complete but prints ''Target: .specforce/specs/docs-beta3-refresh/'', a path that does not exist (the real folder is 20261121-0035-docs-beta3-refresh). The docs claim that short slugs are accepted is functionally true; the display is cosmetic.'
+        - title: CONTRIBUTING files have no language selector
+          detail: README and docs pages have selectors; CONTRIBUTING.md/.pt/.es do not, and did not before this change either. US-9.1 is scoped to docs pages, but the US-6 maintainability NFR suggests adding one.
+        - title: Skill name spf.<name> violates Cursor/KiloCode/Antigravity naming rules
+          detail: Official docs require lowercase+hyphen names matching the folder (spf-spec); installed name is spf.spec, so explicit invocation/discovery may fail in those tools. Docs use 'ask by name' fallback.
+        - title: Codex and Kilo skill folders may differ from kit.yaml
+          detail: Codex docs list .agents/skills for repo skills (kit installs .codex/skills); Kilo docs list .kilo/skills (kit installs .kilocode/skills).
+        - title: Hooks run without a shell
+          detail: core/hooks.go splits on spaces and execs in parallel; pipes/&&/redirects silently misbehave. Docs now say so; product could validate or use a shell.
+        - title: archive command group lacks IsAgentCommand annotation
+          detail: specforce archive instructions run by an agent in a TTY can trigger update check/notices.
+        - title: 'Legacy /spf: syntax remains in kit and module texts'
+          detail: spf.spec/spf.implement skill hand-off lines, bug-requirements.yaml template, agent-kit.md BR-KIT-14 and engineering.md (globalEnabledAgents, commands/ folders) are stale.
+        - title: spec-management.md documents spec list --type/--status flags that do not exist
+          detail: CLI only exposes --json; docs follow the CLI.

@@ -16,7 +16,7 @@ type Artifact struct {
 	Description string `json:"description" yaml:"description"`
 	Instruction string `json:"instruction" yaml:"instruction"`
 	Template    string `json:"template" yaml:"template"`
-	Path        string `json:"path" yaml:"-"`
+	Path        string `json:"path" yaml:"path,omitempty"`
 }
 
 // Registry manages the collection of constitution artifacts.
@@ -92,12 +92,15 @@ func loadArtifact(artifactsFS fs.FS, path, fileName string) (Artifact, error) {
 	art.Name = art.Slug
 
 	// Path is the expected project-relative path (with extension)
-	mdFileName := art.Slug + ".md"
-	if art.Slug == "index" {
-		mdFileName = "_index.md"
-	}
+	// If it was already loaded from YAML (override), we keep it.
+	if art.Path == "" {
+		mdFileName := art.Slug + ".md"
+		if art.Slug == "index" {
+			mdFileName = "_index.md"
+		}
 
-	art.Path = filepath.Join(".specforce", "docs", mdFileName)
+		art.Path = filepath.Join(".specforce", "docs", mdFileName)
+	}
 
 	return art, nil
 }
@@ -112,8 +115,8 @@ func (r *Registry) Get(slug string) (Artifact, bool) {
 func (r *Registry) List() []Artifact {
 	list := make([]Artifact, 0, len(r.artifacts))
 	// We want a stable order, but for now simple slice is fine.
-	// Common order: principles, architecture, ui-ux, security, engineering, governance, memorial
-	order := []string{"principles", "architecture", "ui-ux", "security", "engineering", "governance", "memorial"}
+	// Common order: principles, architecture, ui-ux, security, engineering, governance
+	order := []string{"principles", "architecture", "ui-ux", "security", "engineering", "governance"}
 	
 	for _, slug := range order {
 		if art, ok := r.artifacts[slug]; ok {

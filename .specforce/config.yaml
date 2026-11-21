@@ -10,8 +10,10 @@ instructions:
   #   - "Include a detailed component inventory"
 
   # Example: Project-wide instructions for all tasks artifacts
-  # tasks:
-  #   - "Each task must have a clear verification step"
+  tasks:
+    - "Always structure tasks using explicit TDD Red-Green pairs within the same phase."
+    - "Each phase must contain [RED] tasks (writing unit/integration tests covering both Happy Path and Edge Cases) followed by [GREEN] tasks (implementing the logic to satisfy those tests)."
+    - "Never place test creation and implementation in separate phases."
   #   - "Group tasks by implementation phases"
 
   # Example: Project-wide instructions for the implementation phase
@@ -20,13 +22,11 @@ instructions:
   #   - "Use explicit type casts instead of interfaces when possible"
   # archive:
   #   - "Always update the project memorial with lessons learned from the feature"
-
 hooks:
   # Example: Run linting and tests automatically when finishing tasks
   on_task_finished:
     - "make lint"
     - "make test"
   # on_phase_finished:
-  #   - "go test ./src/internal/..."
   # on_all_tasks_finished:
-  #   - "go test ./..."
+  #   - "make security"
