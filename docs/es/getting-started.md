@@ -63,7 +63,13 @@ Si el comando `specforce` funciona pero no encuentra su "cerebro" interno (el bi
 Specforce se mantiene actualizado en segundo plano, siguiendo el canal desde el que lo instalaste:
 
 - **Cuándo comprueba:** como máximo una vez cada 6 horas, y solo cuando ejecutas un comando interactivo en una terminal. La comprobación se ejecuta de forma desacoplada y nunca ralentiza el comando; estar sin conexión no provoca comprobaciones repetidas.
-- **Dónde busca:** las instalaciones con npm siguen la etiqueta npm del canal en uso (por ejemplo `beta` para una versión `1.0.0-beta.x`, `latest` para las versiones estables); las instalaciones nativas siguen la última release de GitHub. Specforce nunca instala una versión anterior.
+- **Dónde busca:** las instalaciones con npm siguen la etiqueta npm del canal en uso (por ejemplo `beta` para una versión `1.1.0-beta.x`, `latest` para las versiones estables); las instalaciones nativas siguen solo las releases estables. A partir de la 1.0.0, las pre-releases de GitHub están marcadas como pre-release y nunca se ofrecen automáticamente; para probar una en una instalación nativa, descárgala de la [página de releases](https://github.com/jeancodogno/specforce-kit/releases). Specforce nunca instala una versión anterior.
+- **Salir de un canal de pre-release:** si usas una pre-release publicada (`1.0.0-alpha.x`, o de `1.0.0-beta.1` a `1.0.0-beta.3`), con npm o nativa, Specforce te mueve a la 1.0.0 automáticamente en segundo plano en cuanto se publique la 1.0.0; no tienes que hacer nada (con npm, para obtenerla de inmediato, ejecuta el comando de abajo; las instalaciones nativas también pueden descargarla de la [página de releases](https://github.com/jeancodogno/specforce-kit/releases)). A partir de la 1.0.0, una pre-release instalada con npm (por ejemplo `1.1.0-beta.1`) sigue recibiendo las actualizaciones de su propio canal y nunca pasa a la versión estable por sí sola. Cuando se publica una versión estable más nueva, el siguiente comando interactivo muestra un aviso **STABLE RELEASE AVAILABLE**, una vez por versión estable: `Specforce 1.1.0 (stable) is available. You are on the beta channel; to switch, run: npm install -g @jeancodogno/specforce-kit@latest`. El aviso nunca instala nada y nunca aparece en los comandos de agentes. Cambia cuando quieras, en tu terminal:
+
+```bash
+npm install -g @jeancodogno/specforce-kit@latest
+```
+
 - **Cuándo aplica:** las instalaciones con npm instalan la nueva versión exacta; los binarios nativos se descargan, se verifican contra el checksum de la release y se sustituyen en la siguiente ejecución. El siguiente comando interactivo muestra `(Specforce updated to <version>)` una sola vez.
 - **Cuándo no puede:** si la carpeta de instalación no tiene permisos de escritura, o si una instalación o verificación falla, no se reintenta nada en bucle y se muestra una sola vez para esa versión un aviso **MANUAL UPDATE REQUIRED**, con el comando exacto:
 

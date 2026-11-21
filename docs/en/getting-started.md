@@ -63,7 +63,13 @@ If the `specforce` command works but fails to find its internal "brain" (the nat
 Specforce keeps itself up to date in the background, following the channel you installed it from:
 
 - **When it checks:** at most once every 6 hours, only when you run an interactive command in a terminal. The check runs detached and never slows the command down; being offline does not cause repeated checks.
-- **Where it looks:** npm installs follow the npm tag of the running channel (for example `beta` for a `1.0.0-beta.x` version, `latest` for stable versions); native installs follow the latest GitHub release. Specforce never downgrades.
+- **Where it looks:** npm installs follow the npm tag of the running channel (for example `beta` for a `1.1.0-beta.x` version, `latest` for stable versions); native installs follow stable releases only. From 1.0.0 onward, GitHub pre-releases are marked as pre-release and are never offered automatically; to try one natively, download it from the [releases page](https://github.com/jeancodogno/specforce-kit/releases). Specforce never downgrades.
+- **Leaving a pre-release channel:** if you run a published pre-release (`1.0.0-alpha.x`, or `1.0.0-beta.1` to `1.0.0-beta.3`), npm or native, Specforce moves you to 1.0.0 automatically in the background once 1.0.0 is published; nothing to do (on npm, to get it right away, run the command below; native installs can also download it from the [releases page](https://github.com/jeancodogno/specforce-kit/releases)). From 1.0.0 onward, an npm pre-release (for example `1.1.0-beta.1`) keeps receiving the updates of its own channel and never switches to stable on its own. When a newer stable version is published, the next interactive command shows a **STABLE RELEASE AVAILABLE** notice, once per stable version: `Specforce 1.1.0 (stable) is available. You are on the beta channel; to switch, run: npm install -g @jeancodogno/specforce-kit@latest`. The notice never installs anything and never appears for agent commands. Switch whenever you choose, in your terminal:
+
+```bash
+npm install -g @jeancodogno/specforce-kit@latest
+```
+
 - **When it applies:** npm installs install the exact new version; native binaries are downloaded, verified against the release checksum and swapped in on the next run. The next interactive command shows `(Specforce updated to <version>)` once.
 - **When it cannot:** if the install folder is not writable, or an install or verification fails, nothing is retried in a loop and a **MANUAL UPDATE REQUIRED** notice is shown once for that version, with the exact command:
 

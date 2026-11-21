@@ -1,0 +1,117 @@
+slug: 20261121-1156-v1-release-docs
+name: 20261121-1156-v1-release-docs
+type: feature
+size: small
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-21T16:44:16.736198977Z
+              completed_at: 2026-11-21T16:47:53.030922377Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-21T16:44:16.736200786Z
+              completed_at: 2026-11-21T16:47:53.030922963Z
+    T1.3:
+        sessions:
+            - started_at: 2026-11-21T16:44:16.736201225Z
+              completed_at: 2026-11-21T16:47:53.03092328Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-21T16:44:16.7362015Z
+              completed_at: 2026-11-21T16:47:53.030923618Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-21T16:44:16.736201845Z
+              completed_at: 2026-11-21T16:47:53.030923925Z
+    T2.3:
+        sessions:
+            - started_at: 2026-11-21T16:44:16.736202161Z
+              completed_at: 2026-11-21T16:47:53.030924208Z
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-21T17:03:01Z
+    criteria:
+        - id: AC-T1.1
+          scenario: EN Updates contains @latest, notice, 'stable releases only'
+          evidence: task shell check prints OK
+          verdict: PASSED
+        - id: AC-T1.2
+          scenario: PT mirror has @latest and same line count
+          evidence: check prints OK; 176=176
+          verdict: PASSED
+        - id: AC-T1.3
+          scenario: ES mirror has @latest and same line count
+          evidence: check prints OK; 176=176
+          verdict: PASSED
+        - id: AC-T2.1
+          scenario: CHANGELOG structure and keywords
+          evidence: check prints OK
+          verdict: PASSED
+        - id: AC-T2.2
+          scenario: SECURITY report a vulnerability/checksum/provenance/no e-mail
+          evidence: check prints OK; no '@' in file
+          verdict: PASSED
+        - id: AC-T2.3
+          scenario: Release notes @latest in first 15 lines + CHANGELOG.md link
+          evidence: check prints OK
+          verdict: PASSED
+        - id: F-1
+          scenario: No claim that published betas stay on channel or show notice
+          evidence: all files say alpha.x/beta.1-3 move to 1.0.0 automatically; notice scoped from 1.0.0 onward; old updater confirmed in pre-release tags; d8b9ec7 in no tag
+          verdict: PASSED
+        - id: F-2
+          scenario: Notice example matches rendered format
+          evidence: RenderStableNotification text and stableSwitchCommand match
+          verdict: PASSED
+        - id: F-3
+          scenario: '@latest command offered only to npm installs'
+          evidence: Updates and release notes scope it to npm; native pointed to releases page
+          verdict: PASSED
+        - id: F-4
+          scenario: Pre-release marking qualified 'from 1.0.0 onward'
+          evidence: en/pt/es line 66, SECURITY, CHANGELOG; beta.3 isPrerelease=false
+          verdict: PASSED
+        - id: F-5
+          scenario: Other factual claims match code/git
+          evidence: skills, Cursor, sizes/resize, QA verdicts, legacy detection, memorial paths, Gemini removal, throttle, fingerprint, permissions, provenance, notes wiring, asset names
+          verdict: PASSED
+        - id: F-6
+          scenario: pt/es parity and genuine translation
+          evidence: identical hunk positions; real translations
+          verdict: PASSED
+        - id: F-7
+          scenario: 'git diff only inside ## Updates'
+          evidence: single hunk per file within Updates
+          verdict: PASSED
+        - id: F-8
+          scenario: Relative links and anchors resolve
+          evidence: '#updates, #invoking-skills, #migrating-from-02x resolve; blob/v1.0.0 links resolve once tagged'
+          verdict: PASSED
+        - id: F-9
+          scenario: No e-mail; GitHub private reporting only
+          evidence: no '@'; private-vulnerability-reporting enabled=true
+          verdict: PASSED
+        - id: F-10
+          scenario: No placeholders except '## [1.0.0] - Unreleased'
+          evidence: only hit is CHANGELOG line 7
+          verdict: PASSED
+        - id: F-11
+          scenario: 'Keep a Changelog structure with [1.0.0]: link reference'
+          evidence: preamble, heading, Added/Changed/Removed, footer link
+          verdict: PASSED
+        - id: F-12
+          scenario: tasks.md goals and constraints consistent with files
+          evidence: US-1..US-4 and T1.1..T2.3 match
+          verdict: PASSED
+    findings:
+        - title: beta-stable-notice requirements use a 1.0.0-beta.3 example
+          detail: Behavioural example is version-parametric, but published beta.3 cannot show the notice; consider a post-1.0.0 example.
+        - title: Unchanged Updates bullets describe the new updater in present tense
+          detail: Accurate from 1.0.0 onward; published pre-releases behave differently.
+        - title: 'spf-archive skill still suggests /spf: slash-style requests'
+          detail: Conflicts with CHANGELOG wording about invoking skills by name.
+        - title: Release-notes links depend on the v1.0.0 tag
+          detail: blob/v1.0.0/CHANGELOG.md resolves only once tagged with CHANGELOG.md committed.
+        - title: Published GitHub pre-releases are not marked as pre-release
+          detail: alpha/beta releases have prerelease=false; releases/latest is v1.0.0-beta.3 while npm latest is 0.2.2, so older npm pre-release installs may be downgraded to 0.2.2 by the old updater until 1.0.0 ships.
