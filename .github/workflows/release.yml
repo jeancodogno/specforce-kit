@@ -9,8 +9,50 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  verify:
+    name: Verify Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.3"
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check Version Agreement
+        run: node scripts/release-tools.js check-version ${{ github.ref_name }}
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          verify: false
+          args: --timeout=5m
+          install-mode: goinstall
+          skip-pkg-cache: true
+
+      - name: Run Unit Tests
+        run: go test ./...
+
+      - name: Run Release Tooling Tests
+        run: node --test scripts/*.test.js
+
+  release:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,12 +71,37 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Derive Release Channel
+        id: channel
+        run: |
+          set -euo pipefail
+          channel=$(node scripts/release-tools.js channel "${TAG#v}")
+          echo "Release channel for $TAG: $channel"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ github.ref_name }}
+
+      - name: Select Release Notes
+        id: notes
+        run: |
+          set -euo pipefail
+          notes=$(node scripts/release-tools.js notes "$TAG")
+          if [[ -n "$notes" ]]; then
+            echo "Release notes source: $notes"
+            echo "args=--release-notes $notes" >> "$GITHUB_OUTPUT"
+          else
+            echo "Release notes source: generated change list (no non-empty .github/release-notes/$TAG.md)"
+            echo "args=" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          TAG: ${{ github.ref_name }}
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --clean ${{ steps.notes.outputs.args }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,33 +110,18 @@ jobs:
 
       - name: Publish Native Packages
         run: |
-          TAG_ARG=""
-          if [[ "${{ github.ref_name }}" == *"alpha"* ]]; then
-            TAG_ARG="--tag alpha"
-          elif [[ "${{ github.ref_name }}" == *"beta"* ]]; then
-            TAG_ARG="--tag beta"
-          elif [[ "${{ github.ref_name }}" == *"rc"* ]]; then
-            TAG_ARG="--tag rc"
-          fi
-          for dir in npm/*; do
-            echo "Publishing $dir with $TAG_ARG..."
-            cd $dir
-            npm publish --access public $TAG_ARG || echo "Warning: Failed to publish $dir"
-            cd ../..
+          set -euo pipefail
+          for dir in npm/*/; do
+            node scripts/release-tools.js publish "$dir" "$CHANNEL"
           done
         env:
+          CHANNEL: ${{ steps.channel.outputs.channel }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish Main Package
         run: |
-          TAG_ARG=""
-          if [[ "${{ github.ref_name }}" == *"alpha"* ]]; then
-            TAG_ARG="--tag alpha"
-          elif [[ "${{ github.ref_name }}" == *"beta"* ]]; then
-            TAG_ARG="--tag beta"
-          elif [[ "${{ github.ref_name }}" == *"rc"* ]]; then
-            TAG_ARG="--tag rc"
-          fi
-          npm publish --access public $TAG_ARG
+          set -euo pipefail
+          node scripts/release-tools.js publish . "$CHANNEL"
         env:
+          CHANNEL: ${{ steps.channel.outputs.channel }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
