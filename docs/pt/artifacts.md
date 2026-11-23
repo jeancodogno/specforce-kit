@@ -24,7 +24,7 @@ Toda mudança começa com uma especificação criada pelo `spf.spec`. A pasta de
 
 - **`spec.yaml`**: metadados gerenciados pela CLI: tipo, tamanho, declaração e selo do delta, auditoria de refinamento, registros de tempo das tarefas e o relatório de QA.
 - **`proposal.md`** *(opcional)*: o resultado formalizado de uma sessão de `spf.discovery` (problema, descobertas verificadas, decisões, perguntas em aberto, tipo e tamanho sugeridos). O planejamento o reaproveita em vez de perguntar de novo.
-- **`requirements.md`**: o "quê" e o "porquê": histórias de usuário, critérios de aceitação BDD (GIVEN/WHEN/THEN) e restrições de negócio. Sem detalhes técnicos.
+- **`requirements.md`**: o "quê" e o "porquê". Abre com um Review Brief curto para quem revisa (o que muda, as decisões tomadas, o que revisar com atenção). Cada história de usuário tem cenários de aceitação de uma linha identificados por letra (`a.` situação → resultado), e as regras que valem para a feature inteira aparecem uma vez em General Rules. Sem detalhes técnicos. Este formato vale a partir da 1.1.0; specs escritas antes continuam válidas.
 - **`design.md`**: o "como": arquitetura, contratos e o inventário de arquivos e componentes. Sem código final.
 - **`tasks.md`**: o roadmap atômico de execução (veja [Formato das tarefas](#5-formato-das-tarefas)).
 - **`deltas/<module>.md`**: as mudanças propostas para cada especificação viva de módulo afetada (veja [Deltas de módulo](#6-deltas-de-módulo)).
@@ -51,7 +51,7 @@ Toda especificação tem um tamanho, escolhido na criação (`specforce spec ini
 
 Uma especificação criada com `--type bug` usa as variantes de bug dos artefatos de planejamento, a partir dos templates `bug-requirements` e `bug-design`:
 
-- **Requisitos (`bug-requirements`)**: descrição do problema, evidências (logs, erros), passos concretos de reprodução, uma análise de causa raiz baseada em evidências e critérios de aceitação de regressão (`[FIX-x]`). Quando a causa raiz não está estabelecida, o agente para e pergunta ou recomenda o `spf.discovery` em vez de adivinhar.
+- **Requisitos (`bug-requirements`)**: um Review Brief curto, descrição do problema, evidências (logs, erros), passos concretos de reprodução, uma análise de causa raiz baseada em evidências e critérios de aceitação de regressão (`[FIX-x]`) escritos como cenários de uma linha identificados por letra. Quando a causa raiz não está estabelecida, o agente para e pergunta ou recomenda o `spf.discovery` em vez de adivinhar.
 - **Design (`bug-design`)**: os caminhos de código a alterar, a estratégia de regressão e os efeitos colaterais.
 - **Roadmap**: a primeira tarefa é um teste de regressão que falha antes da correção (uma tarefa `[RED]`). Nenhuma tarefa de correção pode vir antes dela.
 
@@ -59,11 +59,11 @@ Os arquivos mantêm os nomes de sempre (`requirements.md`, `design.md`, `tasks.m
 
 ## 5. Formato das tarefas
 
-Cada tarefa em `tasks.md` é um item de checklist como `- [ ] T1.1: [CODE] Title`, seguido de:
+Cada tarefa em `tasks.md` é um item de checklist cujo título começa com um verbo de ação (Create, Modify, Remove, Move ou Rename) e diz o resultado, como `- [ ] T1.1: Create the SenderAvatar component with a tooltip`. O título nunca fica em negrito. Os campos vêm em parágrafos separados e indentados sob a tarefa, tarefas seguidas da mesma fase são separadas por uma linha `---`, e o nome da fase diz o resultado que ela entrega. Este layout vale a partir da 1.1.0; roadmaps anteriores continuam válidos. Os campos são:
 
 - **`**Target:**`**: o caminho exato do arquivo ou o comando da CLI que a tarefa altera.
-- **`**Context:**`**: o requisito que ela implementa (`[US-X]`), obrigatório a partir de `medium`.
-- **`**Constraints:**`** *(opcional)*: apenas o que o implementador não consegue deduzir do design e do código (uma armadilha, um desvio da convenção, uma decisão de design referenciada). Sem assinaturas, constantes ou trechos de código.
+- **`**Context:**`**: os requisitos que ela implementa e as letras dos cenários que cobre (`[US-1] a, b · [US-2] c`), obrigatório a partir de `medium`.
+- **`**Constraints:**`** *(opcional)*: apenas o que o implementador não consegue deduzir do design e do código (uma armadilha, um desvio da convenção, uma decisão de design referenciada), cada uma dizendo o que dá errado se for ignorada. Nunca um requisito repetido, a repetição do constraint de outra tarefa, a implementação óbvia ou um contrato de dados. Sem assinaturas, constantes ou trechos de código.
 - **`**Acceptance Check:**`**: um único comando não interativo ou cenário de teste com um resultado esperado observável. Critérios que exigem julgamento humano são reescritos ou sinalizados como não verificáveis.
 
 Regras:
@@ -107,7 +107,7 @@ Uma tarefa cujo título contém o token exato `[RED]` (diferencia maiúsculas de
 - Os hooks `on_phase_finished` e `on_all_tasks_finished` continuam rodando, mesmo quando uma tarefa `[RED]` fecha a fase.
 - Um lote que contenha qualquer tarefa não marcada como `[RED]` roda todos os hooks normalmente.
 
-Para tornar os roadmaps test-first, adicione uma instrução em `tasks` no `config.yaml` (veja [Configuração](configuration.md)).
+Os templates não dividem as tarefas em pares de teste e código por conta própria. Para tornar os roadmaps test-first, adicione uma instrução em `tasks` no `config.yaml` (veja [Configuração](configuration.md)). A partir da 1.1.0, o token fica no fim do título com verbo, por exemplo `Create tests for SenderAvatar [RED]`.
 
 ## 9. A pasta `.specforce/`
 

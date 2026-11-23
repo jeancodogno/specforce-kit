@@ -13,7 +13,7 @@ En `config.yaml`:
 ```yaml
 instructions:
   requirements:
-    - "Always use BDD GIVEN/WHEN/THEN syntax for acceptance criteria."
+    - "Always name the end-user persona in every user story."
     - "Ensure accessibility is always mentioned if UI is involved."
   bug-requirements:
     - "Always include the exact error message in the evidence section."

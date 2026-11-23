@@ -24,7 +24,7 @@ Every change starts with a specification created by `spf.spec`. Its folder can c
 
 - **`spec.yaml`**: metadata managed by the CLI: type, size, delta declaration and seal, refinement audit, task time logs and the QA report.
 - **`proposal.md`** *(optional)*: the formalized result of a `spf.discovery` session (problem, verified findings, decisions, open questions, suggested type and size). Planning reuses it instead of asking again.
-- **`requirements.md`**: the "what" and "why": user stories, BDD acceptance criteria (GIVEN/WHEN/THEN) and business constraints. No technical details.
+- **`requirements.md`**: the "what" and "why". It opens with a short Review Brief for the reviewer (what changes, the decisions taken, what to review closely). Each user story has lettered one-line acceptance scenarios (`a.` situation → result), and rules that apply to the whole feature are stated once under General Rules. No technical details. This format applies from 1.1.0 onward; specs written earlier stay valid.
 - **`design.md`**: the "how": architecture, contracts and the file and component inventory. No final code.
 - **`tasks.md`**: the atomic execution roadmap (see [Task format](#5-task-format)).
 - **`deltas/<module>.md`**: the proposed changes to each affected module living spec (see [Module deltas](#6-module-deltas)).
@@ -51,7 +51,7 @@ Every spec has a size, chosen at creation (`specforce spec init <slug> --size <s
 
 A spec created with `--type bug` uses the bug variants of the planning artifacts, from the templates `bug-requirements` and `bug-design`:
 
-- **Requirements (`bug-requirements`)**: issue description, evidence (logs, errors), concrete reproduction steps, an evidence-based root cause analysis and regression acceptance criteria (`[FIX-x]`). When the root cause is not established, the agent stops to ask or recommends `spf.discovery` instead of guessing.
+- **Requirements (`bug-requirements`)**: a short Review Brief, issue description, evidence (logs, errors), concrete reproduction steps, an evidence-based root cause analysis and regression acceptance criteria (`[FIX-x]`) written as lettered one-line scenarios. When the root cause is not established, the agent stops to ask or recommends `spf.discovery` instead of guessing.
 - **Design (`bug-design`)**: the code paths to change, the regression strategy and side effects.
 - **Roadmap**: the first task is a regression test that fails before the fix (a `[RED]` task). No fix task may come before it.
 
@@ -59,11 +59,11 @@ The files keep the usual names (`requirements.md`, `design.md`, `tasks.md`).
 
 ## 5. Task format
 
-Each task in `tasks.md` is a checklist item such as `- [ ] T1.1: [CODE] Title`, followed by:
+Each task in `tasks.md` is a checklist item whose title starts with an action verb (Create, Modify, Remove, Move or Rename) and states the outcome, such as `- [ ] T1.1: Create the SenderAvatar component with a tooltip`. The title is never bold. Its fields follow as separate paragraphs indented under the task, consecutive tasks of a phase are separated by a `---` line, and phase names state the outcome they deliver. This layout applies from 1.1.0 onward; earlier roadmaps stay valid. The fields are:
 
 - **`**Target:**`**: the exact file path or CLI command the task changes.
-- **`**Context:**`**: the requirement it implements (`[US-X]`), mandatory from `medium` up.
-- **`**Constraints:**`** *(optional)*: only what the implementer cannot deduce from the design and the code (a pitfall, a deviation from convention, a referenced design decision). No signatures, constants or code snippets.
+- **`**Context:**`**: the requirements it implements and the scenario letters it covers (`[US-1] a, b · [US-2] c`), mandatory from `medium` up.
+- **`**Constraints:**`** *(optional)*: only what the implementer cannot deduce from the design and the code (a pitfall, a deviation from convention, a referenced design decision), each saying what goes wrong if it is ignored. Never a repeated requirement, a repeat of another task's constraint, the obvious implementation or a data contract. No signatures, constants or code snippets.
 - **`**Acceptance Check:**`**: a single non-interactive command or test scenario with an observable expected result. Criteria needing human judgment are rewritten or flagged as not verifiable.
 
 Rules:
@@ -107,7 +107,7 @@ A task whose title carries the exact token `[RED]` (case-sensitive) is a test-fi
 - `on_phase_finished` and `on_all_tasks_finished` hooks still run, even when a `[RED]` task closes the phase.
 - A batch containing any task not marked `[RED]` runs all hooks as usual.
 
-To make roadmaps test-first, add an instruction to `tasks` in `config.yaml` (see [Configuration](configuration.md)).
+The templates do not split tasks into test and code pairs by themselves. To make roadmaps test-first, add an instruction to `tasks` in `config.yaml` (see [Configuration](configuration.md)). From 1.1.0 onward, the token goes at the end of the action-verb title, for example `Create tests for SenderAvatar [RED]`.
 
 ## 9. The `.specforce/` folder
 
