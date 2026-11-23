@@ -1,15 +1,15 @@
-description: "Functional requirements, business rules, and strict BDD acceptance criteria."
+description: "Functional requirements, business rules, and compact one-line acceptance scenarios."
 instruction: |
-  Generate a high-fidelity business specification focusing entirely on the "What" and "Why", never the "How". Adhere strictly to the following execution rules for SELF-CONTAINMENT:
+  Generate a lean, reviewable business specification focusing entirely on the "What" and "Why", never the "How". Adhere strictly to the following execution rules for SELF-CONTAINMENT:
 
-  1. **Zero Context Leak Mandate:** The specification MUST be actionable by an AI agent with zero access to the previous conversation history. Every business rule and technical constraint MUST be explicitly stated.
-  2. **Strict Zero-Technical-Specification Policy:** Requirements MUST contain exclusively business rules, user stories, and BDD acceptance criteria (focusing purely on 'What' and 'Why'). DO NOT include technical implementation details, code, specific endpoints/URLs, HTTP status codes, library names, JSON payloads, database schemas/SQL, or technical parsing mechanisms in requirements.md. User Stories MUST use end-user/business personas (never developer/technical personas). All technical implementation details belong strictly in design.md.
-  3. **BDD Rigor & Density:** Acceptance Criteria MUST follow the strict GIVEN/WHEN/THEN syntax describing user actions and business outcomes. For every requirement, you MUST define at least one "Edge Case" or failure state that describes system behavior under stress or malformed input without mentioning technical error codes or transport protocols.
-  4. **Scope Containment:** Pay heavy attention to the "Out of Scope" section. Explicitly list features or edge cases that downstream agents MUST NOT build.
-  5. **Conditional Omission:** If the `lens` is "Backend-heavy" or "Integration", you MUST completely delete the `## 5. Global UI/UX Contract` section. Do not leave placeholders or write "Not applicable".
-  6. **Localized Context Mandate:** Every functional requirement `[US-x]` block MUST include localized `UI/UX Specifics` and `Technical Constraints (NFR)` sub-sections. Vague descriptions like "optimized" or "secure" are forbidden; use concrete values (e.g., "latency < 50ms", "0600 permissions").
-  7. **Flexible NFR Tags:** Technical Constraints MUST use a flexible `**[Category]:** [Value]` format. You MUST explicitly include a **[Performance]** tag for every requirement.
-  8. **Global Baselines:** You MUST include `## 5. Global UI/UX Contract` (if applicable) and `## 6. Global Non-Functional Requirements (NFRs)` sections to establish feature-wide standards.
+  1. **Zero Context Leak Mandate:** The specification MUST be actionable by an AI agent with zero access to the previous conversation history. Every business rule and constraint MUST be explicitly stated.
+  2. **Strict Zero-Technical-Specification Policy:** Requirements MUST contain exclusively business rules, user stories, and acceptance scenarios (focusing purely on 'What' and 'Why'). DO NOT include technical implementation details, code, specific endpoints/URLs, HTTP status codes, library names, JSON payloads, database schemas/SQL, or technical parsing mechanisms in requirements.md. User Stories MUST use end-user/business personas (never developer/technical personas). All technical implementation details belong strictly in design.md.
+  3. **Review Brief First:** The document MUST open with `## 0. Review Brief` of about 8 lines, with three items: **Changes**, **Decisions** and **Review closely**, each with at most 3 short bullets. When no decision beyond the request exists, the Decisions item says so in one line. Review closely MUST name requirement or scenario ids (e.g., US-3, US-1.e) so a reviewer knows where to look first.
+  4. **One-Line Stories and Scenarios:** Each requirement is `### [US-n] Title`, a ONE-LINE user story (`AS A ..., I WANT ..., SO THAT ...`), then lettered one-line scenarios in the form `- **a.** situation → result`. Merge scenarios that share the same result. Write a failure scenario only when a real failure case exists; never pad a requirement with an invented one. Scenarios are cited elsewhere as requirement id + letter (e.g., US-3.b).
+  5. **Constraint Line:** A requirement carries no per-requirement UI or non-functional blocks. It MAY carry one optional `**Constraint:**` line, written as its own paragraph after a blank line, only for a deviation from the General Rules.
+  6. **Context Limit:** `## 1. Context` has at most 2 sentences: the problem and its value.
+  7. **Scope Containment:** Pay heavy attention to the `## 2. Out of Scope` section. Explicitly list features or edge cases that downstream agents MUST NOT build.
+  8. **General Rules Once:** Feature-wide rules live in `## 4. General Rules`, stated once, with up to three bullets: **Domain** (business rules the feature must never violate), **Interface** and **Quality**. If the `lens` is "Backend-heavy" or "Integration", completely omit the **Interface** bullet. A **Quality** line is written only for a real, measurable target of this feature; never invent numbers, and vague terms like "optimized" or "secure" are forbidden. No line may state that something "does not change" or "does not apply"; omit it instead.
   9. **YAML Frontmatter:** Ensure the top YAML block is correctly populated with the `slug` and the correct `lens`.
 template: |
   ---
@@ -19,52 +19,30 @@ template: |
 
   # Feature: {FEATURE_NAME}
 
-  ## 1. Context & Value
-  [Briefly describe the business value and the core problem being solved. Max 3 sentences.]
+  ## 0. Review Brief
+  - **Changes:** [What changes for the user, in at most 3 short bullets.]
+  - **Decisions:** [Decisions made beyond the request, at most 3 short bullets. If none, one line saying so.]
+  - **Review closely:** [Requirement or scenario ids that deserve attention, e.g., US-3, US-1.e.]
+
+  ## 1. Context
+  [The problem and its value. Max 2 sentences.]
 
   ## 2. Out of Scope (Anti-Goals)
-  *Explicitly state what MUST NOT be built in this specific feature to prevent scope creep.*
-  - [e.g., Do not implement the email notification flow in this spec]
-  - [e.g., Do not build the admin panel UI yet]
+  - [What MUST NOT be built in this feature, e.g., the email notification flow.]
 
-  ## 3. Acceptance Criteria (BDD)
-  *Every requirement MUST be testable. Define success and failure.*
+  ## 3. Requirements
 
   ### [US-1] {Title}
-  **User Story:** AS A [persona], I WANT TO [action], SO THAT [value].
-  
-  **Scenarios:**
-  1. **[Happy Path]** GIVEN [context] WHEN [action] THEN [outcome].
-  2. **[Edge Case]** GIVEN [context] WHEN [exception/error] THEN [fallback/behavior].
+  AS A [persona], I WANT [action], SO THAT [value].
+  - **a.** [situation] → [result].
+  - **b.** [failure situation, only if a real failure case exists] → [result].
 
-  **UI/UX Specifics:**
-  - **View/Component:** [e.g., Status Card, Input Form, Progress Bar].
-  - **Feedback Logic:** [e.g., Border turns Mint Green on success, Spinner during I/O].
-  - **Keybindings:** [e.g., 'enter' to confirm, 'tab' to switch fields].
-
-  **Technical Constraints (NFR):**
-  - **[Performance]:** [e.g., Latency < 50ms, async processing for files > 10MB].
-  - **[Safety & Security]:** [e.g., Atomic operation, 0600 file permissions].
-  - **[Integrity]:** [e.g., Idempotency required, path sanitization].
-  - **[Observability]:** [e.g., Audit log via core.UI, real-time progress reporting].
+  **Constraint:** [Optional. Only a deviation from the General Rules.]
 
   ### [US-2] {Title}
   *(Repeat structure as needed)*
 
-  ## 4. Business Invariants
-  *Strict domain rules that the system must never violate, regardless of the user story. These must be technically testable.*
-  - [e.g., A user cannot be deleted if they have active invoices].
-
-  ## 5. Global UI/UX Contract (TUI Ghost Protocol)
-  *(Render this section ONLY if the lens includes UI. Aligned with .specforce/docs/ui-ux.md)*
-  - **Density Posture:** [e.g., Compact (80x24) | Standard (80x40)].
-  - **Signature Moves:** [e.g., Branding box header, ASCII-Braille logos, Mint Green accents].
-  - **Interaction Model:** [e.g., Cursor-based selection, standard keybindings (esc:back, q:quit)].
-  - **State Behavior:** [Rules for 'Loading' (spinners), 'Empty' (placeholder text), and 'Error' (red borders)].
-
-  ## 6. Global Non-Functional Requirements (NFRs)
-  *Technical constraints and quality gates. Aligned with .specforce/docs/engineering.md*
-  - **[Performance]:** [e.g., Latency < 100ms, instantaneous template generation].
-  - **[Reliability]:** [e.g., Fail-fast with clear errors, no silent failures].
-  - **[Security]:** [e.g., 0600 file permissions, command validation].
-  - **[Maintainability]:** [e.g., 80% coverage gate, standard Go formatting].
+  ## 4. General Rules
+  - **Domain:** [Business rules the feature must never violate.]
+  - **Interface:** [Feature-wide interface rules. Omit this bullet for features without a user interface.]
+  - **Quality:** [Only a real, measurable target of this feature. Omit if none.]

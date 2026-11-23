@@ -1,0 +1,266 @@
+slug: 20261123-1656-lean-spec-templates
+name: 20261123-1656-lean-spec-templates
+type: feature
+size: medium
+time_logs:
+    T1.1:
+        sessions:
+            - started_at: 2026-11-23T20:06:42.331830684Z
+              completed_at: 2026-11-23T20:07:52.739743248Z
+    T1.2:
+        sessions:
+            - started_at: 2026-11-23T20:06:42.33183183Z
+              completed_at: 2026-11-23T20:07:52.739743717Z
+    T2.1:
+        sessions:
+            - started_at: 2026-11-23T20:08:00.444366025Z
+              completed_at: 2026-11-23T20:09:58.59312121Z
+    T2.2:
+        sessions:
+            - started_at: 2026-11-23T20:08:00.444366618Z
+              completed_at: 2026-11-23T20:09:58.593121644Z
+    T2.3:
+        sessions:
+            - started_at: 2026-11-23T20:08:00.444366902Z
+              completed_at: 2026-11-23T20:09:58.593121838Z
+    T3.1:
+        sessions:
+            - started_at: 2026-11-23T20:09:58.656819136Z
+              completed_at: 2026-11-23T20:12:16.871663922Z
+    T3.2:
+        sessions:
+            - started_at: 2026-11-23T20:09:58.656819636Z
+              completed_at: 2026-11-23T20:12:16.871666666Z
+    T3.3:
+        sessions:
+            - started_at: 2026-11-23T20:09:58.656819836Z
+              completed_at: 2026-11-23T20:12:16.871666935Z
+delta:
+    impact: modules
+    modules:
+        - module: agent-kit
+          base_hashes:
+            BR-KIT-35: 648da7c7d132f996ffbbff411a6e973cc454fa582bcc37714ae5d74fc8c11e95
+            US-KIT-25: 6f0d7e5098df7d7cb2480c2f2acec3f85c23275d45610577aa4dc467fdd09fb7
+          id_map:
+            NEW:review-brief: BR-KIT-39
+            NEW:compact-scenarios: BR-KIT-40
+            NEW:general-rules: BR-KIT-41
+            NEW:task-layout: BR-KIT-42
+            NEW:execution-strategy-anchors: BR-KIT-43
+            NEW:test-first-neutral: BR-KIT-44
+            NEW:us-lean-reviewable-specs: US-KIT-32
+        - module: spec-management
+          id_map:
+            NEW:audit-all-links: BR-SPEC-16
+            NEW:us-audit-multi-links: US-SPEC-12
+qa:
+    status: PASSED
+    run: 1
+    recorded_at: 2026-11-23T20:16:30Z
+    criteria:
+        - id: US-1.1
+          scenario: Review Brief with three items
+          evidence: template '## 0. Review Brief' Changes/Decisions/Review closely; rule 3; kit test passes
+          verdict: PASSED
+        - id: US-1.2
+          scenario: Brief about 8 lines, max 3 bullets
+          evidence: rule 3 and template item text
+          verdict: PASSED
+        - id: US-1.3
+          scenario: No decision gives one line
+          evidence: Decisions placeholder 'If none, one line saying so'
+          verdict: PASSED
+        - id: US-2.1
+          scenario: Lettered one-line situation → result
+          evidence: rule 4; template '- **a.** [situation] → [result].'
+          verdict: PASSED
+        - id: US-2.2
+          scenario: Same-result scenarios merged
+          evidence: rule 4
+          verdict: PASSED
+        - id: US-2.3
+          scenario: No invented failure scenario
+          evidence: rule 4; template 'only if a real failure case exists'
+          verdict: PASSED
+        - id: US-2.4
+          scenario: Real failure stated with result
+          evidence: template b. line
+          verdict: PASSED
+        - id: US-3.1
+          scenario: General Rules once
+          evidence: template '## 4. General Rules'; rule 8
+          verdict: PASSED
+        - id: US-3.2
+          scenario: Deviation as one-line constraint
+          evidence: rule 5; optional **Constraint:** paragraph
+          verdict: PASSED
+        - id: US-3.3
+          scenario: Interface omitted without UI
+          evidence: rule 8; template note
+          verdict: PASSED
+        - id: US-3.4
+          scenario: No invented quality target
+          evidence: rule 8; Quality 'Omit if none'
+          verdict: PASSED
+        - id: US-4.1
+          scenario: Verb-first titles
+          evidence: tasks rule 7; template Create/Modify/Remove
+          verdict: PASSED
+        - id: US-4.2
+          scenario: Phase names state outcome
+          evidence: rule 6; template phase heading
+          verdict: PASSED
+        - id: US-4.3
+          scenario: Indented fields and --- separators
+          evidence: rule 7; temp project valid, status and update work
+          verdict: PASSED
+        - id: US-4.4
+          scenario: Links cite scenario letters
+          evidence: rule 5; template; audit tests pass
+          verdict: PASSED
+        - id: US-4.5
+          scenario: No bold title; separator after blank line
+          evidence: rule 7; template has no bold title (re-verified)
+          verdict: PASSED
+        - id: US-5.1
+          scenario: Constraint states consequence
+          evidence: tasks rule 1; template placeholder
+          verdict: PASSED
+        - id: US-5.2
+          scenario: Excluded constraint kinds
+          evidence: rule 1 exclusion list
+          verdict: PASSED
+        - id: US-5.3
+          scenario: Anchors once in Execution Strategy
+          evidence: template; rule 2
+          verdict: PASSED
+        - id: US-5.4
+          scenario: No mitigation for handled risk
+          evidence: Pre-emptive Mitigations note
+          verdict: PASSED
+        - id: US-5.5
+          scenario: No order narrative
+          evidence: rule 6; no Gravity Order (re-verified)
+          verdict: PASSED
+        - id: US-6.1
+          scenario: No pairs from template
+          evidence: rule 7; base yaml has no pairing
+          verdict: PASSED
+        - id: US-6.2
+          scenario: '[RED] ends the verb title'
+          evidence: rule 7 example; IsRedTask Contains; temp project parsed
+          verdict: PASSED
+        - id: US-6.3
+          scenario: Bug first task is regression test
+          evidence: tasks rule 11; bug rule 6
+          verdict: PASSED
+        - id: US-7.1
+          scenario: Bug Review Brief
+          evidence: bug template '## 0. Review Brief'
+          verdict: PASSED
+        - id: US-7.2
+          scenario: Lettered regression scenarios
+          evidence: bug template [FIX-1] a. … → …
+          verdict: PASSED
+        - id: US-7.3
+          scenario: Evidence, repro, root cause mandatory
+          evidence: bug rules 1, 2, 5
+          verdict: PASSED
+        - id: US-8.1
+          scenario: Several requirements in one link
+          evidence: TestDeterministicCheck_LinkedRequirements (re-run -count=1 passes)
+          verdict: PASSED
+        - id: US-8.2
+          scenario: Letters after link
+          evidence: sub-tests pass
+          verdict: PASSED
+        - id: US-8.3
+          scenario: Uncited requirement missing
+          evidence: sub-test passes; no prefix confusion with US-10
+          verdict: PASSED
+        - id: US-8.4
+          scenario: Title/constraint mention does not count
+          evidence: sub-test passes; only **Context:** lines scanned
+          verdict: PASSED
+        - id: BI-1
+          scenario: Existing specs stay valid
+          evidence: legacy archived spec is_valid true; 97 specs audit only more lenient
+          verdict: PASSED
+        - id: BI-2
+          scenario: Tool-read section names unchanged
+          evidence: rendered templates keep exact titles
+          verdict: PASSED
+        - id: BI-3
+          scenario: Tool-read field labels unchanged
+          evidence: labels intact; temp project tracked
+          verdict: PASSED
+        - id: BI-4
+          scenario: No implementation details in requirements
+          evidence: rule 2 kept
+          verdict: PASSED
+        - id: NFR-Perf-40pct
+          scenario: At least 40% shorter
+          evidence: prototype 2454 → 1095 words (55.4%); measured on prototype only
+          verdict: PASSED
+        - id: NFR-Reliab
+          scenario: Status valid for old and new layouts
+          evidence: is_valid true for both
+          verdict: PASSED
+        - id: NFR-Maint
+          scenario: Kit tests assert new rules
+          evidence: TestKitManifests_LeanReviewableTemplates passes (re-run)
+          verdict: PASSED
+        - id: DELTA ADDED NEW:review-brief
+          scenario: Brief in both blueprints
+          evidence: templates and rule 3
+          verdict: PASSED
+        - id: DELTA ADDED NEW:compact-scenarios
+          scenario: Lettered one-line scenarios
+          evidence: rule 4 in both
+          verdict: PASSED
+        - id: DELTA ADDED NEW:general-rules
+          scenario: General Rules once
+          evidence: rules 5, 8; kit test
+          verdict: PASSED
+        - id: DELTA ADDED NEW:task-layout
+          scenario: Readable task layout
+          evidence: tasks rules 5-7
+          verdict: PASSED
+        - id: DELTA ADDED NEW:execution-strategy-anchors
+          scenario: Anchors once, no narrative
+          evidence: template and rule 6
+          verdict: PASSED
+        - id: DELTA ADDED NEW:test-first-neutral
+          scenario: Neutral, [RED] at end
+          evidence: rule 7
+          verdict: PASSED
+        - id: DELTA ADDED NEW:us-lean-reviewable-specs
+          scenario: Use case scenarios
+          evidence: rendered blueprints
+          verdict: PASSED
+        - id: DELTA MODIFIED BR-KIT-35
+          scenario: Lean constraints rule
+          evidence: tasks rule 1
+          verdict: PASSED
+        - id: DELTA MODIFIED US-KIT-25
+          scenario: RED title verb + token
+          evidence: rule 7; spf-spec SKILL.yaml
+          verdict: PASSED
+        - id: DELTA ADDED NEW:audit-all-links
+          scenario: Audit counts every linked requirement
+          evidence: auditor.go linkedRequirements + tests
+          verdict: PASSED
+        - id: DELTA ADDED NEW:us-audit-multi-links
+          scenario: Audit use case
+          evidence: three sub-tests pass
+          verdict: PASSED
+    findings:
+        - title: Bulleted or mid-line Context no longer counts as coverage
+          detail: New audit requires the trimmed line to start with **Context:**; '- **Context:**' or blockquote variants report requirements missing. No existing spec of 97 is affected.
+        - title: Bold task titles are skipped silently
+          detail: '''- [ ] **T1.1: …**'' is not parsed; status omits it, update says not found, spec status stays valid. Template forbids it but nothing validates it.'
+        - title: Coverage audit has no CLI caller
+          detail: RefineSpec/Audit are not invoked by any command; US-8 proven by unit tests only.
+        - title: Any bracketed [US-n] in requirements becomes a requirement
+          detail: A bracketed id in the Review Brief without a heading would be reported missing; template writes ids unbracketed. Pre-existing.
