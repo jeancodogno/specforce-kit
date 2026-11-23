@@ -1,5 +1,7 @@
 # Governance
 
+> **Version:** 1.1.0 (MINOR: Release Process added) · **Last amended:** 2026-11-23
+
 ## Versioning Policy (SemVer)
 - **MAJOR:** Breaking constitutional or architectural process change. Requires team consensus.
 - **MINOR:** New principle or standard added without breaking prior commitments.
@@ -10,6 +12,15 @@
 2. Classify the SemVer impact (Major/Minor/Patch).
 3. Update all affected docs in `.specforce/docs/`.
 4. Record the version bump and the amendment date in the document's header.
+
+## Release Process
+1. Classify the version with SemVer: template or skill behavior changes that keep existing specs valid are MINOR; fixes only are PATCH.
+2. Update user documentation in `docs/{en,pt,es}/` for any behavior the release changes, scoped with "from X.Y.Z onward".
+3. Add a dated `## [X.Y.Z] - YYYY-MM-DD` entry to `CHANGELOG.md` (Keep a Changelog sections) and its link reference at the bottom.
+4. Bump the version in `package.json` (package and every `optionalDependencies` entry), `src/internal/core/constants.go` and the recovery command in `AGENTS.md`, in one `chore(release): prepare vX.Y.Z` commit.
+5. Commits carry no `Co-Authored-By` trailer.
+6. Releases are prepared on the `X.x` release branch (for example `1.x`). Run `go test ./...` and `make lint`, then push the branch and an annotated `vX.Y.Z` tag; the tag triggers the release workflow.
+7. `main` holds the current released version: open a "Release X.Y.Z" pull request from `X.x` into `main` and merge it with a merge commit (not squash or rebase) so the release tag stays on `main`'s history. The merge is done by a human.
 
 ## Ownership & Review
 - **Owner:** Project Lead / Solutions Architect.
