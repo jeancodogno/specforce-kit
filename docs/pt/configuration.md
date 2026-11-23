@@ -13,7 +13,7 @@ No `config.yaml`:
 ```yaml
 instructions:
   requirements:
-    - "Sempre use a sintaxe BDD GIVEN/WHEN/THEN nos critérios de aceitação."
+    - "Sempre nomeie a persona do usuário final em cada história de usuário."
     - "Garanta que a acessibilidade seja sempre mencionada quando houver UI envolvida."
   bug-requirements:
     - "Sempre inclua a mensagem de erro exata na seção de evidências."

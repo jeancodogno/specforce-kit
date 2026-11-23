@@ -868,3 +868,85 @@ func testLeanImplementBrief(t *testing.T) {
 		t.Errorf("%s must not reference {action_steps}", path)
 	}
 }
+
+func TestKitManifests_LeanReviewableTemplates(t *testing.T) {
+	t.Run("Requirements", func(t *testing.T) {
+		path := "artifacts/spec/requirements.yaml"
+		assertFileContains(t, path, []string{
+			"## 0. Review Brief",
+			"Review closely",
+			"**Changes**",
+			"**Decisions**",
+			"→",
+			"## 2. Out of Scope",
+			"## 4. General Rules",
+			"**Domain**",
+			"**Interface**",
+			"**Quality**",
+			"Zero Context Leak",
+			"Zero-Technical-Specification",
+			"lens:",
+			"[US-1]",
+		})
+		assertFileNotContains(t, path, []string{
+			"UI/UX Specifics",
+			"Technical Constraints (NFR)",
+			"**[Performance]:**",
+			"Global UI/UX Contract",
+			"Global Non-Functional Requirements",
+			"Business Invariants",
+			"GIVEN",
+		})
+	})
+
+	t.Run("BugRequirements", func(t *testing.T) {
+		path := "artifacts/spec/bug-requirements.yaml"
+		assertFileContains(t, path, []string{
+			"## 0. Review Brief",
+			"Review closely",
+			"**Fix**",
+			"**Decisions**",
+			"→",
+			"[FIX-1]",
+			"root cause",
+			"RED",
+			"halt",
+		})
+		assertFileNotContains(t, path, []string{
+			"**[Performance]:**",
+			"GIVEN",
+		})
+	})
+
+	t.Run("Tasks", testReadableTasksBlueprint)
+}
+
+func testReadableTasksBlueprint(t *testing.T) {
+	path := "artifacts/spec/tasks.yaml"
+	assertFileContains(t, path, []string{
+		"Create",
+		"Modify",
+		"Remove",
+		"Move",
+		"Rename",
+		"---",
+		"[RED]",
+		"what goes wrong",
+		"## 1. Execution Strategy",
+		"repeats a requirement",
+		"repeats another task's constraint",
+		"describes the obvious implementation",
+		"defines a data contract",
+	})
+	assertFileNotContains(t, path, []string{
+		"Gravity Order",
+		"[SCAFFOLD/CLI]",
+		"[CODE]",
+	})
+	assertFileContains(t, "kit/skills/spf-spec/SKILL.yaml", []string{
+		"starts with its action verb and ends with the `[RED]` token",
+	})
+	assertFileNotContains(t, "kit/skills/spf-spec/SKILL.yaml", []string{
+		"RED tasks carry the `[RED]` token in their title",
+	})
+}

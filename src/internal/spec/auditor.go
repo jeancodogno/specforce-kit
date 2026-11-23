@@ -100,9 +100,9 @@ func crossReferenceTasks(tasksPath string, requirements map[string]bool) []Coher
 	}
 
 	var errors []CoherenceError
-	tasksContent := string(tasksData)
+	linked := linkedRequirements(string(tasksData))
 	for us := range requirements {
-		if !strings.Contains(tasksContent, fmt.Sprintf("**Context:** [%s]", us)) {
+		if !linked[us] {
 			errors = append(errors, CoherenceError{
 				Artifact: "tasks",
 				Code:     "MISSING_TASK",
@@ -112,6 +112,23 @@ func crossReferenceTasks(tasksPath string, requirements map[string]bool) []Coher
 		}
 	}
 	return errors
+}
+
+// linkedRequirements collects every [US-x] cited on a **Context:** line.
+// Mentions elsewhere (titles, constraints) do not count as coverage.
+func linkedRequirements(tasksContent string) map[string]bool {
+	usRegex := regexp.MustCompile(`\[(US-\d+)\]`)
+	linked := make(map[string]bool)
+	for _, line := range strings.Split(tasksContent, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "**Context:**") {
+			continue
+		}
+		for _, m := range usRegex.FindAllStringSubmatch(trimmed, -1) {
+			linked[m[1]] = true
+		}
+	}
+	return linked
 }
 
 // Audit runs the full suite of checks (Deterministic + AI-driven parsing).

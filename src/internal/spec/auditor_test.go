@@ -148,3 +148,89 @@ func TestDeterministicCheck_SmallSpec(t *testing.T) {
 		}
 	})
 }
+
+const linkedReqContent = `---
+slug: test-spec
+---
+# Feature: Test
+## 2. Out of Scope
+- [US-9] should be ignored.
+## 3. Acceptance Criteria
+### [US-1] Requirement 1
+### [US-2] Requirement 2
+### [US-3] Requirement 3
+`
+
+type linkedCase struct {
+	name        string
+	tasks       string
+	wantMissing []string
+}
+
+var linkedCases = []linkedCase{
+	{
+		name:  "legacy link citing several requirements",
+		tasks: "- [ ] T1.1: Task\n**Context:** [US-1], [US-2], [US-3]\n",
+	},
+	{
+		name:  "new link with scenario letters and dot separator",
+		tasks: "- [ ] T1.1: Task\n**Context:** [US-1] a, b · [US-2] c · [US-3]\n",
+	},
+	{
+		name:  "requirement followed by scenario letters",
+		tasks: "- [ ] T1.1: Task\n**Context:** [US-1]\n- [ ] T1.2: Task\n**Context:** [US-2] a, b\n- [ ] T1.3: Task\n**Context:** [US-3] a\n",
+	},
+	{
+		name:        "unlinked requirement is still missing",
+		tasks:       "- [ ] T1.1: Task\n**Context:** [US-1] a · [US-2] b\n",
+		wantMissing: []string{"US-3"},
+	},
+	{
+		name:        "mention in title or constraint does not count",
+		tasks:       "- [ ] T1.1: Task for [US-2]\n**Context:** [US-1]\n**Constraints:** keep [US-3] intact\n",
+		wantMissing: []string{"US-2", "US-3"},
+	},
+	{
+		name:  "indented context line",
+		tasks: "- [ ] T1.1: Task\n  **Context:** [US-1] a · [US-2]\n    **Context:** [US-3]\n",
+	},
+}
+
+func runLinkedCase(t *testing.T, tt linkedCase) {
+	tmpDir := t.TempDir()
+	slug := "test-spec"
+	specDir := filepath.Join(tmpDir, ".specforce", "specs", slug)
+	if err := os.MkdirAll(specDir, 0750); err != nil {
+		t.Fatalf("failed to create spec dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "requirements.md"), []byte(linkedReqContent), 0600); err != nil {
+		t.Fatalf("failed to write requirements.md: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "tasks.md"), []byte(tt.tasks), 0600); err != nil {
+		t.Fatalf("failed to write tasks.md: %v", err)
+	}
+
+	errs := NewAuditor(tmpDir).DeterministicCheck(context.Background(), slug)
+
+	got := map[string]bool{}
+	for _, e := range errs {
+		if e.Code != "MISSING_TASK" {
+			t.Errorf("unexpected error code %q", e.Code)
+		}
+		got[e.Context] = true
+	}
+	if len(errs) != len(tt.wantMissing) {
+		t.Fatalf("expected %d errors, got %d: %+v", len(tt.wantMissing), len(errs), errs)
+	}
+	for _, us := range tt.wantMissing {
+		if !got["## ["+us+"]"] {
+			t.Errorf("expected %s reported missing, got %+v", us, errs)
+		}
+	}
+}
+
+func TestDeterministicCheck_LinkedRequirements(t *testing.T) {
+	for _, tt := range linkedCases {
+		t.Run(tt.name, func(t *testing.T) { runLinkedCase(t, tt) })
+	}
+}

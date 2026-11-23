@@ -31,6 +31,7 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
 - `[BR-SPEC-13]` Task validation produces non-blocking warnings, listed apart from errors in the human and machine-readable specification status, for a task that contains a fenced code block and for a task whose target and constraints cite more than three distinct file paths; warnings never change validity, progress or the outcome of any command.
 - `[BR-SPEC-14]` The step list of a task is optional: a task may omit it, may use the constraints heading or the legacy step-list heading, and may leave the block empty, with no minimum or maximum number of items; the implementation status exposes the items of either heading as the task's constraints, empty when absent, and every roadmap valid before this change stays valid.
 - `[BR-SPEC-15]` The implementation status identifies a roadmap's pre-emptive mitigations section by its title, whatever section number it carries, exposes its text up to the next top-level section, and leaves the mitigations empty when the roadmap has no such section; roadmaps numbering it 3 keep the same output.
+- `[BR-SPEC-16]` The coverage audit MUST treat a requirement as covered when any task's requirement link cites it, whatever its position in the link and whether scenario letters follow it. A requirement link is a line that starts with the Context label, ignoring indentation; mentions anywhere else (titles, constraints, bulleted or inline Context labels) do not count, and requirements listed under Out of Scope stay excluded.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-SPEC-01] Tiered Sizing at Initialization
@@ -154,6 +155,20 @@ Governs the lifecycle of feature and bug specifications (`.specforce/specs/<slug
   - **GIVEN** a mitigations section followed by another top-level section
   - **WHEN** the implementation status is requested
   - **THEN** only the mitigations text is exposed.
+
+### [US-SPEC-12] Coverage Audit Recognizes Every Linked Requirement
+- **Scenario:** Task covering several requirements
+  - **GIVEN** a task whose requirement link cites US-1 and US-2
+  - **WHEN** the coverage audit runs
+  - **THEN** neither requirement is reported as missing.
+- **Scenario:** Link with scenario letters
+  - **GIVEN** a requirement link that cites a requirement followed by scenario letters
+  - **WHEN** the coverage audit runs
+  - **THEN** the requirement is recognized as covered.
+- **Scenario:** Uncovered requirement
+  - **GIVEN** a requirement that no requirement link cites, even if a task title or constraint mentions it
+  - **WHEN** the coverage audit runs
+  - **THEN** it is reported as missing.
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**

@@ -4,6 +4,34 @@ All notable changes to Specforce Kit are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-23
+
+Leaner specifications that are faster to review. Specs written with earlier versions stay valid, and nothing needs to be migrated.
+
+### Changed
+
+- **Requirements are shorter and open with a Review Brief:** what changes, the decisions taken and what to review closely, in about 8 lines.
+  - Each user story has lettered one-line scenarios (`a.` situation → result), which tasks cite as `US-1.a`.
+  - Rules that apply to the whole feature are stated once under General Rules.
+  - The per-requirement UI/UX and non-functional blocks are gone, and so are the mandatory performance tag and the mandatory edge case per requirement.
+- **Bug requirements** gain the same Review Brief and one-line regression scenarios. Evidence, reproduction steps and root cause stay mandatory.
+- **Tasks are easier to scan:**
+  - Titles start with an action verb (Create, Modify, Remove, Move or Rename) and state the outcome.
+  - Phases are named after what they deliver.
+  - Fields are separate paragraphs indented under the task, and tasks of a phase are separated by `---`.
+  - Requirement links cite scenario letters (`[US-1] a, b · [US-2] c`).
+- **Constraints are leaner:**
+  - Each constraint says what goes wrong if it is ignored.
+  - Repeated requirements, repeats of another task's constraint, the obvious implementation and data contracts are left out.
+  - Decisions that apply to several tasks live once in the Execution Strategy, which no longer asks for an ordering narrative.
+- **Test-first is now opt-in:** the templates no longer split tasks into test and code pairs by themselves. Projects that want pairs keep asking for them in `config.yaml`. The `[RED]` token now goes at the end of the action-verb title (`Create tests for SenderAvatar [RED]`).
+- **Requirement links must start their line:** the coverage audit only counts a requirement link that starts its line, ignoring indentation. A `**Context:**` written inside a bullet or in the middle of a line no longer counts.
+- **Check your `config.yaml` instructions:** project instructions are added on top of the new templates. An instruction that asks for GIVEN/WHEN/THEN scenarios or per-requirement UI/UX blocks brings back the verbosity the new templates remove, so review your `instructions:` after upgrading.
+
+### Fixed
+
+- The coverage audit recognizes every requirement cited in a task's `**Context:**` line, not only the first one.
+
 ## [1.0.0] - 2026-11-21
 
 The first stable release. It summarizes everything that changed since `0.2.x`, including the `1.0.0` alpha and beta pre-releases.
@@ -44,4 +72,5 @@ The first stable release. It summarizes everything that changed since `0.2.x`, i
 
 For versions before 1.0.0, see the [GitHub releases](https://github.com/jeancodogno/specforce-kit/releases).
 
+[1.1.0]: https://github.com/jeancodogno/specforce-kit/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jeancodogno/specforce-kit/releases/tag/v1.0.0

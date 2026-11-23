@@ -42,10 +42,16 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - `[BR-KIT-32]` Discovery blueprints MUST allow non-mutating commands and running the application, test suites and browsers locally for evidence, MUST forbid commands that change tracked product files or that have external or irreversible effects (mutating network calls, real credentials, production data or services, destructive commands) without asking the user first, and MAY delegate broad searches to strictly read-only helpers while conclusions stay in the main session.
 - `[BR-KIT-33]` Discovery blueprints MUST describe, only for an explicit formalization request, a proposal with problem, verified findings with file references, decisions taken, rejected alternatives, open questions, suggested type and size, and evidence references, and MUST offer a bug-type specification when a root cause is confirmed; early and mid turns MUST NOT push toward a specification, and an oversized idea gets a decomposition recommendation in text without halting.
 - `[BR-KIT-34]` The generated agent guide, the repository agent guide and the discovery skill description MUST state that discovery is read-only for product code while allowing disposable evidence in the scratch area, and the prohibition of direct edits without an approved specification MUST remain unchanged for product code.
-- `[BR-KIT-35]` Planning blueprints MUST direct task roadmaps to state constraints only when they carry something the implementer cannot deduce from the design and the code (a pitfall, a deviation from repository convention, or a recorded design decision referenced rather than repeated), MUST forbid method signatures, constants and code snippets in tasks, and MUST direct the design to be the only artifact where code-symbol anchors are written.
+- `[BR-KIT-35]` Planning blueprints MUST direct task roadmaps to state constraints only when they carry something the implementer cannot deduce from the design and the code (a pitfall, a deviation from repository convention, or a recorded design decision referenced rather than repeated), each stating what goes wrong if it is ignored; MUST exclude from constraints anything that repeats a requirement, repeats another task's constraint, describes the obvious implementation or defines a data contract; MUST forbid method signatures, constants and code snippets in tasks; and MUST direct the design to be the only artifact where code-symbol anchors are written.
 - `[BR-KIT-36]` The design blueprint MUST allow a one-line `Why:` on a non-obvious technical decision inside the contract or inventory entry it affects, MUST forbid debating alternatives and adding a dedicated rationale section, and MUST NOT require it for decisions with no real alternative.
 - `[BR-KIT-37]` Implementation orchestration blueprints MUST direct the orchestrator to put into each worker brief the task's constraints (omitting the line when there are none) and, copied verbatim and naming their source, the design inventory entries, related contracts and `Why:` lines that concern the task's target, or to state that none applies when the design is absent or has no matching entry.
 - `[BR-KIT-38]` The independent qa-tester's black-box tier MUST execute every scenario of the roadmap's black-box scenario section and add one traceability matrix row per scenario, identified by its scenario identifier, using the existing verdicts; a scenario that cannot be executed is `NOT-VERIFIABLE` with a stated reason, and roadmaps without the section derive black-box checks from the requirements' acceptance scenarios.
+- `[BR-KIT-39]` The feature and bug requirements blueprints MUST open the requirements with a Review Brief of about 8 lines holding what changes, the decisions taken and what to review closely, each with at most 3 short bullets; a feature with no decision beyond the request states so in one line.
+- `[BR-KIT-40]` The requirements blueprints MUST write each requirement as a one-line user story followed by lettered one-line scenarios in the form "situation → result", citable as the requirement identifier plus the letter; scenarios with the same result are merged, and a failure scenario is written only when a real failure case exists.
+- `[BR-KIT-41]` The feature requirements blueprint MUST state feature-wide domain, interface and quality rules once in a single General Rules section, MUST omit the interface rules for features without a user interface, MUST allow a per-requirement constraint line only for a deviation from the general rules, MUST NOT require a per-requirement quality tag, and MUST state a quality line only for a real, measurable target of the feature.
+- `[BR-KIT-42]` The tasks blueprint MUST direct task titles to start with an action verb (Create, Modify, Remove, Move or Rename) followed by the target and the outcome, phase names to state the outcome they deliver, task fields to be separate paragraphs indented under the task, consecutive tasks of a phase to be separated by a horizontal rule preceded by a blank line, and requirement links to cite the scenario letters they cover; it MUST forbid bold task titles.
+- `[BR-KIT-43]` The tasks blueprint MUST direct the execution strategy to hold the technical anchors and the decisions that apply to several tasks, stated once and not repeated in tasks, MUST NOT require a narrative of the task order, and MUST direct pre-emptive mitigations to be written only for risks not already handled by a task constraint.
+- `[BR-KIT-44]` The artifact blueprints MUST NOT split feature tasks into test and code pairs; when project instructions ask for test-first pairs, the test task title keeps the action verb and ends with the `[RED]` token.
 
 ## 3. Canonical Requirements & Use Cases
 ### [US-KIT-01] Zero Technical Specification Enforcement in Requirements
@@ -232,7 +238,7 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
 - **Scenario:** Planning a test-first pair
   - **GIVEN** a roadmap with RED and GREEN task pairs
   - **WHEN** the roadmap is written
-  - **THEN** every RED task carries the RED token in its title.
+  - **THEN** every RED task title starts with its action verb and ends with the RED token.
 
 ### [US-KIT-26] Lean Discovery Blueprint
 - **Scenario:** Reading the blueprint
@@ -297,6 +303,20 @@ Manages the embedded Agent Kit blueprints (skills), artifact generation schemas,
   - **GIVEN** a scenario whose command cannot be executed in the environment
   - **WHEN** the matrix is built
   - **THEN** its row is `NOT-VERIFIABLE` with a reason and is never reported as passed.
+
+### [US-KIT-32] Lean, Reviewable Specification Blueprints
+- **Scenario:** Writing requirements
+  - **GIVEN** a planning session for a feature
+  - **WHEN** the requirements are written
+  - **THEN** they open with a Review Brief, each requirement has a one-line story and lettered one-line scenarios, and feature-wide rules appear once in General Rules.
+- **Scenario:** Writing a roadmap
+  - **GIVEN** a planning session with requirements
+  - **WHEN** the roadmap is written
+  - **THEN** task titles start with an action verb, fields are indented paragraphs, consecutive tasks are separated by a horizontal rule, and requirement links cite scenario letters.
+- **Scenario:** Project without test-first instructions
+  - **GIVEN** project instructions that do not ask for test-first pairs
+  - **WHEN** a feature roadmap is written
+  - **THEN** tasks are not split into test and code pairs.
 
 ## 4. Public Integration Surfaces & Contracts
 - **Public CLI Commands:**
